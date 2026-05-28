@@ -114,20 +114,20 @@ export class MapScene extends Phaser.Scene {
   }
 
   addNavigation() {
-    new Button(this, 124, GAME_HEIGHT - 54, 170, 50, 'Назад', () => {
+    new Button(this, 128, GAME_HEIGHT - 58, 196, 58, 'Назад', () => {
       this.scene.start('MenuScene');
     }, {
       iconKey: AssetKeys.Icons.Cancel,
       backgroundKey: AssetKeys.Buttons.Cancel,
-      fontSize: 22
+      iconSize: 30
     });
 
-    new Button(this, GAME_WIDTH - 126, GAME_HEIGHT - 54, 190, 50, 'Магазин', () => {
+    new Button(this, GAME_WIDTH - 136, GAME_HEIGHT - 58, 214, 58, 'Магазин', () => {
       this.scene.start('ShopScene', { from: 'MapScene' });
     }, {
       iconKey: AssetKeys.Icons.Upgrades,
-      backgroundKey: AssetKeys.Buttons.Map,
-      fontSize: 22
+      fontSize: 22,
+      iconSize: 30
     });
   }
 }

@@ -70,54 +70,55 @@ export class MenuScene extends Phaser.Scene {
 
   addMenuButtons() {
     const x = GAME_WIDTH / 2;
-    const startY = 238;
-    const gap = 76;
+    const startY = 204;
+    const gap = 104;
+    const buttonWidth = 410;
+    const buttonHeight = 112;
 
-    new Button(this, x, startY, 330, 58, 'Играть', () => {
+    new Button(this, x, startY, buttonWidth, buttonHeight, 'Играть', () => {
       this.scene.start('PreparationScene', { levelId: this.profile.unlockedLevel });
     }, {
       iconKey: AssetKeys.Icons.Ready,
       backgroundKey: AssetKeys.Buttons.Play,
-      fontSize: 28
+      iconSize: 50
     });
 
-    new Button(this, x, startY + gap, 330, 58, 'Кампания', () => {
+    new Button(this, x, startY + gap, buttonWidth, buttonHeight, 'Кампания', () => {
       this.scene.start('MapScene');
     }, {
       iconKey: AssetKeys.Icons.Campaign,
       backgroundKey: AssetKeys.Buttons.Campaign,
-      fontSize: 27
+      iconSize: 50
     });
 
-    new Button(this, x, startY + gap * 2, 330, 58, 'Быстрый бой', () => {
+    new Button(this, x, startY + gap * 2, buttonWidth, buttonHeight, 'Быстрый бой', () => {
       this.scene.start('PreparationScene', { levelId: 1 });
     }, {
       iconKey: AssetKeys.Icons.Ships,
       backgroundKey: AssetKeys.Buttons.QuickBattle,
-      fontSize: 27
+      iconSize: 50
     });
 
-    new Button(this, x, startY + gap * 3, 330, 58, 'Настройки', () => {
+    new Button(this, x, startY + gap * 3, buttonWidth, buttonHeight, 'Настройки', () => {
       Toast.show(this, 'Настройки появятся позже');
     }, {
       iconKey: AssetKeys.Icons.Settings,
       backgroundKey: AssetKeys.Buttons.Settings,
-      fontSize: 27
+      iconSize: 50
     });
 
     new Button(this, x, startY + gap * 4, 330, 58, 'Магазин', () => {
       this.scene.start('ShopScene', { from: 'MenuScene' });
     }, {
       iconKey: AssetKeys.Icons.Upgrades,
-      backgroundKey: AssetKeys.Buttons.Map,
-      fontSize: 27
+      fontSize: 27,
+      iconSize: 34
     });
 
     this.dailyButton = new Button(this, x, startY + gap * 5, 330, 58, '', () => {
       this.claimDailyReward();
     }, {
       icon: '🎁',
-      backgroundKey: AssetKeys.Buttons.Map,
       fontSize: 23
     });
 

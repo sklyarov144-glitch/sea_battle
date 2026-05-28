@@ -21,13 +21,13 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image(AssetKeys.Buttons.Ready, '/assets/ui/buttons/button_ready.png');
     this.load.image(AssetKeys.Buttons.Settings, '/assets/ui/buttons/button_settings.png');
 
-    this.load.image(AssetKeys.Icons.AutoPlace, '/assets/ui/icons/auto_place.png');
-    this.load.image(AssetKeys.Icons.Campaign, '/assets/ui/icons/campaign.png');
-    this.load.image(AssetKeys.Icons.Cancel, '/assets/ui/icons/cancel.png');
-    this.load.image(AssetKeys.Icons.Ready, '/assets/ui/icons/ready.png');
-    this.load.image(AssetKeys.Icons.Settings, '/assets/ui/icons/settings.png');
-    this.load.image(AssetKeys.Icons.Ships, '/assets/ui/icons/ships.png');
-    this.load.image(AssetKeys.Icons.Upgrades, '/assets/ui/icons/upgrades.png');
+    this.load.image(AssetKeys.Icons.AutoPlace, '/assets/ui/icons_clean/auto_place.png');
+    this.load.image(AssetKeys.Icons.Campaign, '/assets/ui/icons_clean/campaign.png');
+    this.load.image(AssetKeys.Icons.Cancel, '/assets/ui/icons_clean/cancel.png');
+    this.load.image(AssetKeys.Icons.Ready, '/assets/ui/icons_clean/ready.png');
+    this.load.image(AssetKeys.Icons.Settings, '/assets/ui/icons_clean/settings.png');
+    this.load.image(AssetKeys.Icons.Ships, '/assets/ui/icons_clean/ships.png');
+    this.load.image(AssetKeys.Icons.Upgrades, '/assets/ui/icons_clean/upgrades.png');
   }
 
   create() {

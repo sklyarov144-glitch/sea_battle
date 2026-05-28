@@ -148,10 +148,10 @@ export class GameScene extends Phaser.Scene {
       color: '#fff5d6'
     });
 
-    this.exitButton = new Button(this, 1160, 66, 116, 44, 'Меню', () => this.showExitConfirm(), {
+    this.exitButton = new Button(this, 1158, 66, 150, 50, 'Меню', () => this.showExitConfirm(), {
       iconKey: AssetKeys.Icons.Cancel,
       backgroundKey: AssetKeys.Buttons.Cancel,
-      iconSize: 26,
+      iconSize: 28,
       fontSize: 18,
       fill: 0x6d3440,
       hoverFill: 0x843e4c
@@ -189,21 +189,21 @@ export class GameScene extends Phaser.Scene {
       color: '#fff5d6',
       align: 'center'
     }).setOrigin(0.5);
-    const stayButton = new Button(this, GAME_WIDTH / 2 - 128, GAME_HEIGHT / 2 + 62, 210, 50, 'Остаться', () => {
+    const stayButton = new Button(this, GAME_WIDTH / 2 - 128, GAME_HEIGHT / 2 + 62, 238, 64, 'Остаться', () => {
       this.closeExitConfirm();
     }, {
       fontSize: 21,
       iconKey: AssetKeys.Icons.Cancel,
       backgroundKey: AssetKeys.Buttons.Cancel,
-      iconSize: 30
+      iconSize: 34
     });
-    const leaveButton = new Button(this, GAME_WIDTH / 2 + 128, GAME_HEIGHT / 2 + 62, 210, 50, 'В меню', () => {
+    const leaveButton = new Button(this, GAME_WIDTH / 2 + 128, GAME_HEIGHT / 2 + 62, 238, 64, 'В меню', () => {
       this.scene.start('MenuScene');
     }, {
       fontSize: 21,
       iconKey: AssetKeys.Icons.Campaign,
       backgroundKey: AssetKeys.Buttons.Campaign,
-      iconSize: 30,
+      iconSize: 34,
       fill: 0x6d3440,
       hoverFill: 0x843e4c
     });
@@ -314,10 +314,10 @@ export class GameScene extends Phaser.Scene {
         icon: '➜',
         fontSize: 22
       }),
-      cancel: new Button(this, 804, 623, 170, 52, 'Отмена', () => this.cancelAbility(), {
+      cancel: new Button(this, 804, 623, 196, 60, 'Отмена', () => this.cancelAbility(), {
         iconKey: AssetKeys.Icons.Cancel,
         backgroundKey: AssetKeys.Buttons.Cancel,
-        iconSize: 30,
+        iconSize: 34,
         fontSize: 22,
         fill: 0x6d3440,
         hoverFill: 0x843e4c

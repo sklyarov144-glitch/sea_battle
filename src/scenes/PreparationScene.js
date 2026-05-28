@@ -132,7 +132,6 @@ export class PreparationScene extends Phaser.Scene {
       }, {
         fontSize: 19,
         iconKey: AssetKeys.Icons.Ships,
-        backgroundKey: AssetKeys.Buttons.Map,
         iconSize: 28
       });
     });
@@ -146,31 +145,30 @@ export class PreparationScene extends Phaser.Scene {
       this.updateBoard();
     }, {
       fontSize: 18,
-      icon: '↻',
-      backgroundKey: AssetKeys.Buttons.Settings
+      icon: '↻'
     });
 
-    this.autoButton = new Button(this, 1044, 474, 218, 52, 'Авто', () => this.autoPlace(), {
+    this.autoButton = new Button(this, 1044, 474, 260, 72, 'Авто', () => this.autoPlace(), {
       fontSize: 20,
       iconKey: AssetKeys.Icons.AutoPlace,
       backgroundKey: AssetKeys.Buttons.AutoPlace,
-      iconSize: 32
+      iconSize: 38
     });
 
-    this.readyButton = new Button(this, 936, 556, 286, 58, 'Готов к бою', () => this.startBattle(), {
+    this.readyButton = new Button(this, 936, 556, 330, 82, 'Готов к бою', () => this.startBattle(), {
       fontSize: 22,
       iconKey: AssetKeys.Icons.Ready,
       backgroundKey: AssetKeys.Buttons.Ready,
-      iconSize: 36
+      iconSize: 44
     });
 
-    new Button(this, 100, GAME_HEIGHT - 44, 156, 42, 'Назад', () => {
+    new Button(this, 112, GAME_HEIGHT - 50, 190, 56, 'Назад', () => {
       this.scene.start('MapScene');
     }, {
       fontSize: 18,
       iconKey: AssetKeys.Icons.Cancel,
       backgroundKey: AssetKeys.Buttons.Cancel,
-      iconSize: 28
+      iconSize: 30
     });
   }
 

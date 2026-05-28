@@ -96,27 +96,26 @@ export class ResultScene extends Phaser.Scene {
       lineSpacing: 8
     }).setOrigin(0.5);
 
-    new Button(this, GAME_WIDTH / 2 - 170, 506, 250, 54, 'В кампанию', () => {
+    new Button(this, GAME_WIDTH / 2 - 190, 506, 300, 76, 'В кампанию', () => {
       this.scene.start('MapScene');
     }, {
       iconKey: AssetKeys.Icons.Campaign,
       backgroundKey: AssetKeys.Buttons.Campaign,
-      fontSize: 23
+      iconSize: 38
     });
 
-    new Button(this, GAME_WIDTH / 2 + 170, 506, 250, 54, 'Играть снова', () => {
+    new Button(this, GAME_WIDTH / 2 + 190, 506, 300, 76, 'Играть снова', () => {
       this.scene.start('PreparationScene', { levelId: this.result.levelId });
     }, {
       iconKey: AssetKeys.Icons.Ready,
       backgroundKey: AssetKeys.Buttons.Play,
-      fontSize: 23
+      iconSize: 38
     });
 
-    this.doubleButton = new Button(this, GAME_WIDTH / 2, 574, 390, 52, 'Удвоить за рекламу', () => {
+    this.doubleButton = new Button(this, GAME_WIDTH / 2, 594, 390, 60, 'Удвоить за рекламу', () => {
       this.doubleReward();
     }, {
       icon: '▶',
-      backgroundKey: AssetKeys.Buttons.Ready,
       fontSize: 22,
       fill: 0x0f7d8a,
       hoverFill: 0x139cab

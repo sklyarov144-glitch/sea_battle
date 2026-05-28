@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
 import { AssetKeys } from '../config/assetKeys.js';
+import { coverImage } from './displayUtils.js';
 
 export function createSeaBackground(scene, options = {}) {
   const waterSkin = options.waterSkin ?? 'classic';
@@ -74,11 +75,8 @@ export function createCoverImageBackground(scene, key, options = {}) {
     return createSeaBackground(scene, options.fallback ?? {});
   }
 
-  const texture = scene.textures.get(key);
-  const source = texture.getSourceImage();
-  const baseScale = Math.max(GAME_WIDTH / source.width, GAME_HEIGHT / source.height);
   const image = scene.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, key);
-  image.setOrigin(0.5);
+  const baseScale = coverImage(image, GAME_WIDTH, GAME_HEIGHT);
   image.setScale(baseScale * (options.scale ?? 1.04));
   image.setDepth(options.depth ?? -100);
 

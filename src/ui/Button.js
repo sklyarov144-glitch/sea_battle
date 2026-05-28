@@ -19,10 +19,13 @@ export class Button extends Phaser.GameObjects.Container {
       icon: null,
       iconKey: null,
       backgroundKey: null,
+      imageButtonWithTextInside: null,
       iconSize: null,
+      iconOffsetX: null,
       radius: 8,
       ...options
     };
+    this.imageButtonWithTextInside = this.options.imageButtonWithTextInside ?? Boolean(this.options.backgroundKey);
     this.enabled = true;
     this.selected = false;
     this.hovered = false;
@@ -41,7 +44,7 @@ export class Button extends Phaser.GameObjects.Container {
 
     this.iconText = null;
     this.iconImage = null;
-    const iconLeft = -width / 2 + Math.max(28, height * 0.62);
+    const iconLeft = this.options.iconOffsetX ?? -width / 2 + Math.max(28, height * 0.62);
     if (this.options.iconKey && scene.textures.exists(this.options.iconKey)) {
       this.iconImage = scene.add.image(iconLeft, 0, this.options.iconKey);
       this.iconImage.setOrigin(0.5);
@@ -55,16 +58,19 @@ export class Button extends Phaser.GameObjects.Container {
       this.add(this.iconText);
     }
 
-    const hasIcon = Boolean(this.options.icon || this.iconImage);
-    this.text = scene.add.text(hasIcon ? Math.round(height * 0.28) : 0, 0, label, {
-      fontFamily: 'Georgia, "Times New Roman", serif',
-      fontSize: `${this.options.fontSize}px`,
-      color: this.options.textColor,
-      align: 'center',
-      fixedWidth: width - (hasIcon ? Math.round(height * 1.35) : 22),
-      wordWrap: { width: width - (hasIcon ? Math.round(height * 1.35) : 22), useAdvancedWrap: true }
-    }).setOrigin(0.5);
-    this.add(this.text);
+    this.text = null;
+    if (!this.imageButtonWithTextInside) {
+      const hasIcon = Boolean(this.options.icon || this.iconImage);
+      this.text = scene.add.text(hasIcon ? Math.round(height * 0.28) : 0, 0, label, {
+        fontFamily: 'Georgia, "Times New Roman", serif',
+        fontSize: `${this.options.fontSize}px`,
+        color: this.options.textColor,
+        align: 'center',
+        fixedWidth: width - (hasIcon ? Math.round(height * 1.35) : 22),
+        wordWrap: { width: width - (hasIcon ? Math.round(height * 1.35) : 22), useAdvancedWrap: true }
+      }).setOrigin(0.5);
+      this.add(this.text);
+    }
 
     this.hitTarget = scene.add.rectangle(0, 0, width, height, 0xffffff, 0.001);
     this.hitTarget.setOrigin(0.5);
@@ -174,7 +180,7 @@ export class Button extends Phaser.GameObjects.Container {
       this.iconText.setAlpha(this.enabled ? 1 : 0.55);
       this.iconText.setY(yOffset);
     }
-    this.text.setY(yOffset);
+    this.text?.setY(yOffset);
     this.setAlpha(this.enabled ? 1 : 0.68);
   }
 
@@ -201,7 +207,7 @@ export class Button extends Phaser.GameObjects.Container {
 
   setLabel(label) {
     this.label = label;
-    this.text.setText(label);
+    this.text?.setText(label);
     return this;
   }
 }
