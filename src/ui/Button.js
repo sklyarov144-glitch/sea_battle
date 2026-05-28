@@ -17,6 +17,9 @@ export class Button extends Phaser.GameObjects.Container {
       stroke: 0xf0c35a,
       fontSize: 24,
       icon: null,
+      iconKey: null,
+      backgroundKey: null,
+      iconSize: null,
       radius: 8,
       ...options
     };
@@ -25,24 +28,41 @@ export class Button extends Phaser.GameObjects.Container {
     this.hovered = false;
     this.pressed = false;
 
+    this.backgroundImage = null;
     this.background = scene.add.graphics();
-    this.add(this.background);
+    if (this.options.backgroundKey && scene.textures.exists(this.options.backgroundKey)) {
+      this.backgroundImage = scene.add.image(0, 0, this.options.backgroundKey);
+      this.backgroundImage.setOrigin(0.5);
+      this.backgroundImage.setDisplaySize(width, height);
+      this.add(this.backgroundImage);
+    } else {
+      this.add(this.background);
+    }
 
     this.iconText = null;
-    if (this.options.icon) {
+    this.iconImage = null;
+    const iconLeft = -width / 2 + Math.max(28, height * 0.62);
+    if (this.options.iconKey && scene.textures.exists(this.options.iconKey)) {
+      this.iconImage = scene.add.image(iconLeft, 0, this.options.iconKey);
+      this.iconImage.setOrigin(0.5);
+      const iconSize = this.options.iconSize ?? Math.round(height * 0.62);
+      this.iconImage.setDisplaySize(iconSize, iconSize);
+      this.add(this.iconImage);
+    } else if (this.options.icon) {
       this.iconText = scene.add.text(-width / 2 + 30, 0, this.options.icon, {
         fontSize: `${Math.round(this.options.fontSize * 1.05)}px`
       }).setOrigin(0.5);
       this.add(this.iconText);
     }
 
-    this.text = scene.add.text(this.options.icon ? 16 : 0, 0, label, {
+    const hasIcon = Boolean(this.options.icon || this.iconImage);
+    this.text = scene.add.text(hasIcon ? Math.round(height * 0.28) : 0, 0, label, {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: `${this.options.fontSize}px`,
       color: this.options.textColor,
       align: 'center',
-      fixedWidth: width - (this.options.icon ? 58 : 22),
-      wordWrap: { width: width - (this.options.icon ? 58 : 22), useAdvancedWrap: true }
+      fixedWidth: width - (hasIcon ? Math.round(height * 1.35) : 22),
+      wordWrap: { width: width - (hasIcon ? Math.round(height * 1.35) : 22), useAdvancedWrap: true }
     }).setOrigin(0.5);
     this.add(this.text);
 
@@ -127,12 +147,34 @@ export class Button extends Phaser.GameObjects.Container {
     const alpha = this.enabled ? 1 : 0.55;
     const yOffset = this.pressed ? 2 : 0;
 
-    this.background.fillStyle(0x261509, alpha);
-    this.background.fillRoundedRect(-this.widthValue / 2 + 3, -this.heightValue / 2 + 5 + yOffset, this.widthValue, this.heightValue, radius);
-    this.background.fillStyle(fill, alpha);
-    this.background.fillRoundedRect(-this.widthValue / 2, -this.heightValue / 2 + yOffset, this.widthValue, this.heightValue, radius);
-    this.background.lineStyle(2, this.options.stroke, alpha);
-    this.background.strokeRoundedRect(-this.widthValue / 2 + 2, -this.heightValue / 2 + 2 + yOffset, this.widthValue - 4, this.heightValue - 4, radius - 1);
+    if (this.backgroundImage) {
+      this.backgroundImage.setY(yOffset);
+      this.backgroundImage.setAlpha(alpha);
+      this.backgroundImage.clearTint();
+      if (this.selected) {
+        this.backgroundImage.setTint(0x9ff3ff);
+      } else if (this.hovered && this.enabled) {
+        this.backgroundImage.setTint(0xfff0bf);
+      } else if (!this.enabled) {
+        this.backgroundImage.setTint(0x666b75);
+      }
+    } else {
+      this.background.fillStyle(0x261509, alpha);
+      this.background.fillRoundedRect(-this.widthValue / 2 + 3, -this.heightValue / 2 + 5 + yOffset, this.widthValue, this.heightValue, radius);
+      this.background.fillStyle(fill, alpha);
+      this.background.fillRoundedRect(-this.widthValue / 2, -this.heightValue / 2 + yOffset, this.widthValue, this.heightValue, radius);
+      this.background.lineStyle(2, this.options.stroke, alpha);
+      this.background.strokeRoundedRect(-this.widthValue / 2 + 2, -this.heightValue / 2 + 2 + yOffset, this.widthValue - 4, this.heightValue - 4, radius - 1);
+    }
+    if (this.iconImage) {
+      this.iconImage.setAlpha(this.enabled ? 1 : 0.55);
+      this.iconImage.setY(yOffset);
+    }
+    if (this.iconText) {
+      this.iconText.setAlpha(this.enabled ? 1 : 0.55);
+      this.iconText.setY(yOffset);
+    }
+    this.text.setY(yOffset);
     this.setAlpha(this.enabled ? 1 : 0.68);
   }
 

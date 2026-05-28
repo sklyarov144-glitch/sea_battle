@@ -1,9 +1,9 @@
 import Phaser from 'phaser';
+import { AssetKeys } from '../config/assetKeys.js';
 import { LEVELS } from '../config/balanceConfig.js';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
 import { StorageService } from '../services/StorageService.js';
 import { YandexService } from '../services/YandexService.js';
-import { AssetKeys } from '../config/assetKeys.js';
 import { Button } from '../ui/Button.js';
 import { Toast } from '../ui/Toast.js';
 import { createRainOverlay, createSeaBackground, drawWoodPanel, flyCoins, spawnFireworks } from '../utils/effects.js';
@@ -96,17 +96,31 @@ export class ResultScene extends Phaser.Scene {
       lineSpacing: 8
     }).setOrigin(0.5);
 
-    new Button(this, GAME_WIDTH / 2 - 170, 506, 250, 54, 'На карту', () => {
+    new Button(this, GAME_WIDTH / 2 - 170, 506, 250, 54, 'В кампанию', () => {
       this.scene.start('MapScene');
-    }, { icon: '🗺', fontSize: 23 });
+    }, {
+      iconKey: AssetKeys.Icons.Campaign,
+      backgroundKey: AssetKeys.Buttons.Campaign,
+      fontSize: 23
+    });
 
     new Button(this, GAME_WIDTH / 2 + 170, 506, 250, 54, 'Играть снова', () => {
-      this.scene.start('GameScene', { levelId: this.result.levelId });
-    }, { icon: '↻', fontSize: 23 });
+      this.scene.start('PreparationScene', { levelId: this.result.levelId });
+    }, {
+      iconKey: AssetKeys.Icons.Ready,
+      backgroundKey: AssetKeys.Buttons.Play,
+      fontSize: 23
+    });
 
     this.doubleButton = new Button(this, GAME_WIDTH / 2, 574, 390, 52, 'Удвоить за рекламу', () => {
       this.doubleReward();
-    }, { icon: '▶', fontSize: 22, fill: 0x0f7d8a, hoverFill: 0x139cab });
+    }, {
+      icon: '▶',
+      backgroundKey: AssetKeys.Buttons.Ready,
+      fontSize: 22,
+      fill: 0x0f7d8a,
+      hoverFill: 0x139cab
+    });
   }
 
   getRewardText() {

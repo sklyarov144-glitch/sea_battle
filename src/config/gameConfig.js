@@ -3,6 +3,7 @@ import { BootScene } from '../scenes/BootScene.js';
 import { PreloadScene } from '../scenes/PreloadScene.js';
 import { MenuScene } from '../scenes/MenuScene.js';
 import { MapScene } from '../scenes/MapScene.js';
+import { PreparationScene } from '../scenes/PreparationScene.js';
 import { GameScene } from '../scenes/GameScene.js';
 import { ResultScene } from '../scenes/ResultScene.js';
 import { ShopScene } from '../scenes/ShopScene.js';
@@ -34,6 +35,7 @@ export const gameConfig = {
     PreloadScene,
     MenuScene,
     MapScene,
+    PreparationScene,
     GameScene,
     ResultScene,
     ShopScene

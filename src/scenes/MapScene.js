@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { AssetKeys } from '../config/assetKeys.js';
 import { LEVELS } from '../config/balanceConfig.js';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
 import { StorageService } from '../services/StorageService.js';
@@ -23,7 +24,7 @@ export class MapScene extends Phaser.Scene {
 
   addHeader() {
     drawWoodPanel(this, 44, 28, 1192, 82);
-    this.add.text(80, 54, 'Карта островов', {
+    this.add.text(80, 54, 'Кампания', {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '36px',
       color: '#fff0bf'
@@ -106,7 +107,7 @@ export class MapScene extends Phaser.Scene {
     if (unlocked) {
       hitZone.on('pointerover', () => this.tweens.add({ targets: container, scale: 1.08, duration: 140 }));
       hitZone.on('pointerout', () => this.tweens.add({ targets: container, scale: 1, duration: 140 }));
-      hitZone.on('pointerup', () => this.scene.start('GameScene', { levelId: level.id }));
+      hitZone.on('pointerup', () => this.scene.start('PreparationScene', { levelId: level.id }));
     } else {
       hitZone.on('pointerup', () => Toast.show(this, 'Этот остров пока закрыт'));
     }
@@ -115,10 +116,18 @@ export class MapScene extends Phaser.Scene {
   addNavigation() {
     new Button(this, 124, GAME_HEIGHT - 54, 170, 50, 'Назад', () => {
       this.scene.start('MenuScene');
-    }, { icon: '←', fontSize: 22 });
+    }, {
+      iconKey: AssetKeys.Icons.Cancel,
+      backgroundKey: AssetKeys.Buttons.Cancel,
+      fontSize: 22
+    });
 
     new Button(this, GAME_WIDTH - 126, GAME_HEIGHT - 54, 190, 50, 'Магазин', () => {
       this.scene.start('ShopScene', { from: 'MapScene' });
-    }, { icon: '💰', fontSize: 22 });
+    }, {
+      iconKey: AssetKeys.Icons.Upgrades,
+      backgroundKey: AssetKeys.Buttons.Map,
+      fontSize: 22
+    });
   }
 }

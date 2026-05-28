@@ -44,6 +44,7 @@ export class GameScene extends Phaser.Scene {
 
   init(data) {
     this.levelId = data.levelId ?? 1;
+    this.playerSetup = data.playerSetup ?? null;
   }
 
   create() {
@@ -55,8 +56,8 @@ export class GameScene extends Phaser.Scene {
     this.profile = StorageService.loadProfile();
     this.battle = createBattleSetup(this.level);
 
-    this.playerBoard = this.battle.player.board;
-    this.playerShips = this.battle.player.ships;
+    this.playerBoard = this.playerSetup?.board ?? this.battle.player.board;
+    this.playerShips = this.playerSetup?.ships ?? this.battle.player.ships;
     this.enemyBoard = this.battle.enemy.board;
     this.enemyShips = this.battle.enemy.ships;
 
@@ -148,7 +149,9 @@ export class GameScene extends Phaser.Scene {
     });
 
     this.exitButton = new Button(this, 1160, 66, 116, 44, 'Меню', () => this.showExitConfirm(), {
-      icon: '←',
+      iconKey: AssetKeys.Icons.Cancel,
+      backgroundKey: AssetKeys.Buttons.Cancel,
+      iconSize: 26,
       fontSize: 18,
       fill: 0x6d3440,
       hoverFill: 0x843e4c
@@ -188,12 +191,19 @@ export class GameScene extends Phaser.Scene {
     }).setOrigin(0.5);
     const stayButton = new Button(this, GAME_WIDTH / 2 - 128, GAME_HEIGHT / 2 + 62, 210, 50, 'Остаться', () => {
       this.closeExitConfirm();
-    }, { fontSize: 21, icon: '×' });
+    }, {
+      fontSize: 21,
+      iconKey: AssetKeys.Icons.Cancel,
+      backgroundKey: AssetKeys.Buttons.Cancel,
+      iconSize: 30
+    });
     const leaveButton = new Button(this, GAME_WIDTH / 2 + 128, GAME_HEIGHT / 2 + 62, 210, 50, 'В меню', () => {
       this.scene.start('MenuScene');
     }, {
       fontSize: 21,
-      icon: '←',
+      iconKey: AssetKeys.Icons.Campaign,
+      backgroundKey: AssetKeys.Buttons.Campaign,
+      iconSize: 30,
       fill: 0x6d3440,
       hoverFill: 0x843e4c
     });
@@ -305,7 +315,9 @@ export class GameScene extends Phaser.Scene {
         fontSize: 22
       }),
       cancel: new Button(this, 804, 623, 170, 52, 'Отмена', () => this.cancelAbility(), {
-        icon: '×',
+        iconKey: AssetKeys.Icons.Cancel,
+        backgroundKey: AssetKeys.Buttons.Cancel,
+        iconSize: 30,
         fontSize: 22,
         fill: 0x6d3440,
         hoverFill: 0x843e4c
@@ -327,7 +339,7 @@ export class GameScene extends Phaser.Scene {
 
   updateStatus() {
     this.goldText.setText(`Золото: ${this.profile.gold}  |  добыча боя: ${this.battleGold}`);
-    this.turnText.setText(this.playerTurn ? 'Ваш ход' : 'Ход капитана-бота');
+    this.turnText.setText(this.playerTurn ? 'Ваш ход' : 'Ход соперника');
     document.body.dataset.turn = this.playerTurn ? 'player' : 'bot';
     document.body.dataset.battleGold = String(this.battleGold);
   }
@@ -600,7 +612,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     if (forceEndTurn || !anyHit) {
-      this.addLog(forceEndTurn ? 'Ход уносит водоворот.' : 'Промах. Бот готовит ответ.');
+      this.addLog(forceEndTurn ? 'Ход уносит водоворот.' : 'Промах. Соперник готовит ответ.');
       this.startBotTurn();
       return;
     }
@@ -761,7 +773,7 @@ export class GameScene extends Phaser.Scene {
 
     if (result.hit) {
       spawnExplosion(this, center.x, center.y);
-      this.addLog(result.sunk ? 'Бот потопил ваш корабль!' : 'Бот попал!');
+      this.addLog(result.sunk ? 'Соперник потопил ваш корабль!' : 'Соперник попал!');
       if (result.sunk) {
         cameraShake(this, 0.008, 260);
         spawnSmoke(this, center.x, center.y);
@@ -770,7 +782,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     spawnSplash(this, center.x, center.y);
-    this.addLog('Бот промахнулся.');
+    this.addLog('Соперник промахнулся.');
   }
 
   async animatePlayerShot(result) {

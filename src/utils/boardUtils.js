@@ -67,7 +67,7 @@ function shuffled(items, rng) {
   return result;
 }
 
-function canPlaceShip(board, x, y, length, direction, gap) {
+export function canPlaceShip(board, x, y, length, direction, gap = true) {
   const size = board.length;
   const cells = Array.from({ length }, (_, index) => ({
     x: direction === 'horizontal' ? x + index : x,
@@ -91,7 +91,7 @@ function canPlaceShip(board, x, y, length, direction, gap) {
   );
 }
 
-function placeShip(board, ship, x, y, direction) {
+export function placeShip(board, ship, x, y, direction) {
   for (let index = 0; index < ship.length; index += 1) {
     const cell = {
       x: direction === 'horizontal' ? x + index : x,
@@ -101,6 +101,35 @@ function placeShip(board, ship, x, y, direction) {
     board[cell.y][cell.x].shipId = ship.id;
     ship.cells.push(cell);
   }
+}
+
+export function createShip(length, id) {
+  return {
+    id,
+    length,
+    cells: [],
+    hits: 0,
+    sunk: false
+  };
+}
+
+export function cloneBoardSetup(board, ships) {
+  const clonedBoard = board.map((row) =>
+    row.map((cell) => ({
+      ...cell,
+      event: null,
+      shot: false,
+      hint: false,
+      sunk: false
+    }))
+  );
+  const clonedShips = ships.map((ship) => ({
+    ...ship,
+    cells: ship.cells.map((cell) => ({ ...cell })),
+    hits: 0,
+    sunk: false
+  }));
+  return { board: clonedBoard, ships: clonedShips };
 }
 
 function buildShipList() {

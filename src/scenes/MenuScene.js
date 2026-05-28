@@ -43,7 +43,7 @@ export class MenuScene extends Phaser.Scene {
       strokeThickness: 8
     }).setOrigin(0.5);
 
-    this.add.text(titleX, 126, 'Карта Сокровищ', {
+    this.add.text(titleX, 126, 'Кампания Сокровищ', {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '34px',
       color: '#f0c35a',
@@ -74,20 +74,52 @@ export class MenuScene extends Phaser.Scene {
     const gap = 76;
 
     new Button(this, x, startY, 330, 58, 'Играть', () => {
-      this.scene.start('MapScene');
-    }, { icon: '⚔', fontSize: 28 });
+      this.scene.start('PreparationScene', { levelId: this.profile.unlockedLevel });
+    }, {
+      iconKey: AssetKeys.Icons.Ready,
+      backgroundKey: AssetKeys.Buttons.Play,
+      fontSize: 28
+    });
 
-    new Button(this, x, startY + gap, 330, 58, 'Карта', () => {
+    new Button(this, x, startY + gap, 330, 58, 'Кампания', () => {
       this.scene.start('MapScene');
-    }, { icon: '🗺', fontSize: 27 });
+    }, {
+      iconKey: AssetKeys.Icons.Campaign,
+      backgroundKey: AssetKeys.Buttons.Campaign,
+      fontSize: 27
+    });
 
-    new Button(this, x, startY + gap * 2, 330, 58, 'Магазин', () => {
+    new Button(this, x, startY + gap * 2, 330, 58, 'Быстрый бой', () => {
+      this.scene.start('PreparationScene', { levelId: 1 });
+    }, {
+      iconKey: AssetKeys.Icons.Ships,
+      backgroundKey: AssetKeys.Buttons.QuickBattle,
+      fontSize: 27
+    });
+
+    new Button(this, x, startY + gap * 3, 330, 58, 'Настройки', () => {
+      Toast.show(this, 'Настройки появятся позже');
+    }, {
+      iconKey: AssetKeys.Icons.Settings,
+      backgroundKey: AssetKeys.Buttons.Settings,
+      fontSize: 27
+    });
+
+    new Button(this, x, startY + gap * 4, 330, 58, 'Магазин', () => {
       this.scene.start('ShopScene', { from: 'MenuScene' });
-    }, { icon: '💰', fontSize: 27 });
+    }, {
+      iconKey: AssetKeys.Icons.Upgrades,
+      backgroundKey: AssetKeys.Buttons.Map,
+      fontSize: 27
+    });
 
-    this.dailyButton = new Button(this, x, startY + gap * 3, 330, 58, '', () => {
+    this.dailyButton = new Button(this, x, startY + gap * 5, 330, 58, '', () => {
       this.claimDailyReward();
-    }, { icon: '🎁', fontSize: 24 });
+    }, {
+      icon: '🎁',
+      backgroundKey: AssetKeys.Buttons.Map,
+      fontSize: 23
+    });
 
     this.refreshDailyButton();
   }
