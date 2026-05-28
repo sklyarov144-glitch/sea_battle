@@ -63,6 +63,7 @@ export class GameScene extends Phaser.Scene {
     this.playerTurn = true;
     this.busy = false;
     this.battleEnded = false;
+    this.exitConfirmOpen = false;
     this.selectedAbility = null;
     this.torpedoAxis = 'row';
     this.battleGold = 0;
@@ -146,7 +147,65 @@ export class GameScene extends Phaser.Scene {
       color: '#fff5d6'
     });
 
+    this.exitButton = new Button(this, 1160, 66, 116, 44, 'Меню', () => this.showExitConfirm(), {
+      icon: '←',
+      fontSize: 18,
+      fill: 0x6d3440,
+      hoverFill: 0x843e4c
+    });
+
     this.updateStatus();
+  }
+
+  showExitConfirm() {
+    if (this.battleEnded || this.exitConfirmOpen) {
+      return;
+    }
+
+    this.exitConfirmOpen = true;
+    this.cancelAbility();
+    this.updateAbilityButtons();
+
+    this.exitOverlay = this.add.container(0, 0).setDepth(500);
+    const dim = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x020812, 0.68);
+    dim.setInteractive();
+    const panel = drawWoodPanel(this, GAME_WIDTH / 2 - 270, GAME_HEIGHT / 2 - 116, 540, 232, {
+      fill: 0x5f381b,
+      alpha: 0.98
+    });
+    const title = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 62, 'Покинуть бой?', {
+      fontFamily: 'Georgia, "Times New Roman", serif',
+      fontSize: '34px',
+      color: '#fff0bf',
+      stroke: '#2b170b',
+      strokeThickness: 4
+    }).setOrigin(0.5);
+    const message = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 12, 'Текущий бой будет завершён без награды.', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '22px',
+      color: '#fff5d6',
+      align: 'center'
+    }).setOrigin(0.5);
+    const stayButton = new Button(this, GAME_WIDTH / 2 - 128, GAME_HEIGHT / 2 + 62, 210, 50, 'Остаться', () => {
+      this.closeExitConfirm();
+    }, { fontSize: 21, icon: '×' });
+    const leaveButton = new Button(this, GAME_WIDTH / 2 + 128, GAME_HEIGHT / 2 + 62, 210, 50, 'В меню', () => {
+      this.scene.start('MenuScene');
+    }, {
+      fontSize: 21,
+      icon: '←',
+      fill: 0x6d3440,
+      hoverFill: 0x843e4c
+    });
+
+    this.exitOverlay.add([dim, panel, title, message, stayButton, leaveButton]);
+  }
+
+  closeExitConfirm() {
+    this.exitConfirmOpen = false;
+    this.exitOverlay?.destroy();
+    this.exitOverlay = null;
+    this.updateAbilityButtons();
   }
 
   createBoards() {
@@ -274,7 +333,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   updateAbilityButtons() {
-    const canAct = this.playerTurn && !this.busy && !this.battleEnded;
+    const canAct = this.playerTurn && !this.busy && !this.battleEnded && !this.exitConfirmOpen;
     document.body.dataset.busy = String(this.busy);
     document.body.dataset.selectedAbility = this.selectedAbility ?? '';
     document.body.dataset.torpedoAxis = this.torpedoAxis;
@@ -298,6 +357,7 @@ export class GameScene extends Phaser.Scene {
     this.abilityButtons.column
       .setEnabled(canAct && this.selectedAbility === 'torpedo')
       .setSelected(this.selectedAbility === 'torpedo' && this.torpedoAxis === 'column');
+    this.exitButton?.setEnabled(!this.battleEnded && !this.exitConfirmOpen);
   }
 
   updateAllBoards() {

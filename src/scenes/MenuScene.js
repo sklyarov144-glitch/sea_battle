@@ -30,7 +30,6 @@ export class MenuScene extends Phaser.Scene {
     this.addTitle();
     this.addStatsPanel();
     this.addMenuButtons();
-    this.addShipsSilhouette();
   }
 
   addTitle() {
@@ -91,30 +90,6 @@ export class MenuScene extends Phaser.Scene {
     }, { icon: '🎁', fontSize: 24 });
 
     this.refreshDailyButton();
-  }
-
-  addShipsSilhouette() {
-    const graphics = this.add.graphics();
-    graphics.setDepth(-2);
-    graphics.fillStyle(0x1a1f28, 0.28);
-    graphics.fillEllipse(246, 598, 290, 58);
-    graphics.fillStyle(0x3a2717, 0.78);
-    graphics.fillRoundedRect(116, 550, 260, 48, 8);
-    graphics.fillTriangle(156, 550, 238, 495, 328, 550);
-    graphics.fillStyle(0xf0c35a, 0.76);
-    graphics.fillTriangle(246, 458, 246, 533, 332, 533);
-    graphics.fillStyle(0xd7f8ff, 0.68);
-    graphics.fillTriangle(236, 472, 162, 535, 236, 535);
-
-    this.tweens.add({
-      targets: graphics,
-      y: 8,
-      angle: 1.3,
-      duration: 2600,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.inOut'
-    });
   }
 
   refreshStats() {
