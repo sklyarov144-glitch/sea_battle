@@ -20,7 +20,7 @@ import {
 import {
   cameraShake,
   createCannonArc,
-  createSeaBackground,
+  createCoverImageBackground,
   drawWoodPanel,
   flyCoins,
   pulseTarget,
@@ -76,8 +76,18 @@ export class GameScene extends Phaser.Scene {
       torpedo: BASE_ABILITY_CHARGES.torpedo + (this.boosts.torpedo ?? 0)
     };
 
-    createSeaBackground(this, { waterSkin: this.profile.selectedSkins.water });
+    createCoverImageBackground(this, AssetKeys.Images.BattleOceanBg, {
+      fallback: { waterSkin: this.profile.selectedSkins.water },
+      overlayAlpha: 0.32,
+      overlayColor: 0x031827,
+      scale: 1.02,
+      toScale: 1.06,
+      panX: -14,
+      panY: 10,
+      duration: 16000
+    });
     this.createLayout();
+    this.createBoardOverlays();
     this.createStatusPanel();
     this.createBoards();
     this.createCenterPanel();
@@ -94,6 +104,18 @@ export class GameScene extends Phaser.Scene {
       enemyCannon: { x: 1115, y: 126 },
       goldCounter: { x: 180, y: 68 }
     };
+  }
+
+  createBoardOverlays() {
+    const overlay = this.add.graphics();
+    overlay.setDepth(-20);
+    overlay.fillStyle(0x041f32, 0.52);
+    overlay.fillRoundedRect(42, 128, 366, 408, 12);
+    overlay.fillRoundedRect(690, 112, 500, 488, 12);
+    overlay.fillRoundedRect(420, 126, 270, 388, 12);
+    overlay.lineStyle(2, 0x65d6ef, 0.22);
+    overlay.strokeRoundedRect(42, 128, 366, 408, 12);
+    overlay.strokeRoundedRect(690, 112, 500, 488, 12);
   }
 
   createStatusPanel() {

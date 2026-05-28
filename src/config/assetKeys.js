@@ -1,4 +1,8 @@
 export const AssetKeys = {
+  Images: {
+    MenuBattleBg: 'menu_battle_bg',
+    BattleOceanBg: 'battle_ocean_bg'
+  },
   Textures: {
     Cannonball: 'cannonball',
     Coin: 'coin',

@@ -1,10 +1,16 @@
 import Phaser from 'phaser';
+import { AssetKeys } from '../config/assetKeys.js';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
 import { createSeaBackground, drawWoodPanel } from '../utils/effects.js';
 
 export class PreloadScene extends Phaser.Scene {
   constructor() {
     super('PreloadScene');
+  }
+
+  preload() {
+    this.load.image(AssetKeys.Images.MenuBattleBg, '/assets/backgrounds/menu_battle_bg.png');
+    this.load.image(AssetKeys.Images.BattleOceanBg, '/assets/backgrounds/battle_ocean_bg.png');
   }
 
   create() {

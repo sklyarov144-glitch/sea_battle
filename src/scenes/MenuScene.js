@@ -1,11 +1,12 @@
 import Phaser from 'phaser';
+import { AssetKeys } from '../config/assetKeys.js';
 import { CAPTAIN_XP_PER_LEVEL, DAILY_REWARD } from '../config/balanceConfig.js';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
 import { StorageService } from '../services/StorageService.js';
 import { Button } from '../ui/Button.js';
 import { ProgressBar } from '../ui/ProgressBar.js';
 import { Toast } from '../ui/Toast.js';
-import { createSeaBackground, drawWoodPanel, flyCoins } from '../utils/effects.js';
+import { createCoverImageBackground, drawWoodPanel, flyCoins } from '../utils/effects.js';
 
 export class MenuScene extends Phaser.Scene {
   constructor() {
@@ -15,7 +16,16 @@ export class MenuScene extends Phaser.Scene {
   create() {
     document.body.dataset.scene = 'MenuScene';
     this.profile = StorageService.loadProfile();
-    createSeaBackground(this, { waterSkin: this.profile.selectedSkins.water });
+    createCoverImageBackground(this, AssetKeys.Images.MenuBattleBg, {
+      fallback: { waterSkin: this.profile.selectedSkins.water },
+      overlayAlpha: 0.42,
+      overlayColor: 0x061827,
+      scale: 1.03,
+      toScale: 1.09,
+      panX: 16,
+      panY: -8,
+      duration: 14500
+    });
 
     this.addTitle();
     this.addStatsPanel();

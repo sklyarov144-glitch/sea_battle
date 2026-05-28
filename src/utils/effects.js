@@ -69,6 +69,49 @@ export function createSeaBackground(scene, options = {}) {
   return scene.add.container(0, 0, [graphics, waveGraphics, foamGraphics]).setDepth(-100);
 }
 
+export function createCoverImageBackground(scene, key, options = {}) {
+  if (!scene.textures.exists(key)) {
+    return createSeaBackground(scene, options.fallback ?? {});
+  }
+
+  const texture = scene.textures.get(key);
+  const source = texture.getSourceImage();
+  const baseScale = Math.max(GAME_WIDTH / source.width, GAME_HEIGHT / source.height);
+  const image = scene.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, key);
+  image.setOrigin(0.5);
+  image.setScale(baseScale * (options.scale ?? 1.04));
+  image.setDepth(options.depth ?? -100);
+
+  if (options.animate !== false) {
+    scene.tweens.add({
+      targets: image,
+      scale: baseScale * (options.toScale ?? 1.1),
+      x: GAME_WIDTH / 2 + (options.panX ?? 18),
+      y: GAME_HEIGHT / 2 + (options.panY ?? 8),
+      duration: options.duration ?? 12000,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.inOut'
+    });
+  }
+
+  const objects = [image];
+  if (options.overlayAlpha && options.overlayAlpha > 0) {
+    const overlay = scene.add.rectangle(
+      GAME_WIDTH / 2,
+      GAME_HEIGHT / 2,
+      GAME_WIDTH,
+      GAME_HEIGHT,
+      options.overlayColor ?? 0x031827,
+      options.overlayAlpha
+    );
+    overlay.setDepth((options.depth ?? -100) + 1);
+    objects.push(overlay);
+  }
+
+  return scene.add.container(0, 0, objects).setDepth(options.depth ?? -100);
+}
+
 export function drawWoodPanel(scene, x, y, width, height, options = {}) {
   const graphics = scene.add.graphics();
   const fill = options.fill ?? 0x6b3f1e;
