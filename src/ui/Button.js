@@ -17,6 +17,7 @@ export class Button extends Phaser.GameObjects.Container {
       stroke: 0xf0c35a,
       fontSize: 24,
       icon: null,
+      radius: 8,
       ...options
     };
     this.enabled = true;
@@ -45,51 +46,77 @@ export class Button extends Phaser.GameObjects.Container {
     }).setOrigin(0.5);
     this.add(this.text);
 
+    this.hitTarget = scene.add.rectangle(0, 0, width, height, 0xffffff, 0.001);
+    this.hitTarget.setOrigin(0.5);
+    this.add(this.hitTarget);
+
     this.setSize(width, height);
-    this.setInteractive(new Phaser.Geom.Rectangle(-width / 2, -height / 2, width, height), Phaser.Geom.Rectangle.Contains);
+    this.updateHitArea();
 
-    this.on('pointerover', () => {
-      this.hovered = true;
-      this.draw();
-      if (this.enabled) {
-        scene.tweens.add({ targets: this, scale: 1.035, duration: 120, ease: 'Sine.easeOut' });
-      }
-    });
-
-    this.on('pointerout', () => {
-      this.hovered = false;
-      this.pressed = false;
-      this.draw();
-      scene.tweens.add({ targets: this, scale: 1, duration: 120, ease: 'Sine.easeOut' });
-    });
-
-    this.on('pointerdown', () => {
-      if (!this.enabled) {
-        return;
-      }
-      this.pressed = true;
-      this.draw();
-      scene.tweens.add({ targets: this, scale: 0.975, duration: 80, ease: 'Sine.easeOut' });
-    });
-
-    this.on('pointerup', () => {
-      if (!this.enabled) {
-        return;
-      }
-      this.pressed = false;
-      this.draw();
-      scene.tweens.add({ targets: this, scale: this.hovered ? 1.035 : 1, duration: 100, ease: 'Sine.easeOut' });
-      this.onClick?.();
-    });
+    this.hitTarget.on('pointerover', () => this.handlePointerOver());
+    this.hitTarget.on('pointerout', () => this.handlePointerOut());
+    this.hitTarget.on('pointerdown', () => this.handlePointerDown());
+    this.hitTarget.on('pointerup', () => this.handlePointerUp());
 
     scene.add.existing(this);
     this.draw();
   }
 
+  updateHitArea() {
+    this.hitTarget.setSize(this.widthValue, this.heightValue);
+    this.hitTarget.setDisplaySize(this.widthValue, this.heightValue);
+    this.hitTarget.setInteractive({
+      useHandCursor: this.enabled,
+      hitArea: new Phaser.Geom.Rectangle(0, 0, this.widthValue, this.heightValue),
+      hitAreaCallback: Phaser.Geom.Rectangle.Contains
+    });
+  }
+
+  handlePointerOver() {
+    this.hovered = true;
+    this.draw();
+
+    if (this.enabled) {
+      this.scene.tweens.killTweensOf(this);
+      this.scene.tweens.add({ targets: this, scale: 1.035, duration: 120, ease: 'Sine.easeOut' });
+    }
+  }
+
+  handlePointerOut() {
+    this.hovered = false;
+    this.pressed = false;
+    this.draw();
+    this.scene.tweens.killTweensOf(this);
+    this.scene.tweens.add({ targets: this, scale: 1, duration: 120, ease: 'Sine.easeOut' });
+  }
+
+  handlePointerDown() {
+    if (!this.enabled) {
+      return;
+    }
+
+    this.pressed = true;
+    this.draw();
+    this.scene.tweens.killTweensOf(this);
+    this.scene.tweens.add({ targets: this, scale: 0.975, duration: 80, ease: 'Sine.easeOut' });
+  }
+
+  handlePointerUp() {
+    if (!this.enabled) {
+      return;
+    }
+
+    this.pressed = false;
+    this.draw();
+    this.scene.tweens.killTweensOf(this);
+    this.scene.tweens.add({ targets: this, scale: this.hovered ? 1.035 : 1, duration: 100, ease: 'Sine.easeOut' });
+    this.onClick?.();
+  }
+
   draw() {
     this.background.clear();
 
-    const radius = 8;
+    const radius = this.options.radius;
     const fill = this.selected
       ? this.options.selectedFill
       : this.enabled
@@ -111,12 +138,14 @@ export class Button extends Phaser.GameObjects.Container {
 
   setEnabled(enabled) {
     this.enabled = enabled;
-    this.disableInteractive();
     if (enabled) {
-      this.setInteractive(
-        new Phaser.Geom.Rectangle(-this.widthValue / 2, -this.heightValue / 2, this.widthValue, this.heightValue),
-        Phaser.Geom.Rectangle.Contains
-      );
+      this.updateHitArea();
+    } else {
+      this.hitTarget.disableInteractive();
+      this.hovered = false;
+      this.pressed = false;
+      this.scene.tweens.killTweensOf(this);
+      this.setScale(1);
     }
     this.draw();
     return this;

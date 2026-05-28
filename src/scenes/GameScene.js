@@ -255,6 +255,7 @@ export class GameScene extends Phaser.Scene {
     const canAct = this.playerTurn && !this.busy && !this.battleEnded;
     document.body.dataset.busy = String(this.busy);
     document.body.dataset.selectedAbility = this.selectedAbility ?? '';
+    document.body.dataset.torpedoAxis = this.torpedoAxis;
     document.body.dataset.abilityCharges = JSON.stringify(this.abilityCharges);
     this.abilityButtons.radar
       .setLabel(`Радар ${this.abilityCharges.radar}`)
