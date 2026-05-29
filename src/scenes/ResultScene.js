@@ -78,7 +78,7 @@ export class ResultScene extends Phaser.Scene {
 
   addPanel() {
     const level = LEVELS[this.result.levelId - 1];
-    drawNavalPanel(this, GAME_WIDTH / 2 - 320, 96, 640, 508, { alpha: 0.96 });
+    drawNavalPanel(this, GAME_WIDTH / 2 - 350, 78, 700, 560, { alpha: 0.96 });
 
     const title = this.result.victory ? t('victory') : t('defeat');
     const subtitle = this.result.victory ? t('captain_chest_opened') : t('crew_saved_loot');
@@ -114,14 +114,15 @@ export class ResultScene extends Phaser.Scene {
       lineSpacing: 8
     }).setOrigin(0.5);
 
-    new Button(this, GAME_WIDTH / 2 - 190, 506, 300, 76, t('to_campaign'), () => {
-      this.scene.start('MapScene');
+    new Button(this, GAME_WIDTH / 2 - 170, 498, 310, 56, 'Главное меню', () => {
+      this.scene.start('MenuScene');
     }, {
       variant: 'secondary',
-      fontSize: 22
+      fontSize: 21,
+      hitPadding: 10
     });
 
-    new Button(this, GAME_WIDTH / 2 + 190, 506, 300, 76, t('play_again'), () => {
+    new Button(this, GAME_WIDTH / 2 + 170, 498, 310, 56, t('play_again'), () => {
       this.scene.start('PreparationScene', {
         levelId: this.result.levelId,
         battleMode: this.result.battleMode,
@@ -129,14 +130,16 @@ export class ResultScene extends Phaser.Scene {
       });
     }, {
       variant: 'primary',
-      fontSize: 22
+      fontSize: 21,
+      hitPadding: 10
     });
 
-    this.doubleButton = new Button(this, GAME_WIDTH / 2, 594, 390, 60, t('double_reward'), () => {
+    this.doubleButton = new Button(this, GAME_WIDTH / 2, 572, 520, 56, 'Удвоить награду за рекламу', () => {
       this.doubleReward();
     }, {
-      fontSize: 22,
-      variant: 'ready'
+      fontSize: 21,
+      variant: 'ready',
+      hitPadding: 10
     });
   }
 
