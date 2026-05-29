@@ -67,8 +67,8 @@ export class MenuScene extends Phaser.Scene {
 
   addMenuButtons() {
     const x = 600;
-    const startY = 142;
-    const gap = 78;
+    const startY = 170;
+    const gap = 86;
     const width = 336;
     const height = 58;
 
@@ -84,19 +84,11 @@ export class MenuScene extends Phaser.Scene {
       this.scene.start('MapScene');
     }, { variant: 'secondary', fontSize: 23 });
 
-    new Button(this, x, startY + gap * 2, width, height, t('quick_battle'), () => {
-      this.scene.start('PreparationScene', {
-        levelId: 1,
-        battleMode: 'quick',
-        returnScene: 'MenuScene'
-      });
-    }, { variant: 'secondary', fontSize: 22 });
-
-    new Button(this, x, startY + gap * 3, width, height, t('arsenal'), () => {
+    new Button(this, x, startY + gap * 2, width, height, t('shop'), () => {
       this.scene.start('ShopScene', { from: 'MenuScene' });
     }, { variant: 'secondary', fontSize: 22 });
 
-    new Button(this, x, startY + gap * 4, width, height, t('settings'), () => {
+    new Button(this, x, startY + gap * 3, width, height, t('settings'), () => {
       this.openSettings();
     }, { variant: 'secondary', fontSize: 22 });
   }

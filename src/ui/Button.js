@@ -79,9 +79,10 @@ export class Button extends Phaser.GameObjects.Container {
   }
 
   updateHitArea() {
-    const width = this.widthValue;
-    const height = this.heightValue;
+    const width = Math.ceil(this.widthValue);
+    const height = Math.ceil(this.heightValue);
     const hitArea = new Phaser.Geom.Rectangle(-width / 2, -height / 2, width, height);
+    this.setSize(width, height);
     this.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains);
     if (this.input) {
       this.input.hitArea = hitArea;

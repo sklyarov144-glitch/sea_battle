@@ -22,7 +22,6 @@ import {
 } from '../utils/boardUtils.js';
 import {
   cameraShake,
-  createCannonArc,
   createCoverImageBackground,
   pulseTarget,
   spawnExplosion,
@@ -99,15 +98,16 @@ export class GameScene extends Phaser.Scene {
   createLayout() {
     const enemySize = this.enemyBoard?.length ?? 8;
     const playerSize = this.playerBoard?.length ?? 8;
-    const enemyCell = Math.floor(Math.min(52, 432 / enemySize));
+    const enemyY = 140;
+    const enemyCell = Math.floor(Math.min(52, (568 - enemyY) / enemySize));
     const playerCell = Math.floor(Math.min(42, 336 / playerSize));
     const enemyBoardWidth = enemySize * enemyCell;
     const playerBoardWidth = playerSize * playerCell;
     this.layout = {
       player: { x: Math.round(70 + (336 - playerBoardWidth) / 2), y: 205, cell: playerCell, size: playerSize },
-      enemy: { x: Math.round(742 + (432 - enemyBoardWidth) / 2), y: 128, cell: enemyCell, size: enemySize },
-      playerCannon: { x: 406, y: 570 },
-      enemyCannon: { x: 1115, y: 126 }
+      enemy: { x: Math.round(742 + (432 - enemyBoardWidth) / 2), y: enemyY, cell: enemyCell, size: enemySize },
+      playerCannon: { x: 388, y: 535 },
+      enemyCannon: { x: 1170, y: 132 }
     };
   }
 
@@ -256,7 +256,7 @@ export class GameScene extends Phaser.Scene {
       strokeThickness: 2
     }).setOrigin(0.5);
 
-    this.add.text(958, 104, t('enemy_waters'), {
+    this.add.text(958, 116, t('enemy_waters'), {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '30px',
       color: '#fff0bf',
@@ -266,6 +266,30 @@ export class GameScene extends Phaser.Scene {
 
     this.playerCells = this.createBoardCells('player', this.layout.player);
     this.enemyCells = this.createBoardCells('enemy', this.layout.enemy);
+    this.createMortars();
+  }
+
+  createMortars() {
+    this.drawMortar(this.layout.playerCannon.x, this.layout.playerCannon.y, 0.28);
+    this.drawMortar(this.layout.enemyCannon.x, this.layout.enemyCannon.y, Math.PI + 0.35);
+  }
+
+  drawMortar(x, y, rotation) {
+    const g = this.add.graphics().setDepth(35);
+    g.setPosition(x, y);
+    g.setRotation(rotation);
+    g.fillStyle(0x091522, 0.94);
+    g.fillRoundedRect(-21, -14, 44, 28, 9);
+    g.lineStyle(3, 0x9c6b2f, 0.95);
+    g.strokeRoundedRect(-21, -14, 44, 28, 9);
+    g.fillStyle(0x1f3344, 0.98);
+    g.fillRoundedRect(4, -9, 34, 18, 8);
+    g.lineStyle(2, 0xf0c35a, 0.75);
+    g.strokeRoundedRect(4, -9, 34, 18, 8);
+    g.fillStyle(0xd7a748, 0.85);
+    g.fillCircle(-18, 14, 5);
+    g.fillCircle(18, 14, 5);
+    return g;
   }
 
   createBoardCells(kind, layout) {
@@ -367,7 +391,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   updateStatus() {
-    this.goldText.setText(`Золото: ${this.profile.gold}`);
+    this.goldText.setText('');
     this.turnText.setText(this.playerTurn ? t('your_turn') : t('opponent_turn'));
     document.body.dataset.turn = this.playerTurn ? 'player' : 'bot';
     document.body.dataset.battleGold = String(this.battleGold);
@@ -660,7 +684,8 @@ export class GameScene extends Phaser.Scene {
     this.playerTurn = false;
     this.busy = true;
     this.updateAllBoards();
-    await this.wait(this.level.botDelay);
+    this.addLog('Соперник целится...');
+    await this.wait(Phaser.Math.Between(1000, 4000));
 
     while (!this.battleEnded) {
       const shot = chooseBotShot(this.playerBoard, this.playerShips, this.level.botSkill);
@@ -719,13 +744,47 @@ export class GameScene extends Phaser.Scene {
   async animatePlayerShot(result) {
     const target = this.getEnemyCellCenter(result.x, result.y);
     SoundService.playSfx(this, SoundService.keys.sfx_shot);
-    await createCannonArc(this, this.layout.playerCannon, target, { duration: 380, arc: 110, scale: 0.82 });
+    await this.createProjectileArc(this.layout.playerCannon, target, { duration: 380, arc: 110, scale: 0.82 });
   }
 
   async animateBotShot(result) {
     const target = this.getPlayerCellCenter(result.x, result.y);
     SoundService.playSfx(this, SoundService.keys.sfx_shot);
-    await createCannonArc(this, this.layout.enemyCannon, target, { duration: 420, arc: 92, scale: 0.72 });
+    await this.createProjectileArc(this.layout.enemyCannon, target, { duration: 420, arc: 92, scale: 0.72 });
+  }
+
+  createProjectileArc(from, to, options = {}) {
+    return new Promise((resolve) => {
+      const ball = this.add.image(from.x, from.y, AssetKeys.Textures.Cannonball);
+      ball.setDepth(options.depth ?? 80);
+      ball.setScale(options.scale ?? 1);
+      let finished = false;
+      const finish = () => {
+        if (finished) {
+          return;
+        }
+        finished = true;
+        ball.destroy();
+        resolve();
+      };
+
+      this.tweens.addCounter({
+        from: 0,
+        to: 1,
+        duration: options.duration ?? 420,
+        ease: 'Cubic.easeOut',
+        onUpdate: (tween) => {
+          const value = tween.getValue();
+          const x = Phaser.Math.Linear(from.x, to.x, value);
+          const y = Phaser.Math.Linear(from.y, to.y, value) - Math.sin(value * Math.PI) * (options.arc ?? 95);
+          ball.setPosition(Math.round(x), Math.round(y));
+          ball.setScale((options.scale ?? 1) * (1 + Math.sin(value * Math.PI) * 0.18));
+        },
+        onComplete: finish
+      });
+
+      window.setTimeout(finish, (options.duration ?? 420) + 700);
+    });
   }
 
   getEnemyCellCenter(x, y) {
@@ -743,8 +802,11 @@ export class GameScene extends Phaser.Scene {
   }
 
   addLog(message) {
+    if (this.logs[0] === message) {
+      return;
+    }
     this.logs.unshift(message);
-    this.logs = this.logs.slice(0, 6);
+    this.logs = this.logs.slice(0, 8);
     document.body.dataset.lastLog = message;
     if (this.logText) {
       this.logText.setText(this.logs.join('\n'));

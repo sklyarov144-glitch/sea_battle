@@ -112,15 +112,11 @@ export class PreparationScene extends Phaser.Scene {
         const graphics = this.add.graphics();
         const zone = this.add.zone(px + this.boardLayout.cell / 2, py + this.boardLayout.cell / 2, this.boardLayout.cell - 2, this.boardLayout.cell - 2);
         zone.setInteractive({ useHandCursor: true });
-        zone.on('pointerover', () => {
-          this.previewCells = this.getPlacementCells(x, y);
-          this.updateBoard();
-        });
-        zone.on('pointerout', () => {
-          this.previewCells = [];
-          this.updateBoard();
-        });
+        this.input.setDraggable(zone);
         zone.on('pointerup', () => this.tryPlaceSelectedShip(x, y));
+        zone.on('dragstart', (pointer) => this.startPlacedShipDrag(x, y, pointer));
+        zone.on('drag', (pointer) => this.updateShipDrag(pointer));
+        zone.on('dragend', (pointer) => this.endPlacedShipDrag(pointer));
         this.cellViews[y][x] = { graphics, zone };
       }
     }
@@ -135,39 +131,39 @@ export class PreparationScene extends Phaser.Scene {
     });
 
     this.shipItems = this.shipTemplates.map((template, index) => {
-      const x = 794 + (index % 2) * 214;
-      const y = 246 + Math.floor(index / 2) * 62;
+      const x = 784 + (index % 2) * 190;
+      const y = 244 + Math.floor(index / 2) * 54;
       return this.createShipItem(template, index, x, y);
     });
   }
 
   addControls() {
-    drawNavalPanel(this, 690, 414, 482, 226, { title: t('commands'), titleSize: 24 });
-    this.directionButton = new Button(this, 810, 470, 220, 46, t('rotate_horizontal'), () => {
+    drawNavalPanel(this, 690, 420, 482, 208, { title: t('commands'), titleSize: 22 });
+    this.directionButton = new Button(this, 810, 474, 202, 42, t('rotate_horizontal'), () => {
       this.direction = this.direction === 'horizontal' ? 'vertical' : 'horizontal';
       this.directionButton.setLabel(this.direction === 'horizontal' ? t('rotate_horizontal') : t('rotate_vertical'));
       this.updateBoard();
     }, {
-      fontSize: 16,
+      fontSize: 14,
       variant: 'secondary',
       small: true
     });
 
-    this.autoButton = new Button(this, 1052, 470, 218, 46, t('auto_place'), () => this.autoPlace(), {
-      fontSize: 16,
+    this.autoButton = new Button(this, 1056, 474, 204, 42, t('auto_place'), () => this.autoPlace(), {
+      fontSize: 14,
       variant: 'primary',
       small: true
     });
 
-    this.readyButton = new Button(this, 936, 540, 318, 58, t('ready_to_battle'), () => this.startBattle(), {
-      fontSize: 20,
+    this.readyButton = new Button(this, 936, 535, 300, 50, t('ready_to_battle'), () => this.startBattle(), {
+      fontSize: 18,
       variant: 'ready'
     });
 
-    new Button(this, 936, 604, 218, 44, t('back'), () => {
+    new Button(this, 936, 594, 200, 38, t('back'), () => {
       this.scene.start(this.returnScene ?? 'MenuScene');
     }, {
-      fontSize: 16,
+      fontSize: 14,
       variant: 'danger',
       small: true
     });
@@ -188,8 +184,8 @@ export class PreparationScene extends Phaser.Scene {
   createShipItem(template, index, x, y) {
     const container = this.add.container(x, y);
     const graphics = this.add.graphics();
-    const width = 128;
-    const height = 42;
+    const width = 116;
+    const height = 38;
     container.add(graphics);
     container.setSize(width, height);
     container.setInteractive(
@@ -216,8 +212,8 @@ export class PreparationScene extends Phaser.Scene {
   }
 
   drawMiniShip(graphics, length, x, y, options = {}) {
-    const segment = options.segment ?? 24;
-    const gap = options.gap ?? 3;
+    const segment = options.segment ?? 19;
+    const gap = options.gap ?? 2;
     const height = options.height ?? 20;
     const totalWidth = length * segment + (length - 1) * gap;
     const left = x - totalWidth / 2;
@@ -242,14 +238,14 @@ export class PreparationScene extends Phaser.Scene {
     const placed = this.placedTemplateIds.has(template.id);
     const selected = !placed && index === this.selectedTemplateIndex;
     graphics.clear();
-    graphics.fillStyle(selected ? 0x113a58 : 0x061827, placed ? 0.34 : 0.86);
+    graphics.fillStyle(0x061827, placed ? 0.3 : 0.86);
     graphics.fillRoundedRect(-width / 2, -height / 2, width, height, 10);
-    graphics.lineStyle(selected ? 3 : 1, selected ? 0xf8d77a : 0x6db7d4, placed ? 0.35 : 0.86);
+    graphics.lineStyle(selected ? 2 : 1, selected ? 0xf8d77a : 0x6db7d4, placed ? 0.35 : 0.86);
     graphics.strokeRoundedRect(-width / 2 + 1, -height / 2 + 1, width - 2, height - 2, 10);
     this.drawMiniShip(graphics, template.length, 0, 0, {
       alpha: placed ? 0.36 : 0.96,
-      segment: 22,
-      height: 18,
+      segment: 18,
+      height: 15,
       fill: placed ? 0x46525b : 0x9a642f,
       stroke: placed ? 0x77828f : 0xf0c35a
     });
@@ -273,6 +269,33 @@ export class PreparationScene extends Phaser.Scene {
     this.updateShipList();
     this.ghostShip = this.add.graphics().setDepth(200);
     this.updateShipGhost(pointer.x, pointer.y, true);
+  }
+
+  startPlacedShipDrag(x, y, pointer) {
+    const shipId = this.board[y][x].shipId;
+    if (shipId === null) {
+      return;
+    }
+    this.ensureShipTemplateIds();
+    const ship = this.ships.find((item) => item.id === shipId);
+    if (!ship) {
+      return;
+    }
+    const template = this.shipTemplates.find((item) => item.id === ship.templateId);
+    if (!template) {
+      return;
+    }
+    this.removeShipFromBoard(ship);
+    this.ships = this.ships.filter((item) => item.id !== ship.id);
+    this.placedTemplateIds.delete(template.id);
+    this.selectedTemplateIndex = this.shipTemplates.findIndex((item) => item.id === template.id);
+    this.draggingTemplate = template;
+    this.dragRestore = { ship, template };
+    this.ghostShip = this.add.graphics().setDepth(200);
+    this.updateShipGhost(pointer.x, pointer.y, true);
+    this.updateBoard();
+    this.updateShipList();
+    this.updateReadyState();
   }
 
   updateShipDrag(pointer) {
@@ -305,6 +328,33 @@ export class PreparationScene extends Phaser.Scene {
     }
   }
 
+  endPlacedShipDrag(pointer) {
+    if (!this.dragRestore) {
+      return;
+    }
+    const { template, ship } = this.dragRestore;
+    const cell = this.getCellFromPointer(pointer);
+    const valid = Boolean(cell && canPlaceShip(this.board, cell.x, cell.y, template.length, this.direction, true));
+    this.ghostShip?.destroy();
+    this.ghostShip = null;
+    this.draggingTemplate = null;
+    this.previewCells = [];
+    this.dragRestore = null;
+
+    if (valid) {
+      this.placeTemplate(template, cell.x, cell.y);
+    } else {
+      ship.cells = [];
+      placeShip(this.board, ship, ship.origin.x, ship.origin.y, ship.direction);
+      this.ships.push(ship);
+      this.placedTemplateIds.add(template.id);
+      Toast.show(this, t('cannot_place'), { y: 112 });
+      this.updateBoard();
+      this.updateShipList();
+      this.updateReadyState();
+    }
+  }
+
   updateShipGhost(x, y, valid) {
     if (!this.ghostShip || !this.draggingTemplate) {
       return;
@@ -313,8 +363,8 @@ export class PreparationScene extends Phaser.Scene {
     this.ghostShip.setPosition(x, y);
     this.drawMiniShip(this.ghostShip, this.draggingTemplate.length, 0, 0, {
       alpha: 0.78,
-      segment: 24,
-      height: 20,
+      segment: 20,
+      height: 17,
       fill: valid ? 0x2fbf71 : 0xb93632,
       stroke: valid ? 0xb8ffd2 : 0xffb0a8
     });
@@ -331,7 +381,7 @@ export class PreparationScene extends Phaser.Scene {
   }
 
   getPlacementCells(x, y, template = this.selectedTemplate) {
-    if (!template || this.placedTemplateIds.has(template.id)) {
+    if (!template || (!this.dragRestore && this.placedTemplateIds.has(template.id))) {
       return [];
     }
     return Array.from({ length: template.length }, (_, index) => ({
@@ -360,6 +410,9 @@ export class PreparationScene extends Phaser.Scene {
       return;
     }
     const ship = createShip(template.length, this.nextShipId);
+    ship.templateId = template.id;
+    ship.direction = this.direction;
+    ship.origin = { x, y };
     this.nextShipId += 1;
     placeShip(this.board, ship, x, y, this.direction);
     this.ships.push(ship);
@@ -388,6 +441,7 @@ export class PreparationScene extends Phaser.Scene {
     const setup = generateFleet(BOARD_SIZE);
     this.board = setup.board;
     this.ships = setup.ships;
+    this.assignTemplatesToShips();
     this.placedTemplateIds = new Set(this.shipTemplates.map((template) => template.id));
     this.selectedTemplateIndex = 0;
     Toast.show(this, t('fleet_ready'), { y: 112 });
@@ -401,9 +455,9 @@ export class PreparationScene extends Phaser.Scene {
     const errorKeys = new Set((this.errorCells ?? []).map((cell) => `${cell.x}:${cell.y}`));
     const previewOrigin = this.previewCells[0];
     const previewValid = Boolean(
-      this.selectedTemplate &&
+      this.draggingTemplate &&
       previewOrigin &&
-      canPlaceShip(this.board, previewOrigin.x, previewOrigin.y, this.selectedTemplate.length, this.direction, true)
+      canPlaceShip(this.board, previewOrigin.x, previewOrigin.y, this.draggingTemplate.length, this.direction, true)
     );
 
     for (let y = 0; y < BOARD_SIZE; y += 1) {
@@ -457,6 +511,33 @@ export class PreparationScene extends Phaser.Scene {
 
   updateShipList() {
     this.shipItems.forEach((item) => this.drawShipItem(item));
+  }
+
+  removeShipFromBoard(ship) {
+    ship.cells.forEach((cell) => {
+      this.board[cell.y][cell.x].shipId = null;
+    });
+  }
+
+  assignTemplatesToShips() {
+    const used = new Set();
+    this.ships.forEach((ship) => {
+      const template = this.shipTemplates.find((item) => item.length === ship.length && !used.has(item.id));
+      if (template) {
+        used.add(template.id);
+        ship.templateId = template.id;
+      }
+      const first = ship.cells[0] ?? { x: 0, y: 0 };
+      const second = ship.cells[1] ?? first;
+      ship.direction = first.y === second.y ? 'horizontal' : 'vertical';
+      ship.origin = { ...first };
+    });
+  }
+
+  ensureShipTemplateIds() {
+    if (this.ships.some((ship) => !ship.templateId)) {
+      this.assignTemplatesToShips();
+    }
   }
 
   updateReadyState() {
