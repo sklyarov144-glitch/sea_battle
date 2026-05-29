@@ -1,5 +1,8 @@
 import { CAPTAIN_XP_PER_LEVEL } from '../config/balanceConfig.js';
 import { CareerService } from './CareerService.js';
+import { EconomyService, createDefaultUpgrades } from './EconomyService.js';
+
+CareerService.setEconomyService(EconomyService);
 
 const STORAGE_KEY = 'pirateSeaBattle.profile.v1';
 
@@ -10,6 +13,7 @@ const DEFAULT_PROFILE = {
   captainLevel: 1,
   careerXp: 0,
   careerRankIndex: 0,
+  upgrades: createDefaultUpgrades(),
   purchasedItems: {
     radarCharge: 0,
     barrageCharge: 0,
@@ -57,6 +61,10 @@ function mergeProfile(saved) {
     settings: {
       ...profile.settings,
       ...(saved?.settings ?? {})
+    },
+    upgrades: {
+      ...profile.upgrades,
+      ...(saved?.upgrades ?? {})
     }
   };
 }
@@ -73,7 +81,7 @@ function hasLocalStorage() {
 function normalizeCaptainLevel(profile) {
   const levelFromXp = Math.floor(profile.captainXp / CAPTAIN_XP_PER_LEVEL) + 1;
   profile.captainLevel = Math.max(1, levelFromXp);
-  return CareerService.normalize(profile);
+  return CareerService.normalize(EconomyService.normalize(profile));
 }
 
 function stripTransientFields(profile) {
@@ -199,6 +207,10 @@ export const StorageService = {
 
   buyItem(item) {
     return this.updateProfile((profile) => {
+      if (item.type === 'upgrade') {
+        return EconomyService.buyUpgrade(profile, item.id);
+      }
+
       if (profile.gold < item.price) {
         profile.__purchaseStatus = 'notEnoughGold';
         return profile;
@@ -243,7 +255,7 @@ export const StorageService = {
 
       profile.dailyRewardLastClaim = today;
       const previousRankIndex = profile.careerRankIndex ?? CareerService.getRankIndex(profile);
-      const rewardGold = Math.floor(80 + Math.random() * 71);
+      const rewardGold = EconomyService.getDailyGold(profile);
       const xpBonus = Math.random() < 0.35 ? 10 : 0;
       CareerService.addGold(profile, rewardGold);
       if (xpBonus > 0) {
@@ -253,6 +265,29 @@ export const StorageService = {
       profile.__dailyRewardClaimed = true;
       profile.__dailyRewardGold = rewardGold;
       profile.__dailyRewardXp = xpBonus;
+      return profile;
+    });
+  },
+
+  claimRewardedChest() {
+    return this.updateProfile((profile) => {
+      const rewardGold = EconomyService.getRewardedChestGold(profile);
+      CareerService.addGold(profile, rewardGold);
+      profile.__rewardedChestGold = rewardGold;
+      return profile;
+    });
+  },
+
+  grantFreeAbilityCharge(ability = 'radar') {
+    return this.updateProfile((profile) => {
+      const itemMap = {
+        radar: 'radarCharge',
+        barrage: 'barrageCharge',
+        torpedo: 'torpedoCharge'
+      };
+      const itemId = itemMap[ability] ?? itemMap.radar;
+      profile.purchasedItems[itemId] = (profile.purchasedItems[itemId] ?? 0) + 1;
+      profile.__freeAbility = ability;
       return profile;
     });
   },

@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { AssetKeys } from '../config/assetKeys.js';
 import { LEVELS } from '../config/balanceConfig.js';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
+import { EconomyService } from '../services/EconomyService.js';
 import { LocalizationService, t } from '../services/LocalizationService.js';
 import { SoundService } from '../services/SoundService.js';
 import { StorageService } from '../services/StorageService.js';
@@ -54,9 +55,12 @@ export class ResultScene extends Phaser.Scene {
 
   applyRewards() {
     const totalGold = this.result.rewardGold + this.result.chestGold + this.result.battleGold;
-    const careerXp = this.result.victory
-      ? (this.result.battleMode === 'quick' ? 20 : 30)
-      : 5;
+    const profileBeforeRewards = StorageService.loadProfile();
+    const careerXp = this.result.rewardXp || EconomyService.getBattleXpReward({
+      victory: this.result.victory,
+      battleMode: this.result.battleMode,
+      profile: profileBeforeRewards
+    });
     this.appliedGold = totalGold;
     this.appliedXp = careerXp;
     const profile = StorageService.applyBattleResult({
@@ -161,6 +165,20 @@ export class ResultScene extends Phaser.Scene {
       Toast.show(this, `+${this.appliedGold} ${t('gold').toLowerCase()}`);
       SoundService.playSfx(this, SoundService.keys.sfx_reward);
       flyCoins(this, { x: GAME_WIDTH / 2, y: 574 }, { x: GAME_WIDTH / 2, y: 380 }, 16);
+    });
+  }
+
+  continueAfterDefeat() {
+    if (this.result.victory || this.continuedAfterDefeat) {
+      return;
+    }
+    YandexService.showRewardedAd(() => {
+      this.continuedAfterDefeat = true;
+      this.scene.start('PreparationScene', {
+        levelId: this.result.levelId,
+        battleMode: this.result.battleMode,
+        returnScene: this.result.battleMode === 'quick' ? 'MenuScene' : 'MapScene'
+      });
     });
   }
 

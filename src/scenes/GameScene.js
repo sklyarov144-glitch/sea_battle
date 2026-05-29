@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { AssetKeys } from '../config/assetKeys.js';
 import { BASE_ABILITY_CHARGES, LEVELS } from '../config/balanceConfig.js';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
+import { EconomyService } from '../services/EconomyService.js';
 import { LocalizationService, t } from '../services/LocalizationService.js';
 import { SoundService } from '../services/SoundService.js';
 import { StorageService } from '../services/StorageService.js';
@@ -74,15 +75,15 @@ export class GameScene extends Phaser.Scene {
     this.exitConfirmOpen = false;
     this.selectedAbility = null;
     this.torpedoAxis = 'row';
-    this.battleGold = 0;
+    this.battleGold = EconomyService.getStartingBattleGold(this.profile);
     this.logs = [];
     this.hoveredEnemyCell = null;
     this.radarHighlights = new Map();
 
     this.abilityCharges = {
-      radar: BASE_ABILITY_CHARGES.radar + (this.boosts.radar ?? 0),
-      barrage: BASE_ABILITY_CHARGES.barrage + (this.boosts.barrage ?? 0),
-      torpedo: BASE_ABILITY_CHARGES.torpedo + (this.boosts.torpedo ?? 0)
+      radar: BASE_ABILITY_CHARGES.radar + (this.boosts.radar ?? 0) + EconomyService.getAbilityBonus(this.profile, 'radar'),
+      barrage: BASE_ABILITY_CHARGES.barrage + (this.boosts.barrage ?? 0) + EconomyService.getAbilityBonus(this.profile, 'barrage'),
+      torpedo: BASE_ABILITY_CHARGES.torpedo + (this.boosts.torpedo ?? 0) + EconomyService.getAbilityBonus(this.profile, 'torpedo')
     };
 
     createCoverImageBackground(this, AssetKeys.Images.BattleOceanBg, {
@@ -877,14 +878,28 @@ export class GameScene extends Phaser.Scene {
       this.addLog('Флот разбит. Команда отступает.');
     }
 
-    const rewards = victory ? this.level.rewards : this.level.consolation;
+    const profile = StorageService.loadProfile();
+    const rewardGold = EconomyService.getBattleGoldReward({
+      victory,
+      battleMode: this.battleMode,
+      levelId: this.level.id,
+      profile
+    });
+    const rewardXp = EconomyService.getBattleXpReward({
+      victory,
+      battleMode: this.battleMode,
+      profile
+    });
+    const extraChestGold = victory && EconomyService.rollExtraChest(profile)
+      ? EconomyService.getRewardedChestGold(profile)
+      : 0;
     this.time.delayedCall(900, () => {
       this.scene.start('ResultScene', {
         victory,
         levelId: this.level.id,
-        rewardGold: rewards.gold,
-        rewardXp: rewards.xp,
-        chestGold: victory ? this.level.rewards.chest : 0,
+        rewardGold,
+        rewardXp,
+        chestGold: extraChestGold,
         battleGold: this.battleGold,
         battleMode: this.battleMode
       });

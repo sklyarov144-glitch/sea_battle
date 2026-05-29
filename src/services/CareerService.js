@@ -19,6 +19,12 @@ export const CAREER_RANKS = [
 ];
 
 export const CareerService = {
+  economy: null,
+
+  setEconomyService(service) {
+    this.economy = service;
+  },
+
   normalize(profile) {
     if (typeof profile.careerXp !== 'number') {
       profile.careerXp = profile.captainXp ?? 0;
@@ -82,7 +88,9 @@ export const CareerService = {
     const newRankIndex = this.getRankIndex(profile);
     profile.careerRankIndex = newRankIndex;
     if (newRankIndex > previousRankIndex) {
-      const rewardGold = 50 + newRankIndex * 10;
+      const rewardGold = this.economy?.getRankGoldReward
+        ? this.economy.getRankGoldReward(newRankIndex)
+        : Math.max(50, Math.min(300, 50 + newRankIndex * 16));
       this.addGold(profile, rewardGold);
       profile.__rankUp = {
         rankName: CAREER_RANKS[newRankIndex].name,
