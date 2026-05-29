@@ -123,20 +123,23 @@ export class PreparationScene extends Phaser.Scene {
   }
 
   addShipList() {
-    drawNavalPanel(this, 690, 132, 482, 260, { title: t('ships'), titleSize: 28 });
-    this.add.text(724, 188, t('ships_hint'), {
+    drawNavalPanel(this, 690, 132, 482, 260, { title: 'Текущий корабль', titleSize: 26 });
+    this.currentShipText = this.add.text(724, 186, '', {
       fontFamily: 'Georgia, "Times New Roman", serif',
-      fontSize: '16px',
+      fontSize: '22px',
+      color: '#fff0bf',
+      fixedWidth: 402,
+      wordWrap: { width: 402, useAdvancedWrap: true }
+    });
+    this.remainingShipText = this.add.text(724, 254, '', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '18px',
       color: '#d9fbff',
       fixedWidth: 402,
       wordWrap: { width: 402, useAdvancedWrap: true }
     });
-
-    this.shipItems = this.shipTemplates.map((template, index) => {
-      const x = 778 + (index % 2) * 188;
-      const y = 258 + Math.floor(index / 2) * 50;
-      return this.createShipItem(template, index, x, y);
-    });
+    this.currentShipPreview = this.add.graphics();
+    this.updateShipList();
   }
 
   addControls() {
@@ -148,21 +151,18 @@ export class PreparationScene extends Phaser.Scene {
     }, {
       fontSize: 12,
       variant: 'secondary',
-      small: true,
-      hitPadding: 10
+      small: true
     });
 
     this.autoButton = new Button(this, 1036, 486, 184, 38, t('auto_place'), () => this.autoPlace(), {
       fontSize: 12,
       variant: 'primary',
-      small: true,
-      hitPadding: 10
+      small: true
     });
 
     this.readyButton = new Button(this, 919, 540, 256, 42, t('ready_to_battle'), () => this.startBattle(), {
       fontSize: 15,
-      variant: 'ready',
-      hitPadding: 10
+      variant: 'ready'
     });
 
     new Button(this, 919, 594, 176, 34, t('back'), () => {
@@ -170,8 +170,7 @@ export class PreparationScene extends Phaser.Scene {
     }, {
       fontSize: 13,
       variant: 'danger',
-      small: true,
-      hitPadding: 10
+      small: true
     });
   }
 
@@ -179,8 +178,7 @@ export class PreparationScene extends Phaser.Scene {
     new Button(this, 1148, 67, 132, 42, t('settings'), () => this.openSettings(), {
       variant: 'secondary',
       fontSize: 14,
-      small: true,
-      hitPadding: 12
+      small: true
     });
   }
 
@@ -399,6 +397,11 @@ export class PreparationScene extends Phaser.Scene {
   }
 
   tryPlaceSelectedShip(x, y) {
+    if (this.board[y][x].shipId !== null) {
+      this.removePlacedShip(this.board[y][x].shipId);
+      return;
+    }
+
     const template = this.selectedTemplate;
     if (!template || this.placedTemplateIds.has(template.id)) {
       return;
@@ -453,6 +456,33 @@ export class PreparationScene extends Phaser.Scene {
     this.placedTemplateIds = new Set(this.shipTemplates.map((template) => template.id));
     this.selectedTemplateIndex = 0;
     Toast.show(this, t('fleet_ready'), { y: 112 });
+    this.updateBoard();
+    this.updateShipList();
+    this.updateReadyState();
+  }
+
+  autoPlaceRemaining() {
+    const remaining = this.shipTemplates.filter((template) => !this.placedTemplateIds.has(template.id));
+    remaining.forEach((template) => {
+      for (let attempt = 0; attempt < 240; attempt += 1) {
+        const direction = Phaser.Math.Between(0, 1) === 0 ? 'horizontal' : 'vertical';
+        const x = Phaser.Math.Between(0, BOARD_SIZE - 1);
+        const y = Phaser.Math.Between(0, BOARD_SIZE - 1);
+        if (!canPlaceShip(this.board, x, y, template.length, direction, true)) {
+          continue;
+        }
+        const ship = createShip(template.length, this.nextShipId);
+        ship.templateId = template.id;
+        ship.direction = direction;
+        ship.origin = { x, y };
+        this.nextShipId += 1;
+        placeShip(this.board, ship, x, y, direction);
+        this.ships.push(ship);
+        this.placedTemplateIds.add(template.id);
+        break;
+      }
+    });
+    this.selectNextAvailableShip();
     this.updateBoard();
     this.updateShipList();
     this.updateReadyState();
@@ -518,13 +548,53 @@ export class PreparationScene extends Phaser.Scene {
   }
 
   updateShipList() {
-    this.shipItems.forEach((item) => this.drawShipItem(item));
+    const current = this.selectedTemplate;
+    const remaining = this.shipTemplates.length - this.placedTemplateIds.size;
+    if (current && remaining > 0) {
+      this.currentShipText.setText(`Сейчас ставим: ${current.length}-палубный корабль`);
+      this.remainingShipText.setText(`Осталось поставить: ${remaining}\nКликните по клетке поля. Уже поставленный корабль можно снять кликом или перетащить.`);
+    } else {
+      this.currentShipText.setText('Флот готов');
+      this.remainingShipText.setText('Можно переставить корабли или нажать “Готов к бою”.');
+    }
+    this.currentShipPreview.clear();
+    if (current && remaining > 0) {
+      this.drawMiniShip(this.currentShipPreview, current.length, 930, 328, {
+        segment: 30,
+        gap: 4,
+        height: 26,
+        fill: 0x9a642f,
+        stroke: 0xf0c35a
+      });
+    }
   }
 
   removeShipFromBoard(ship) {
     ship.cells.forEach((cell) => {
       this.board[cell.y][cell.x].shipId = null;
     });
+  }
+
+  removePlacedShip(shipId) {
+    this.ensureShipTemplateIds();
+    const ship = this.ships.find((item) => item.id === shipId);
+    if (!ship) {
+      return;
+    }
+    this.removeShipFromBoard(ship);
+    this.ships = this.ships.filter((item) => item.id !== shipId);
+    if (ship.templateId) {
+      this.placedTemplateIds.delete(ship.templateId);
+      this.selectedTemplateIndex = this.shipTemplates.findIndex((template) => template.id === ship.templateId);
+      if (this.selectedTemplateIndex < 0) {
+        this.selectNextAvailableShip();
+      }
+    } else {
+      this.selectNextAvailableShip();
+    }
+    this.updateBoard();
+    this.updateShipList();
+    this.updateReadyState();
   }
 
   assignTemplatesToShips() {
@@ -577,7 +647,10 @@ export class PreparationScene extends Phaser.Scene {
 
   autoPlaceMissingAndStart() {
     if (this.ships.length < this.shipTemplates.length) {
-      this.autoPlace();
+      this.autoPlaceRemaining();
+      if (this.ships.length < this.shipTemplates.length) {
+        this.autoPlace();
+      }
     }
     this.startBattle();
   }

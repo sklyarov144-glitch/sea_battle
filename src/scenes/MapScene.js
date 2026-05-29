@@ -123,18 +123,20 @@ export class MapScene extends Phaser.Scene {
   }
 
   addNavigation() {
-    new Button(this, 128, GAME_HEIGHT - 58, 196, 58, t('back'), () => {
+    new Button(this, 965, 70, 170, 46, t('back'), () => {
       this.scene.start('MenuScene');
     }, {
       variant: 'danger',
-      fontSize: 20
+      fontSize: 17,
+      small: true
     });
 
-    new Button(this, GAME_WIDTH - 136, GAME_HEIGHT - 58, 214, 58, t('shop'), () => {
+    new Button(this, 1140, 70, 170, 46, t('shop'), () => {
       this.scene.start('ShopScene', { from: 'MapScene' });
     }, {
       variant: 'secondary',
-      fontSize: 22
+      fontSize: 17,
+      small: true
     });
   }
 }
