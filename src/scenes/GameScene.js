@@ -392,9 +392,9 @@ export class GameScene extends Phaser.Scene {
       })
     };
     this.abilityChargeTexts = {
-      radar: this.add.text(340, 660, '', this.createChargeTextStyle()).setOrigin(0.5),
-      barrage: this.add.text(640, 660, '', this.createChargeTextStyle()).setOrigin(0.5),
-      torpedo: this.add.text(940, 660, '', this.createChargeTextStyle()).setOrigin(0.5)
+      radar: this.add.text(340, 656, '', this.createChargeTextStyle()).setOrigin(0.5),
+      barrage: this.add.text(640, 656, '', this.createChargeTextStyle()).setOrigin(0.5),
+      torpedo: this.add.text(940, 656, '', this.createChargeTextStyle()).setOrigin(0.5)
     };
 
     this.updateAbilityButtons();
@@ -403,9 +403,10 @@ export class GameScene extends Phaser.Scene {
   createChargeTextStyle() {
     return {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '16px',
+      fontSize: '13px',
       color: '#d9fbff',
-      align: 'center'
+      align: 'center',
+      fixedWidth: 210
     };
   }
 

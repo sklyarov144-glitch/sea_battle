@@ -160,17 +160,18 @@ export class PreparationScene extends Phaser.Scene {
       variant: 'ready'
     });
 
-    new Button(this, 931, 600, 184, 34, t('back'), () => {
-      this.scene.start(this.returnScene ?? 'MenuScene');
-    }, {
-      fontSize: 13,
-      variant: 'danger',
-      small: true
-    });
   }
 
   addSettingsButton() {
-    new Button(this, 1148, 67, 132, 42, t('settings'), () => this.openSettings(), {
+    new Button(this, 1030, 67, 128, 42, t('menu'), () => {
+      this.scene.start(this.returnScene ?? 'MenuScene');
+    }, {
+      variant: 'danger',
+      fontSize: 14,
+      small: true
+    });
+
+    new Button(this, 1160, 67, 128, 42, t('settings'), () => this.openSettings(), {
       variant: 'secondary',
       fontSize: 14,
       small: true
@@ -554,15 +555,17 @@ export class PreparationScene extends Phaser.Scene {
     const remaining = this.shipTemplates.length - this.placedTemplateIds.size;
     if (current && remaining > 0) {
       this.currentShipText.setText(`${current.length}-палубный корабль`);
+      this.orientationButton.setVisible(true);
     } else {
       this.currentShipText.setText('Флот готов');
+      this.orientationButton.setVisible(false);
     }
     this.currentShipPreview.clear();
     if (current && remaining > 0) {
-      this.drawMiniShip(this.currentShipPreview, current.length, 931, 268, {
-        segment: 30,
+      this.drawMiniShip(this.currentShipPreview, current.length, 931, 260, {
+        segment: 23,
         gap: 4,
-        height: 26,
+        height: 21,
         direction: this.direction,
         fill: 0x9a642f,
         stroke: 0xf0c35a

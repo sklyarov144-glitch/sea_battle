@@ -119,7 +119,7 @@ export class ResultScene extends Phaser.Scene {
     }, {
       variant: 'secondary',
       fontSize: 21,
-      hitPadding: 10
+      hitPadding: 0
     });
 
     new Button(this, GAME_WIDTH / 2 + 170, 498, 310, 56, t('play_again'), () => {
@@ -131,7 +131,7 @@ export class ResultScene extends Phaser.Scene {
     }, {
       variant: 'primary',
       fontSize: 21,
-      hitPadding: 10
+      hitPadding: 0
     });
 
     this.doubleButton = new Button(this, GAME_WIDTH / 2, 572, 520, 56, 'Удвоить награду за рекламу', () => {
@@ -139,7 +139,7 @@ export class ResultScene extends Phaser.Scene {
     }, {
       fontSize: 21,
       variant: 'ready',
-      hitPadding: 10
+      hitPadding: 0
     });
   }
 
