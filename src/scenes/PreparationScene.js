@@ -59,7 +59,7 @@ export class PreparationScene extends Phaser.Scene {
     this.draggingTemplate = null;
     this.dragPreviewValid = false;
     this.shipItems = [];
-    this.timeLeft = 30;
+    this.timeLeft = 45;
 
     this.shipTemplates = SHIP_BLUEPRINTS.flatMap((blueprint) =>
       Array.from({ length: blueprint.count }, (_, index) => ({
@@ -87,7 +87,7 @@ export class PreparationScene extends Phaser.Scene {
       fontSize: '34px',
       color: '#fff0bf'
     });
-    this.timerText = this.add.text(GAME_WIDTH / 2, 67, `${t('preparation_timer')}: 00:30`, {
+    this.timerText = this.add.text(GAME_WIDTH / 2, 67, `${t('preparation_timer')}: 00:45`, {
       fontFamily: 'Arial, sans-serif',
       fontSize: '34px',
       color: '#d9fbff',
@@ -124,48 +124,43 @@ export class PreparationScene extends Phaser.Scene {
 
   addShipList() {
     drawNavalPanel(this, 690, 132, 482, 260, { title: 'Текущий корабль', titleSize: 26 });
-    this.currentShipText = this.add.text(724, 186, '', {
+    this.currentShipText = this.add.text(931, 184, '', {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '22px',
       color: '#fff0bf',
-      fixedWidth: 402,
-      wordWrap: { width: 402, useAdvancedWrap: true }
-    });
-    this.remainingShipText = this.add.text(724, 254, '', {
-      fontFamily: 'Arial, sans-serif',
-      fontSize: '18px',
-      color: '#d9fbff',
-      fixedWidth: 402,
-      wordWrap: { width: 402, useAdvancedWrap: true }
-    });
+      align: 'center',
+      fixedWidth: 360,
+      wordWrap: { width: 360, useAdvancedWrap: true }
+    }).setOrigin(0.5, 0);
     this.currentShipPreview = this.add.graphics();
+    this.orientationButton = new Button(this, 931, 340, 240, 44, 'Горизонтально', () => {
+      this.direction = this.direction === 'horizontal' ? 'vertical' : 'horizontal';
+      this.orientationButton.setLabel(this.direction === 'horizontal' ? 'Горизонтально' : 'Вертикально');
+      this.updateBoard();
+      this.updateShipList();
+    }, {
+      fontSize: 16,
+      variant: 'secondary',
+      small: true
+    });
     this.updateShipList();
   }
 
   addControls() {
-    drawNavalPanel(this, 690, 420, 482, 208, { title: t('commands'), titleSize: 22 });
-    this.directionButton = new Button(this, 802, 486, 184, 38, t('rotate_horizontal'), () => {
-      this.direction = this.direction === 'horizontal' ? 'vertical' : 'horizontal';
-      this.directionButton.setLabel(this.direction === 'horizontal' ? t('rotate_horizontal') : t('rotate_vertical'));
-      this.updateBoard();
-    }, {
-      fontSize: 12,
-      variant: 'secondary',
-      small: true
-    });
+    drawNavalPanel(this, 690, 420, 482, 208);
 
-    this.autoButton = new Button(this, 1036, 486, 184, 38, t('auto_place'), () => this.autoPlace(), {
-      fontSize: 12,
+    this.autoButton = new Button(this, 931, 482, 300, 54, 'Авторасстановка', () => this.autoPlace(), {
+      fontSize: 18,
       variant: 'primary',
-      small: true
+      pulse: true
     });
 
-    this.readyButton = new Button(this, 919, 540, 256, 42, t('ready_to_battle'), () => this.startBattle(), {
-      fontSize: 15,
+    this.readyButton = new Button(this, 931, 548, 300, 48, t('ready_to_battle'), () => this.startBattle(), {
+      fontSize: 17,
       variant: 'ready'
     });
 
-    new Button(this, 919, 594, 176, 34, t('back'), () => {
+    new Button(this, 931, 600, 184, 34, t('back'), () => {
       this.scene.start(this.returnScene ?? 'MenuScene');
     }, {
       fontSize: 13,
@@ -220,21 +215,27 @@ export class PreparationScene extends Phaser.Scene {
     const segment = options.segment ?? 19;
     const gap = options.gap ?? 2;
     const height = options.height ?? 20;
-    const totalWidth = length * segment + (length - 1) * gap;
+    const direction = options.direction ?? 'horizontal';
+    const totalWidth = direction === 'horizontal' ? length * segment + (length - 1) * gap : segment;
+    const totalHeight = direction === 'vertical' ? length * segment + (length - 1) * gap : height;
     const left = x - totalWidth / 2;
+    const top = y - totalHeight / 2;
     const fill = options.fill ?? 0x9a642f;
     const stroke = options.stroke ?? 0xf0c35a;
 
     graphics.fillStyle(0x010711, 0.32);
-    graphics.fillRoundedRect(left + 3, y - height / 2 + 4, totalWidth, height, 8);
+    graphics.fillRoundedRect(left + 3, top + 4, totalWidth, totalHeight, 8);
     for (let i = 0; i < length; i += 1) {
-      const sx = left + i * (segment + gap);
+      const sx = direction === 'horizontal' ? left + i * (segment + gap) : left;
+      const sy = direction === 'vertical' ? top + i * (segment + gap) : y - height / 2;
+      const sw = direction === 'horizontal' ? segment : segment;
+      const sh = direction === 'vertical' ? segment : height;
       graphics.fillStyle(fill, options.alpha ?? 0.96);
-      graphics.fillRoundedRect(sx, y - height / 2, segment, height, 7);
+      graphics.fillRoundedRect(sx, sy, sw, sh, 7);
       graphics.lineStyle(2, stroke, options.alpha ?? 0.9);
-      graphics.strokeRoundedRect(sx, y - height / 2, segment, height, 7);
+      graphics.strokeRoundedRect(sx, sy, sw, sh, 7);
       graphics.fillStyle(0xffe0a6, options.alpha ?? 0.75);
-      graphics.fillCircle(sx + segment / 2, y, Math.max(2, segment * 0.12));
+      graphics.fillCircle(sx + sw / 2, sy + sh / 2, Math.max(2, segment * 0.12));
     }
   }
 
@@ -371,6 +372,7 @@ export class PreparationScene extends Phaser.Scene {
       alpha: 0.78,
       segment: 20,
       height: 17,
+      direction: this.direction,
       fill: valid ? 0xb98622 : 0xb93632,
       stroke: valid ? 0xffe0a6 : 0xffb0a8
     });
@@ -551,18 +553,17 @@ export class PreparationScene extends Phaser.Scene {
     const current = this.selectedTemplate;
     const remaining = this.shipTemplates.length - this.placedTemplateIds.size;
     if (current && remaining > 0) {
-      this.currentShipText.setText(`Сейчас ставим: ${current.length}-палубный корабль`);
-      this.remainingShipText.setText(`Осталось поставить: ${remaining}\nКликните по клетке поля. Уже поставленный корабль можно снять кликом или перетащить.`);
+      this.currentShipText.setText(`${current.length}-палубный корабль`);
     } else {
       this.currentShipText.setText('Флот готов');
-      this.remainingShipText.setText('Можно переставить корабли или нажать “Готов к бою”.');
     }
     this.currentShipPreview.clear();
     if (current && remaining > 0) {
-      this.drawMiniShip(this.currentShipPreview, current.length, 930, 328, {
+      this.drawMiniShip(this.currentShipPreview, current.length, 931, 268, {
         segment: 30,
         gap: 4,
         height: 26,
+        direction: this.direction,
         fill: 0x9a642f,
         stroke: 0xf0c35a
       });

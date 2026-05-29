@@ -24,6 +24,7 @@ export class Button extends Phaser.GameObjects.Container {
       selected: false,
       disabled: false,
       small: false,
+      hitPadding: 6,
       ...options
     };
     this.enabled = !this.options.disabled && this.options.variant !== 'disabled';
@@ -81,7 +82,13 @@ export class Button extends Phaser.GameObjects.Container {
   updateHitArea() {
     const width = Math.ceil(this.widthValue);
     const height = Math.ceil(this.heightValue);
-    const hitArea = new Phaser.Geom.Rectangle(-width / 2, -height / 2, width, height);
+    const hitPadding = Math.min(8, Math.max(0, this.options.hitPadding ?? 6));
+    const hitArea = new Phaser.Geom.Rectangle(
+      -width / 2 - hitPadding,
+      -height / 2 - hitPadding,
+      width + hitPadding * 2,
+      height + hitPadding * 2
+    );
     this.setSize(width, height);
     this.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains);
     if (this.input) {

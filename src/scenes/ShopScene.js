@@ -73,11 +73,18 @@ export class ShopScene extends Phaser.Scene {
         color: '#fff5d6'
       }).setOrigin(0.5);
 
+      const stockText = this.add.text(1038, y + 34, '', {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '15px',
+        color: '#d9fbff',
+        align: 'center'
+      }).setOrigin(0.5);
+
       const button = new Button(this, 1038, y, 190, 48, '', () => {
         this.buyItem(item, { x: button.x, y: button.y });
       }, { fontSize: 20, variant: 'secondary', small: true });
 
-      this.itemRows.push({ item, button, priceText });
+      this.itemRows.push({ item, button, priceText, stockText });
     });
 
     this.refreshItemButtons();
@@ -113,13 +120,16 @@ export class ShopScene extends Phaser.Scene {
 
   refreshItemButtons() {
     this.profile = StorageService.loadProfile();
-    this.itemRows.forEach(({ item, button }) => {
+    this.itemRows.forEach(({ item, button, stockText }) => {
       if (item.type === 'consumable') {
         const count = this.profile.purchasedItems[item.id] ?? 0;
-        button.setLabel(count > 0 ? `${t('buy')} (${count})` : t('buy'));
+        button.setLabel(t('buy'));
+        stockText.setText(`В наличии: ${count}`);
         button.setEnabled(this.profile.gold >= item.price);
         return;
       }
+
+      stockText.setText('');
 
       const purchased = Boolean(this.profile.purchasedItems[item.id]);
       const selected = this.profile.selectedSkins[item.skinGroup] === item.skinValue;

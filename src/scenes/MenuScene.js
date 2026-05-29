@@ -74,8 +74,8 @@ export class MenuScene extends Phaser.Scene {
 
     new Button(this, x, startY, width, height, t('play'), () => {
       this.scene.start('PreparationScene', {
-        levelId: this.profile.unlockedLevel,
-        battleMode: 'campaign',
+        levelId: 1,
+        battleMode: 'quick',
         returnScene: 'MenuScene'
       });
     }, { variant: 'primary', fontSize: 23 });

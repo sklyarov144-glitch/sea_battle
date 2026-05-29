@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { AssetKeys } from '../config/assetKeys.js';
-import { BASE_ABILITY_CHARGES, LEVELS } from '../config/balanceConfig.js';
+import { LEVELS } from '../config/balanceConfig.js';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
 import { EconomyService } from '../services/EconomyService.js';
 import { LocalizationService, t } from '../services/LocalizationService.js';
@@ -28,6 +28,13 @@ import {
   spawnSmoke,
   spawnSplash
 } from '../utils/effects.js';
+
+const QUICK_BATTLE_LOCATIONS = [
+  'Открытое море',
+  'Штормовая линия',
+  'Торговый фарватер',
+  'Безымянная отмель'
+];
 
 export class GameScene extends Phaser.Scene {
   constructor() {
@@ -70,9 +77,9 @@ export class GameScene extends Phaser.Scene {
     this.radarHighlights = new Map();
 
     this.abilityCharges = {
-      radar: BASE_ABILITY_CHARGES.radar + (this.boosts.radar ?? 0) + EconomyService.getAbilityBonus(this.profile, 'radar'),
-      barrage: BASE_ABILITY_CHARGES.barrage + (this.boosts.barrage ?? 0) + EconomyService.getAbilityBonus(this.profile, 'barrage'),
-      torpedo: BASE_ABILITY_CHARGES.torpedo + (this.boosts.torpedo ?? 0) + EconomyService.getAbilityBonus(this.profile, 'torpedo')
+      radar: (this.boosts.radar ?? 0) + EconomyService.getAbilityBonus(this.profile, 'radar'),
+      barrage: (this.boosts.barrage ?? 0) + EconomyService.getAbilityBonus(this.profile, 'barrage'),
+      torpedo: (this.boosts.torpedo ?? 0) + EconomyService.getAbilityBonus(this.profile, 'torpedo')
     };
 
     createCoverImageBackground(this, AssetKeys.Images.BattleOceanBg, {
@@ -98,13 +105,13 @@ export class GameScene extends Phaser.Scene {
   createLayout() {
     const enemySize = this.enemyBoard?.length ?? 8;
     const playerSize = this.playerBoard?.length ?? 8;
-    const enemyY = 140;
-    const enemyCell = Math.floor(Math.min(52, (568 - enemyY) / enemySize));
-    const playerCell = Math.floor(Math.min(42, 336 / playerSize));
+    const enemyY = 128;
+    const enemyCell = Math.floor(Math.min(52, (566 - enemyY) / enemySize));
+    const playerCell = Math.floor(Math.min(40, 314 / playerSize));
     const enemyBoardWidth = enemySize * enemyCell;
     const playerBoardWidth = playerSize * playerCell;
     this.layout = {
-      player: { x: Math.round(70 + (336 - playerBoardWidth) / 2), y: 205, cell: playerCell, size: playerSize },
+      player: { x: Math.round(70 + (336 - playerBoardWidth) / 2), y: 190, cell: playerCell, size: playerSize },
       enemy: { x: Math.round(742 + (432 - enemyBoardWidth) / 2), y: enemyY, cell: enemyCell, size: enemySize },
       playerCannon: { x: 430, y: 548 },
       enemyCannon: { x: 1190, y: 126 }
@@ -133,11 +140,15 @@ export class GameScene extends Phaser.Scene {
   }
 
   createStatusPanel() {
-    drawNavalPanel(this, 42, 22, 1196, 86);
+    drawNavalPanel(this, 42, 18, 1196, 78);
 
-    this.add.text(72, 48, `Остров ${this.level.id}: ${this.level.name}`, {
+    const locationName = this.battleMode === 'quick'
+      ? QUICK_BATTLE_LOCATIONS[(this.levelId - 1) % QUICK_BATTLE_LOCATIONS.length]
+      : `Остров ${this.level.id}: ${this.level.name}`;
+
+    this.add.text(72, 43, locationName, {
       fontFamily: 'Georgia, "Times New Roman", serif',
-      fontSize: '27px',
+      fontSize: '25px',
       color: '#fff0bf'
     });
 
@@ -147,27 +158,27 @@ export class GameScene extends Phaser.Scene {
       color: '#fff5d6'
     });
 
-    this.turnText = this.add.text(GAME_WIDTH / 2, 66, '', {
+    this.turnText = this.add.text(GAME_WIDTH / 2, 58, '', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '28px',
       color: '#d9fbff',
       align: 'center'
     }).setOrigin(0.5);
 
-    this.add.text(800, 54, `Капитан ур. ${this.profile.captainLevel}`, {
+    this.add.text(800, 48, `Капитан ур. ${this.profile.captainLevel}`, {
       fontFamily: 'Arial, sans-serif',
       fontSize: '18px',
       color: '#fff5d6'
     });
 
-    this.settingsButton = new Button(this, 1040, 66, 124, 44, t('settings'), () => this.openSettings(), {
+    this.settingsButton = new Button(this, 1040, 58, 124, 42, t('settings'), () => this.openSettings(), {
       fontSize: 13,
       variant: 'secondary',
       small: true,
       hitPadding: 26
     });
 
-    this.exitButton = new Button(this, 1164, 66, 116, 44, t('menu'), () => this.showExitConfirm(), {
+    this.exitButton = new Button(this, 1164, 58, 116, 42, t('menu'), () => this.showExitConfirm(), {
       fontSize: 15,
       variant: 'danger',
       small: true,
@@ -252,7 +263,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   createBoards() {
-    this.add.text(238, 166, t('your_fleet'), {
+    this.add.text(238, 154, t('your_fleet'), {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '28px',
       color: '#fff0bf',
@@ -260,7 +271,7 @@ export class GameScene extends Phaser.Scene {
       strokeThickness: 2
     }).setOrigin(0.5);
 
-    this.add.text(this.layout.enemy.x + (this.layout.enemy.size * this.layout.enemy.cell) / 2, 128, t('enemy_waters'), {
+    this.add.text(this.layout.enemy.x + (this.layout.enemy.size * this.layout.enemy.cell) / 2, 116, t('enemy_waters'), {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '24px',
       color: '#fff0bf',
@@ -358,32 +369,32 @@ export class GameScene extends Phaser.Scene {
   }
 
   createAbilityPanel() {
-    drawNavalPanel(this, 170, 570, 940, 106);
+    drawNavalPanel(this, 170, 588, 940, 82);
 
     this.abilityButtons = {
-      radar: new Button(this, 340, 614, 220, 52, '', () => this.selectAbility('radar'), {
-        fontSize: 21,
+      radar: new Button(this, 340, 626, 214, 44, '', () => this.selectAbility('radar'), {
+        fontSize: 19,
         variant: 'secondary',
         small: false,
         hitPadding: 26
       }),
-      barrage: new Button(this, 640, 614, 220, 52, '', () => this.selectAbility('barrage'), {
-        fontSize: 21,
+      barrage: new Button(this, 640, 626, 214, 44, '', () => this.selectAbility('barrage'), {
+        fontSize: 19,
         variant: 'secondary',
         small: false,
         hitPadding: 26
       }),
-      torpedo: new Button(this, 940, 614, 220, 52, '', () => this.selectAbility('torpedo'), {
-        fontSize: 21,
+      torpedo: new Button(this, 940, 626, 214, 44, '', () => this.selectAbility('torpedo'), {
+        fontSize: 19,
         variant: 'secondary',
         small: false,
         hitPadding: 26
       })
     };
     this.abilityChargeTexts = {
-      radar: this.add.text(340, 653, '', this.createChargeTextStyle()).setOrigin(0.5),
-      barrage: this.add.text(640, 653, '', this.createChargeTextStyle()).setOrigin(0.5),
-      torpedo: this.add.text(940, 653, '', this.createChargeTextStyle()).setOrigin(0.5)
+      radar: this.add.text(340, 660, '', this.createChargeTextStyle()).setOrigin(0.5),
+      barrage: this.add.text(640, 660, '', this.createChargeTextStyle()).setOrigin(0.5),
+      torpedo: this.add.text(940, 660, '', this.createChargeTextStyle()).setOrigin(0.5)
     };
 
     this.updateAbilityButtons();
@@ -695,7 +706,7 @@ export class GameScene extends Phaser.Scene {
     this.busy = true;
     this.updateAllBoards();
     this.addLog('Соперник целится...');
-    await this.wait(Phaser.Math.Between(1000, 5000));
+    await this.wait(Phaser.Math.Between(1000, 3000));
 
     while (!this.battleEnded) {
       const shot = chooseBotShot(this.playerBoard, this.playerShips, this.level.botSkill);
@@ -723,7 +734,7 @@ export class GameScene extends Phaser.Scene {
       }
 
       this.addLog('Соперник целится...');
-      await this.wait(Phaser.Math.Between(1000, 5000));
+      await this.wait(Phaser.Math.Between(1000, 3000));
     }
 
     this.playerTurn = true;
