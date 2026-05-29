@@ -34,6 +34,9 @@ export const SoundService = {
     this.sfxEnabled = settings.sound !== false;
     this.musicVolume = typeof settings.musicVolume === 'number' ? settings.musicVolume : this.musicVolume;
     this.sfxVolume = typeof settings.sfxVolume === 'number' ? settings.sfxVolume : this.sfxVolume;
+    if (!this.musicEnabled) {
+      this.stopMusic();
+    }
   },
 
   playMusic(scene, key) {

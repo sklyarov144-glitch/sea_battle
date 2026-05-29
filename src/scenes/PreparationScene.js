@@ -399,6 +399,19 @@ export class PreparationScene extends Phaser.Scene {
     }));
   }
 
+  getResolvedPlacement(x, y, template) {
+    if (canPlaceShip(this.board, x, y, template.length, this.direction, true)) {
+      return { x, y };
+    }
+    if (this.direction === 'vertical') {
+      const upwardY = y - template.length + 1;
+      if (canPlaceShip(this.board, x, upwardY, template.length, this.direction, true)) {
+        return { x, y: upwardY };
+      }
+    }
+    return null;
+  }
+
   tryPlaceSelectedShip(x, y) {
     if (this.board[y][x].shipId !== null) {
       this.removePlacedShip(this.board[y][x].shipId);
@@ -410,13 +423,14 @@ export class PreparationScene extends Phaser.Scene {
       return;
     }
 
-    if (!canPlaceShip(this.board, x, y, template.length, this.direction, true)) {
+    const placement = this.getResolvedPlacement(x, y, template);
+    if (!placement) {
       this.flashError(this.getPlacementCells(x, y, template));
       Toast.show(this, t('cannot_place'), { y: 112 });
       return;
     }
 
-    this.placeTemplate(template, x, y);
+    this.placeTemplate(template, placement.x, placement.y);
   }
 
   placeTemplate(template, x, y) {

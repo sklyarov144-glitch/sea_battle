@@ -403,10 +403,10 @@ export class GameScene extends Phaser.Scene {
   createChargeTextStyle() {
     return {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '13px',
+      fontSize: '12px',
       color: '#d9fbff',
       align: 'center',
-      fixedWidth: 210
+      fixedWidth: 190
     };
   }
 

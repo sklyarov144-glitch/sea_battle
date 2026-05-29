@@ -49,35 +49,38 @@ export class ShopScene extends Phaser.Scene {
 
   addItems() {
     this.itemRows = [];
-    const startY = 150;
+    const startY = 146;
 
     SHOP_ITEMS.forEach((item, index) => {
       const y = startY + index * 96;
-      drawNavalPanel(this, 104, y - 34, 1072, 74, { alpha: 0.92, radius: 9 });
+      drawNavalPanel(this, 104, y - 30, 1072, 78, { alpha: 0.92, radius: 9 });
 
-      this.add.text(134, y - 18, item.name, {
+      this.add.text(140, y - 14, item.name, {
         fontFamily: 'Georgia, "Times New Roman", serif',
-        fontSize: '24px',
-        color: '#fff0bf'
-      });
-
-      this.add.text(134, y + 13, item.description, {
-        fontFamily: 'Arial, sans-serif',
-        fontSize: '18px',
-        color: '#d9fbff'
-      });
-
-      const priceText = this.add.text(806, y - 3, `${item.price} золота`, {
-        fontFamily: 'Arial, sans-serif',
         fontSize: '22px',
+        color: '#fff0bf'
+      }).setOrigin(0, 0.5);
+
+      this.add.text(140, y + 16, item.description, {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '16px',
+        color: '#d9fbff',
+        fixedWidth: 560,
+        wordWrap: { width: 560, useAdvancedWrap: true }
+      }).setOrigin(0, 0.5);
+
+      const priceText = this.add.text(802, y + 2, `${item.price} золота`, {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '20px',
         color: '#fff5d6'
       }).setOrigin(0.5);
 
-      const stockText = this.add.text(1038, y + 34, '', {
+      const stockText = this.add.text(1038, y + 32, '', {
         fontFamily: 'Arial, sans-serif',
-        fontSize: '15px',
+        fontSize: '12px',
         color: '#d9fbff',
-        align: 'center'
+        align: 'center',
+        fixedWidth: 178
       }).setOrigin(0.5);
 
       const button = new Button(this, 1038, y, 190, 48, '', () => {
