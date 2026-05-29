@@ -163,13 +163,15 @@ export class GameScene extends Phaser.Scene {
     this.settingsButton = new Button(this, 1040, 66, 124, 44, t('settings'), () => this.openSettings(), {
       fontSize: 13,
       variant: 'secondary',
-      small: true
+      small: true,
+      hitPadding: 26
     });
 
     this.exitButton = new Button(this, 1164, 66, 116, 44, t('menu'), () => this.showExitConfirm(), {
       fontSize: 15,
       variant: 'danger',
-      small: true
+      small: true,
+      hitPadding: 26
     });
 
     this.updateStatus();
@@ -205,13 +207,15 @@ export class GameScene extends Phaser.Scene {
       this.closeExitConfirm();
     }, {
       fontSize: 21,
-      variant: 'secondary'
+      variant: 'secondary',
+      hitPadding: 26
     });
     const leaveButton = new Button(this, GAME_WIDTH / 2 + 128, GAME_HEIGHT / 2 + 62, 238, 64, t('to_menu'), () => {
       this.scene.start('MenuScene');
     }, {
       fontSize: 21,
-      variant: 'danger'
+      variant: 'danger',
+      hitPadding: 26
     });
 
     this.exitOverlay.add([dim, panel, title, message, stayButton, leaveButton]);
@@ -256,9 +260,9 @@ export class GameScene extends Phaser.Scene {
       strokeThickness: 2
     }).setOrigin(0.5);
 
-    this.add.text(958, 116, t('enemy_waters'), {
+    this.add.text(958, 130, t('enemy_waters'), {
       fontFamily: 'Georgia, "Times New Roman", serif',
-      fontSize: '30px',
+      fontSize: '26px',
       color: '#fff0bf',
       stroke: '#2b170b',
       strokeThickness: 2
@@ -345,7 +349,8 @@ export class GameScene extends Phaser.Scene {
       fontSize: '19px',
       color: '#fff5d6',
       fixedWidth: 200,
-      lineSpacing: 7,
+      fixedHeight: 82,
+      lineSpacing: 5,
       wordWrap: { width: 200, useAdvancedWrap: true }
     });
 
@@ -359,17 +364,20 @@ export class GameScene extends Phaser.Scene {
       radar: new Button(this, 340, 614, 220, 52, '', () => this.selectAbility('radar'), {
         fontSize: 21,
         variant: 'secondary',
-        small: false
+        small: false,
+        hitPadding: 26
       }),
       barrage: new Button(this, 640, 614, 220, 52, '', () => this.selectAbility('barrage'), {
         fontSize: 21,
         variant: 'secondary',
-        small: false
+        small: false,
+        hitPadding: 26
       }),
       torpedo: new Button(this, 940, 614, 220, 52, '', () => this.selectAbility('torpedo'), {
         fontSize: 21,
         variant: 'secondary',
-        small: false
+        small: false,
+        hitPadding: 26
       })
     };
     this.abilityChargeTexts = {
@@ -802,14 +810,13 @@ export class GameScene extends Phaser.Scene {
   }
 
   addLog(message) {
-    if (this.logs[0] === message) {
+    if (this.currentLogMessage === message) {
       return;
     }
-    this.logs.unshift(message);
-    this.logs = this.logs.slice(0, 8);
+    this.currentLogMessage = message;
     document.body.dataset.lastLog = message;
     if (this.logText) {
-      this.logText.setText(this.logs.join('\n'));
+      this.logText.setText(message);
     }
   }
 

@@ -24,6 +24,7 @@ export class Button extends Phaser.GameObjects.Container {
       selected: false,
       disabled: false,
       small: false,
+      hitPadding: 14,
       ...options
     };
     this.enabled = !this.options.disabled && this.options.variant !== 'disabled';
@@ -55,7 +56,7 @@ export class Button extends Phaser.GameObjects.Container {
 
     this.setSize(width, height);
     this.updateHitArea();
-    this.input.cursor = this.enabled ? 'pointer' : 'default';
+    this.input.cursor = 'pointer';
 
     this.on('pointerover', () => this.handlePointerOver());
     this.on('pointerout', () => this.handlePointerOut());
@@ -81,12 +82,19 @@ export class Button extends Phaser.GameObjects.Container {
   updateHitArea() {
     const width = Math.ceil(this.widthValue);
     const height = Math.ceil(this.heightValue);
-    const hitArea = new Phaser.Geom.Rectangle(-width / 2, -height / 2, width, height);
+    const hitPadding = Math.max(0, this.options.hitPadding ?? 14);
+    const hitArea = new Phaser.Geom.Rectangle(
+      -width / 2 - hitPadding,
+      -height / 2 - hitPadding,
+      width + hitPadding * 2,
+      height + hitPadding * 2
+    );
     this.setSize(width, height);
     this.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains);
     if (this.input) {
       this.input.hitArea = hitArea;
       this.input.hitAreaCallback = Phaser.Geom.Rectangle.Contains;
+      this.input.cursor = 'pointer';
     }
     return this;
   }
@@ -175,7 +183,7 @@ export class Button extends Phaser.GameObjects.Container {
   setEnabled(value) {
     this.enabled = Boolean(value);
     this.updateHitArea();
-    this.input.cursor = this.enabled ? 'pointer' : 'default';
+    this.input.cursor = 'pointer';
     if (!this.enabled) {
       this.hovered = false;
       this.pressed = false;
