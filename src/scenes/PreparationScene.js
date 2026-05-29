@@ -97,12 +97,12 @@ export class PreparationScene extends Phaser.Scene {
   }
 
   addBoard() {
-    this.boardLayout = { x: 128, y: 154, cell: 58 };
+    this.boardLayout = { x: 125, y: 153, cell: 57 };
     const panel = this.add.graphics();
     panel.fillStyle(0x041f32, 0.58);
-    panel.fillRoundedRect(94, 122, 532, 532, 12);
+    panel.fillRoundedRect(94, 122, 508, 508, 12);
     panel.lineStyle(2, 0x65d6ef, 0.32);
-    panel.strokeRoundedRect(94, 122, 532, 532, 12);
+    panel.strokeRoundedRect(94, 122, 508, 508, 12);
 
     for (let y = 0; y < BOARD_SIZE; y += 1) {
       this.cellViews[y] = [];
@@ -126,54 +126,61 @@ export class PreparationScene extends Phaser.Scene {
     drawNavalPanel(this, 690, 132, 482, 260, { title: t('ships'), titleSize: 28 });
     this.add.text(724, 188, t('ships_hint'), {
       fontFamily: 'Georgia, "Times New Roman", serif',
-      fontSize: '19px',
-      color: '#d9fbff'
+      fontSize: '16px',
+      color: '#d9fbff',
+      fixedWidth: 402,
+      wordWrap: { width: 402, useAdvancedWrap: true }
     });
 
     this.shipItems = this.shipTemplates.map((template, index) => {
-      const x = 784 + (index % 2) * 190;
-      const y = 244 + Math.floor(index / 2) * 54;
+      const x = 778 + (index % 2) * 188;
+      const y = 258 + Math.floor(index / 2) * 50;
       return this.createShipItem(template, index, x, y);
     });
   }
 
   addControls() {
     drawNavalPanel(this, 690, 420, 482, 208, { title: t('commands'), titleSize: 22 });
-    this.directionButton = new Button(this, 810, 474, 202, 42, t('rotate_horizontal'), () => {
+    this.directionButton = new Button(this, 802, 486, 184, 38, t('rotate_horizontal'), () => {
       this.direction = this.direction === 'horizontal' ? 'vertical' : 'horizontal';
       this.directionButton.setLabel(this.direction === 'horizontal' ? t('rotate_horizontal') : t('rotate_vertical'));
       this.updateBoard();
     }, {
-      fontSize: 14,
+      fontSize: 12,
       variant: 'secondary',
-      small: true
+      small: true,
+      hitPadding: 10
     });
 
-    this.autoButton = new Button(this, 1056, 474, 204, 42, t('auto_place'), () => this.autoPlace(), {
-      fontSize: 14,
+    this.autoButton = new Button(this, 1036, 486, 184, 38, t('auto_place'), () => this.autoPlace(), {
+      fontSize: 12,
       variant: 'primary',
-      small: true
+      small: true,
+      hitPadding: 10
     });
 
-    this.readyButton = new Button(this, 936, 535, 300, 50, t('ready_to_battle'), () => this.startBattle(), {
-      fontSize: 18,
-      variant: 'ready'
+    this.readyButton = new Button(this, 919, 540, 256, 42, t('ready_to_battle'), () => this.startBattle(), {
+      fontSize: 15,
+      variant: 'ready',
+      hitPadding: 10
     });
 
-    new Button(this, 936, 594, 200, 38, t('back'), () => {
+    new Button(this, 919, 594, 176, 34, t('back'), () => {
       this.scene.start(this.returnScene ?? 'MenuScene');
     }, {
-      fontSize: 14,
+      fontSize: 13,
       variant: 'danger',
-      small: true
+      small: true,
+      hitPadding: 10
     });
   }
 
   addSettingsButton() {
-    new Button(this, GAME_WIDTH - 118, 67, 142, 46, t('settings'), () => this.openSettings(), {
+    new Button(this, 1148, 67, 132, 42, t('settings'), () => this.openSettings(), {
       variant: 'secondary',
-      fontSize: 16,
-      small: true
+      fontSize: 14,
+      small: true,
+      hitPadding: 12
     });
   }
 
@@ -184,8 +191,8 @@ export class PreparationScene extends Phaser.Scene {
   createShipItem(template, index, x, y) {
     const container = this.add.container(x, y);
     const graphics = this.add.graphics();
-    const width = 116;
-    const height = 38;
+    const width = 128;
+    const height = 36;
     container.add(graphics);
     container.setSize(width, height);
     container.setInteractive(
@@ -240,12 +247,13 @@ export class PreparationScene extends Phaser.Scene {
     graphics.clear();
     graphics.fillStyle(0x061827, placed ? 0.3 : 0.86);
     graphics.fillRoundedRect(-width / 2, -height / 2, width, height, 10);
-    graphics.lineStyle(selected ? 2 : 1, selected ? 0xf8d77a : 0x6db7d4, placed ? 0.35 : 0.86);
+    graphics.lineStyle(selected ? 2 : 1, selected ? 0xf8d77a : 0x6db7d4, selected ? 0.9 : placed ? 0.35 : 0.72);
     graphics.strokeRoundedRect(-width / 2 + 1, -height / 2 + 1, width - 2, height - 2, 10);
     this.drawMiniShip(graphics, template.length, 0, 0, {
       alpha: placed ? 0.36 : 0.96,
-      segment: 18,
-      height: 15,
+      segment: 15,
+      gap: 2,
+      height: 14,
       fill: placed ? 0x46525b : 0x9a642f,
       stroke: placed ? 0x77828f : 0xf0c35a
     });
@@ -365,8 +373,8 @@ export class PreparationScene extends Phaser.Scene {
       alpha: 0.78,
       segment: 20,
       height: 17,
-      fill: valid ? 0x2fbf71 : 0xb93632,
-      stroke: valid ? 0xb8ffd2 : 0xffb0a8
+      fill: valid ? 0xb98622 : 0xb93632,
+      stroke: valid ? 0xffe0a6 : 0xffb0a8
     });
   }
 
@@ -477,8 +485,8 @@ export class PreparationScene extends Phaser.Scene {
           alpha = 0.96;
         }
         if (previewKeys.has(key)) {
-          fill = previewValid ? 0x2fbf71 : 0xb93632;
-          stroke = previewValid ? 0xb8ffd2 : 0xffb0a8;
+          fill = previewValid ? 0x9b6b2a : 0xb93632;
+          stroke = previewValid ? 0xffe0a6 : 0xffb0a8;
           alpha = 0.78;
         }
         if (errorKeys.has(key)) {

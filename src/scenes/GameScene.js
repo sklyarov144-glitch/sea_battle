@@ -106,8 +106,8 @@ export class GameScene extends Phaser.Scene {
     this.layout = {
       player: { x: Math.round(70 + (336 - playerBoardWidth) / 2), y: 205, cell: playerCell, size: playerSize },
       enemy: { x: Math.round(742 + (432 - enemyBoardWidth) / 2), y: enemyY, cell: enemyCell, size: enemySize },
-      playerCannon: { x: 388, y: 535 },
-      enemyCannon: { x: 1170, y: 132 }
+      playerCannon: { x: 430, y: 548 },
+      enemyCannon: { x: 1190, y: 126 }
     };
   }
 
@@ -260,9 +260,9 @@ export class GameScene extends Phaser.Scene {
       strokeThickness: 2
     }).setOrigin(0.5);
 
-    this.add.text(958, 130, t('enemy_waters'), {
+    this.add.text(this.layout.enemy.x + (this.layout.enemy.size * this.layout.enemy.cell) / 2, 128, t('enemy_waters'), {
       fontFamily: 'Georgia, "Times New Roman", serif',
-      fontSize: '26px',
+      fontSize: '24px',
       color: '#fff0bf',
       stroke: '#2b170b',
       strokeThickness: 2
@@ -279,7 +279,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   drawMortar(x, y, rotation) {
-    const g = this.add.graphics().setDepth(35);
+    const g = this.add.graphics().setDepth(24);
     g.setPosition(x, y);
     g.setRotation(rotation);
     g.fillStyle(0x091522, 0.94);
@@ -305,13 +305,13 @@ export class GameScene extends Phaser.Scene {
       for (let x = 0; x < boardSize; x += 1) {
         const px = Math.round(layout.x + x * layout.cell);
         const py = Math.round(layout.y + y * layout.cell);
-        const graphics = this.add.graphics();
+        const graphics = this.add.graphics().setDepth(30);
         const icon = this.add.text(px + layout.cell / 2, py + layout.cell / 2, '', {
           fontFamily: 'Arial, sans-serif',
           fontSize: `${Math.round(layout.cell * 0.38)}px`,
           color: '#ffffff',
           align: 'center'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setDepth(31);
 
         const zone = this.add.zone(px + layout.cell / 2, py + layout.cell / 2, layout.cell - 2, layout.cell - 2);
 
@@ -509,9 +509,11 @@ export class GameScene extends Phaser.Scene {
       const segment = Math.min(layout.cell * 0.72, layout.cell - 14);
       const cx = px + layout.cell / 2;
       const cy = py + layout.cell / 2;
-      view.graphics.fillStyle(this.profile.selectedSkins.ship === 'goldCorsair' ? 0xc99634 : 0x9a642f, 0.96);
+      const shipFill = cell.shot ? (cell.sunk ? 0x3a2424 : 0xb93632) : (this.profile.selectedSkins.ship === 'goldCorsair' ? 0xc99634 : 0x9a642f);
+      const shipStroke = cell.shot ? (cell.sunk ? 0x111111 : 0xffd36e) : 0xf0c35a;
+      view.graphics.fillStyle(shipFill, 0.96);
       view.graphics.fillRoundedRect(cx - segment / 2, cy - segment / 2, segment, segment, 7);
-      view.graphics.lineStyle(2, 0xf0c35a, 0.92);
+      view.graphics.lineStyle(2, shipStroke, 0.92);
       view.graphics.strokeRoundedRect(cx - segment / 2, cy - segment / 2, segment, segment, 7);
       view.graphics.fillStyle(0xffe0a6, 0.82);
       view.graphics.fillCircle(cx, cy, Math.max(2.5, segment * 0.12));
@@ -693,7 +695,7 @@ export class GameScene extends Phaser.Scene {
     this.busy = true;
     this.updateAllBoards();
     this.addLog('Соперник целится...');
-    await this.wait(Phaser.Math.Between(1000, 4000));
+    await this.wait(Phaser.Math.Between(1000, 5000));
 
     while (!this.battleEnded) {
       const shot = chooseBotShot(this.playerBoard, this.playerShips, this.level.botSkill);
@@ -720,7 +722,8 @@ export class GameScene extends Phaser.Scene {
         break;
       }
 
-      await this.wait(Math.max(260, this.level.botDelay * 0.65));
+      this.addLog('Соперник целится...');
+      await this.wait(Phaser.Math.Between(1000, 5000));
     }
 
     this.playerTurn = true;

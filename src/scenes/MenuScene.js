@@ -94,22 +94,24 @@ export class MenuScene extends Phaser.Scene {
   }
 
   addCareerPanel() {
-    drawNavalPanel(this, 858, 42, 354, 238, { title: t('career'), titleSize: 22 });
-    drawCareerEmblem(this, 1118, 103, 1.05);
+    drawNavalPanel(this, 882, 42, 330, 186, { title: t('career'), titleSize: 21 });
+    drawCareerEmblem(this, 1122, 102, 0.78);
 
-    this.rankText = this.add.text(886, 92, '', {
+    this.rankText = this.add.text(910, 88, '', {
       fontFamily: 'Georgia, "Times New Roman", serif',
-      fontSize: '22px',
-      color: '#fff0bf'
+      fontSize: '20px',
+      color: '#fff0bf',
+      fixedWidth: 198,
+      wordWrap: { width: 198, useAdvancedWrap: true }
     });
-    this.goldText = this.add.text(886, 132, '', {
+    this.goldText = this.add.text(910, 134, '', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '21px',
+      fontSize: '18px',
       color: '#f8d77a'
     });
-    this.xpText = this.add.text(886, 166, '', {
+    this.xpText = this.add.text(910, 160, '', {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '19px',
+      fontSize: '17px',
       color: '#d9fbff'
     });
 
@@ -131,11 +133,11 @@ export class MenuScene extends Phaser.Scene {
 
     this.careerBar.clear();
     this.careerBar.fillStyle(0x020812, 0.75);
-    this.careerBar.fillRoundedRect(886, 206, 286, 18, 7);
+    this.careerBar.fillRoundedRect(910, 190, 248, 16, 7);
     this.careerBar.fillStyle(0x113a58, 0.96);
-    this.careerBar.fillRoundedRect(889, 209, 280, 12, 6);
+    this.careerBar.fillRoundedRect(913, 193, 242, 10, 5);
     this.careerBar.fillStyle(0xd7a748, 0.98);
-    this.careerBar.fillRoundedRect(889, 209, Math.max(10, 280 * progress), 12, 6);
+    this.careerBar.fillRoundedRect(913, 193, Math.max(8, 242 * progress), 10, 5);
   }
 
   addAdmiralChest() {

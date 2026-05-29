@@ -57,15 +57,15 @@ export class SettingsModal {
     }));
 
     LocalizationService.getSupportedLanguages().forEach((language, index) => {
-      const buttonWidth = 104;
-      const gap = 10;
-      const startX = this.panel.x + 396;
+      const buttonWidth = 98;
+      const gap = 8;
+      const startX = this.panel.x + 390;
       const button = new Button(this.scene, startX + index * (buttonWidth + gap), y, buttonWidth, 44, language.label, () => {
         this.setLanguage(language.code);
       }, {
         variant: language.code === LocalizationService.getLanguage() ? 'primary' : 'secondary',
         selected: language.code === LocalizationService.getLanguage(),
-        fontSize: 16,
+        fontSize: 15,
         small: true
       });
       this.controls.push({ type: 'language', code: language.code, button });
