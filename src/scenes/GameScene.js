@@ -175,14 +175,14 @@ export class GameScene extends Phaser.Scene {
       fontSize: 13,
       variant: 'secondary',
       small: true,
-      hitPadding: 26
+      strictHitArea: true
     });
 
     this.exitButton = new Button(this, 1164, 58, 116, 42, t('menu'), () => this.showExitConfirm(), {
       fontSize: 15,
       variant: 'danger',
       small: true,
-      hitPadding: 26
+      strictHitArea: true
     });
 
     this.updateStatus();
@@ -219,14 +219,14 @@ export class GameScene extends Phaser.Scene {
     }, {
       fontSize: 21,
       variant: 'secondary',
-      hitPadding: 26
+      strictHitArea: true
     });
     const leaveButton = new Button(this, GAME_WIDTH / 2 + 128, GAME_HEIGHT / 2 + 62, 238, 64, t('to_menu'), () => {
       this.scene.start('MenuScene');
     }, {
       fontSize: 21,
       variant: 'danger',
-      hitPadding: 26
+      strictHitArea: true
     });
 
     this.exitOverlay.add([dim, panel, title, message, stayButton, leaveButton]);

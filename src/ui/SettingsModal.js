@@ -169,7 +169,13 @@ export class SettingsModal {
   }
 
   close() {
+    this.scene.tweens.killTweensOf(this.container);
+    this.controls.forEach((control) => {
+      control.button?.destroy();
+      control.valueText?.destroy();
+    });
+    this.controls = [];
     this.options.onClose?.();
-    this.container.destroy();
+    this.container.destroy(true);
   }
 }

@@ -19,10 +19,15 @@ function hasSound(scene, key) {
   }
 }
 
+function getAudioContext(scene) {
+  return scene?.sound?.context ?? scene?.sound?.manager?.context ?? null;
+}
+
 export const SoundService = {
   keys: AUDIO_KEYS,
   music: null,
   musicKey: null,
+  fallbackMusic: null,
   musicEnabled: true,
   sfxEnabled: true,
   musicVolume: 0.45,
@@ -40,7 +45,11 @@ export const SoundService = {
   },
 
   playMusic(scene, key) {
-    if (!this.musicEnabled || !hasSound(scene, key)) {
+    if (!this.musicEnabled) {
+      return;
+    }
+    if (!hasSound(scene, key)) {
+      this.playFallbackMusic(scene, key);
       return;
     }
     if (this.musicKey === key && this.music?.isPlaying) {
@@ -61,21 +70,89 @@ export const SoundService = {
     try {
       this.music?.stop();
       this.music?.destroy();
+      this.fallbackMusic?.oscillator?.stop();
+      this.fallbackMusic?.gain?.disconnect();
     } catch {
       // Audio shutdown is best-effort because Phaser may already own scene teardown.
     }
     this.music = null;
     this.musicKey = null;
+    this.fallbackMusic = null;
   },
 
   playSfx(scene, key) {
-    if (!this.sfxEnabled || !hasSound(scene, key)) {
+    if (!this.sfxEnabled) {
+      return;
+    }
+    if (!hasSound(scene, key)) {
+      this.playFallbackSfx(scene, key);
       return;
     }
     try {
       scene.sound.play(key, { volume: this.sfxVolume });
     } catch (error) {
       console.warn('[SoundService] sfx skipped:', key, error);
+    }
+  },
+
+  playFallbackMusic(scene, key) {
+    if (this.musicKey === key && this.fallbackMusic) {
+      this.fallbackMusic.gain.gain.value = this.musicVolume * 0.045;
+      return;
+    }
+    this.stopMusic();
+    const context = getAudioContext(scene);
+    if (!context) {
+      return;
+    }
+    try {
+      context.resume?.();
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = 'triangle';
+      oscillator.frequency.value = key === AUDIO_KEYS.music_battle ? 132 : 98;
+      gain.gain.value = this.musicVolume * 0.045;
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start();
+      this.musicKey = key;
+      this.fallbackMusic = { oscillator, gain };
+    } catch (error) {
+      console.warn('[SoundService] fallback music skipped:', key, error);
+    }
+  },
+
+  playFallbackSfx(scene, key) {
+    const context = getAudioContext(scene);
+    if (!context) {
+      return;
+    }
+    try {
+      context.resume?.();
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      const now = context.currentTime;
+      const frequencyMap = {
+        [AUDIO_KEYS.sfx_hit]: 170,
+        [AUDIO_KEYS.sfx_shot]: 92,
+        [AUDIO_KEYS.sfx_miss]: 420,
+        [AUDIO_KEYS.sfx_explosion]: 62,
+        [AUDIO_KEYS.sfx_reward]: 660,
+        [AUDIO_KEYS.sfx_rank_up]: 780,
+        [AUDIO_KEYS.sfx_button_hover]: 520,
+        [AUDIO_KEYS.sfx_click]: 360
+      };
+      oscillator.type = key === AUDIO_KEYS.sfx_explosion || key === AUDIO_KEYS.sfx_shot ? 'sawtooth' : 'square';
+      oscillator.frequency.setValueAtTime(frequencyMap[key] ?? 300, now);
+      oscillator.frequency.exponentialRampToValueAtTime(Math.max(40, (frequencyMap[key] ?? 300) * 0.55), now + 0.12);
+      gain.gain.setValueAtTime(this.sfxVolume * 0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start(now);
+      oscillator.stop(now + 0.15);
+    } catch (error) {
+      console.warn('[SoundService] fallback sfx skipped:', key, error);
     }
   },
 
@@ -93,6 +170,9 @@ export const SoundService = {
   setMusicVolume(value) {
     this.musicVolume = Math.max(0, Math.min(1, Number(value)));
     this.music?.setVolume(this.musicVolume);
+    if (this.fallbackMusic) {
+      this.fallbackMusic.gain.gain.value = this.musicVolume * 0.045;
+    }
   },
 
   setSfxVolume(value) {

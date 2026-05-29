@@ -82,7 +82,7 @@ export class Button extends Phaser.GameObjects.Container {
   updateHitArea() {
     const width = Math.ceil(this.widthValue);
     const height = Math.ceil(this.heightValue);
-    const hitPadding = Math.min(8, Math.max(0, this.options.hitPadding ?? 6));
+    const hitPadding = this.options.strictHitArea ? 0 : Math.min(8, Math.max(0, this.options.hitPadding ?? 6));
     const hitArea = new Phaser.Geom.Rectangle(
       -width / 2 - hitPadding,
       -height / 2 - hitPadding,
