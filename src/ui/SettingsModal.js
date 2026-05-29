@@ -18,9 +18,15 @@ export class SettingsModal {
   }
 
   create() {
+    this.panel = {
+      x: GAME_WIDTH / 2 - 340,
+      y: GAME_HEIGHT / 2 - 230,
+      width: 680,
+      height: 460
+    };
     const dim = this.scene.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x020812, 0.72);
     dim.setInteractive();
-    const panel = drawNavalPanel(this.scene, GAME_WIDTH / 2 - 300, GAME_HEIGHT / 2 - 236, 600, 472, {
+    const panel = drawNavalPanel(this.scene, this.panel.x, this.panel.y, this.panel.width, this.panel.height, {
       title: t('settings'),
       titleSize: 30
     });
@@ -28,11 +34,11 @@ export class SettingsModal {
 
     this.addLanguageControls();
     this.addToggleRow(255, t('sfx'), 'sound');
-    this.addToggleRow(316, t('music'), 'music');
-    this.addVolumeRow(378, t('music_volume'), 'musicVolume');
-    this.addVolumeRow(428, t('sfx_volume'), 'sfxVolume');
+    this.addToggleRow(314, t('music'), 'music');
+    this.addVolumeRow(374, t('music_volume'), 'musicVolume');
+    this.addVolumeRow(424, t('sfx_volume'), 'sfxVolume');
 
-    const closeButton = new Button(this.scene, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 192, 228, 56, t('close'), () => this.close(), {
+    const closeButton = new Button(this.scene, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 188, 228, 56, t('close'), () => this.close(), {
       variant: 'primary',
       fontSize: 20
     });
@@ -44,14 +50,17 @@ export class SettingsModal {
 
   addLanguageControls() {
     const y = 184;
-    this.container.add(this.scene.add.text(376, y - 12, t('language'), {
+    this.container.add(this.scene.add.text(this.panel.x + 40, y - 12, t('language'), {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '22px',
       color: '#fff0bf'
     }));
 
     LocalizationService.getSupportedLanguages().forEach((language, index) => {
-      const button = new Button(this.scene, 632 + index * 128, y, 112, 44, language.label, () => {
+      const buttonWidth = 104;
+      const gap = 10;
+      const startX = this.panel.x + 396;
+      const button = new Button(this.scene, startX + index * (buttonWidth + gap), y, buttonWidth, 44, language.label, () => {
         this.setLanguage(language.code);
       }, {
         variant: language.code === LocalizationService.getLanguage() ? 'primary' : 'secondary',
@@ -65,12 +74,12 @@ export class SettingsModal {
   }
 
   addToggleRow(y, label, key) {
-    this.container.add(this.scene.add.text(376, y - 13, label, {
+    this.container.add(this.scene.add.text(this.panel.x + 40, y - 13, label, {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '22px',
       color: '#fff0bf'
     }));
-    const button = new Button(this.scene, 830, y, 154, 44, this.profile.settings[key] ? t('on') : t('off'), () => {
+    const button = new Button(this.scene, this.panel.x + 530, y, 154, 44, this.profile.settings[key] ? t('on') : t('off'), () => {
       this.updateSetting(key, !this.profile.settings[key]);
       button.setLabel(this.profile.settings[key] ? t('on') : t('off'));
       button.setSelected(Boolean(this.profile.settings[key]));
@@ -85,24 +94,27 @@ export class SettingsModal {
   }
 
   addVolumeRow(y, label, key) {
-    this.container.add(this.scene.add.text(376, y - 13, label, {
+    this.container.add(this.scene.add.text(this.panel.x + 40, y - 13, label, {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '20px',
       color: '#fff0bf'
     }));
-    const minus = new Button(this.scene, 690, y, 54, 42, '-', () => this.adjustVolume(key, -0.1), {
+    const minusX = this.panel.x + 388;
+    const valueX = this.panel.x + 468;
+    const plusX = this.panel.x + 548;
+    const minus = new Button(this.scene, minusX, y, 54, 42, '-', () => this.adjustVolume(key, -0.1), {
       variant: 'secondary',
       fontSize: 22,
       small: true
     });
-    const valueText = this.scene.add.text(756, y, this.formatPercent(this.profile.settings[key]), {
+    const valueText = this.scene.add.text(valueX, y, this.formatPercent(this.profile.settings[key]), {
       fontFamily: 'Arial, sans-serif',
       fontSize: '20px',
       color: '#d9fbff',
       fixedWidth: 88,
       align: 'center'
     }).setOrigin(0.5);
-    const plus = new Button(this.scene, 868, y, 54, 42, '+', () => this.adjustVolume(key, 0.1), {
+    const plus = new Button(this.scene, plusX, y, 54, 42, '+', () => this.adjustVolume(key, 0.1), {
       variant: 'secondary',
       fontSize: 22,
       small: true

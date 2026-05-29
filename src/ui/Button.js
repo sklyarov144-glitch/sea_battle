@@ -54,10 +54,7 @@ export class Button extends Phaser.GameObjects.Container {
     this.add(this.text);
 
     this.setSize(width, height);
-    this.setInteractive(
-      new Phaser.Geom.Rectangle(-width / 2, -height / 2, width, height),
-      Phaser.Geom.Rectangle.Contains
-    );
+    this.updateHitArea();
     this.input.cursor = this.enabled ? 'pointer' : 'default';
 
     this.on('pointerover', () => this.handlePointerOver());
@@ -79,6 +76,18 @@ export class Button extends Phaser.GameObjects.Container {
       return VARIANTS.disabled;
     }
     return VARIANTS[this.options.variant] ?? VARIANTS.primary;
+  }
+
+  updateHitArea() {
+    const width = this.widthValue;
+    const height = this.heightValue;
+    const hitArea = new Phaser.Geom.Rectangle(-width / 2, -height / 2, width, height);
+    this.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains);
+    if (this.input) {
+      this.input.hitArea = hitArea;
+      this.input.hitAreaCallback = Phaser.Geom.Rectangle.Contains;
+    }
+    return this;
   }
 
   handlePointerOver() {
@@ -164,6 +173,7 @@ export class Button extends Phaser.GameObjects.Container {
 
   setEnabled(value) {
     this.enabled = Boolean(value);
+    this.updateHitArea();
     this.input.cursor = this.enabled ? 'pointer' : 'default';
     if (!this.enabled) {
       this.hovered = false;
