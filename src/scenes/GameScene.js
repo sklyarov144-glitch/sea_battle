@@ -14,8 +14,6 @@ import {
   allShipsSunk,
   chooseBotShot,
   createBattleSetup,
-  EVENT_TYPES,
-  findHintCellNearShip,
   findShipPresenceInArea,
   fireAt,
   getCellsInArea,
@@ -26,20 +24,11 @@ import {
   cameraShake,
   createCannonArc,
   createCoverImageBackground,
-  flyCoins,
   pulseTarget,
   spawnExplosion,
   spawnSmoke,
   spawnSplash
 } from '../utils/effects.js';
-
-const EVENT_LABELS = {
-  [EVENT_TYPES.Chest]: { icon: '▣', color: '#ffd36e' },
-  [EVENT_TYPES.Barrel]: { icon: '✹', color: '#ff9d66' },
-  [EVENT_TYPES.Wreck]: { icon: '◇', color: '#d9fbff' },
-  [EVENT_TYPES.Vortex]: { icon: '◎', color: '#8fefff' },
-  [EVENT_TYPES.Mine]: { icon: '●', color: '#ff786e' }
-};
 
 export class GameScene extends Phaser.Scene {
   constructor() {
@@ -68,6 +57,7 @@ export class GameScene extends Phaser.Scene {
     this.playerShips = this.playerSetup?.ships ?? this.battle.player.ships;
     this.enemyBoard = this.battle.enemy.board;
     this.enemyShips = this.battle.enemy.ships;
+    this.clearCombatEvents(this.enemyBoard);
 
     this.playerTurn = true;
     this.busy = false;
@@ -75,7 +65,7 @@ export class GameScene extends Phaser.Scene {
     this.exitConfirmOpen = false;
     this.selectedAbility = null;
     this.torpedoAxis = 'row';
-    this.battleGold = EconomyService.getStartingBattleGold(this.profile);
+    this.battleGold = 0;
     this.logs = [];
     this.hoveredEnemyCell = null;
     this.radarHighlights = new Map();
@@ -107,25 +97,39 @@ export class GameScene extends Phaser.Scene {
   }
 
   createLayout() {
+    const enemySize = this.enemyBoard?.length ?? 8;
+    const playerSize = this.playerBoard?.length ?? 8;
+    const enemyCell = Math.floor(Math.min(52, 432 / enemySize));
+    const playerCell = Math.floor(Math.min(42, 336 / playerSize));
+    const enemyBoardWidth = enemySize * enemyCell;
+    const playerBoardWidth = playerSize * playerCell;
     this.layout = {
-      player: { x: 70, y: 205, cell: 42 },
-      enemy: { x: 720, y: 150, cell: 58 },
+      player: { x: Math.round(70 + (336 - playerBoardWidth) / 2), y: 205, cell: playerCell, size: playerSize },
+      enemy: { x: Math.round(742 + (432 - enemyBoardWidth) / 2), y: 128, cell: enemyCell, size: enemySize },
       playerCannon: { x: 406, y: 570 },
-      enemyCannon: { x: 1115, y: 126 },
-      goldCounter: { x: 180, y: 68 }
+      enemyCannon: { x: 1115, y: 126 }
     };
+  }
+
+  clearCombatEvents(board) {
+    board.forEach((row) => {
+      row.forEach((cell) => {
+        cell.event = null;
+        cell.hint = false;
+      });
+    });
   }
 
   createBoardOverlays() {
     const overlay = this.add.graphics();
     overlay.setDepth(-20);
     overlay.fillStyle(0x041f32, 0.52);
-    overlay.fillRoundedRect(42, 128, 366, 408, 12);
-    overlay.fillRoundedRect(690, 112, 500, 488, 12);
+    overlay.fillRoundedRect(42, 128, 366, 408, 10);
+    overlay.fillRoundedRect(700, 104, 512, 470, 10);
     overlay.fillRoundedRect(420, 126, 270, 388, 12);
     overlay.lineStyle(2, 0x65d6ef, 0.22);
-    overlay.strokeRoundedRect(42, 128, 366, 408, 12);
-    overlay.strokeRoundedRect(690, 112, 500, 488, 12);
+    overlay.strokeRoundedRect(42, 128, 366, 408, 10);
+    overlay.strokeRoundedRect(700, 104, 512, 470, 10);
   }
 
   createStatusPanel() {
@@ -249,15 +253,15 @@ export class GameScene extends Phaser.Scene {
       fontSize: '28px',
       color: '#fff0bf',
       stroke: '#2b170b',
-      strokeThickness: 4
+      strokeThickness: 2
     }).setOrigin(0.5);
 
-    this.add.text(952, 116, t('enemy_waters'), {
+    this.add.text(958, 104, t('enemy_waters'), {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '30px',
       color: '#fff0bf',
       stroke: '#2b170b',
-      strokeThickness: 4
+      strokeThickness: 2
     }).setOrigin(0.5);
 
     this.playerCells = this.createBoardCells('player', this.layout.player);
@@ -267,11 +271,12 @@ export class GameScene extends Phaser.Scene {
   createBoardCells(kind, layout) {
     const cells = [];
 
-    for (let y = 0; y < 8; y += 1) {
+    const boardSize = layout.size ?? 8;
+    for (let y = 0; y < boardSize; y += 1) {
       cells[y] = [];
-      for (let x = 0; x < 8; x += 1) {
-        const px = layout.x + x * layout.cell;
-        const py = layout.y + y * layout.cell;
+      for (let x = 0; x < boardSize; x += 1) {
+        const px = Math.round(layout.x + x * layout.cell);
+        const py = Math.round(layout.y + y * layout.cell);
         const graphics = this.add.graphics();
         const icon = this.add.text(px + layout.cell / 2, py + layout.cell / 2, '', {
           fontFamily: 'Arial, sans-serif',
@@ -327,28 +332,42 @@ export class GameScene extends Phaser.Scene {
     drawNavalPanel(this, 170, 570, 940, 106);
 
     this.abilityButtons = {
-      radar: new Button(this, 340, 623, 220, 58, '', () => this.selectAbility('radar'), {
+      radar: new Button(this, 340, 614, 220, 52, '', () => this.selectAbility('radar'), {
         fontSize: 21,
         variant: 'secondary',
         small: false
       }),
-      barrage: new Button(this, 640, 623, 220, 58, '', () => this.selectAbility('barrage'), {
+      barrage: new Button(this, 640, 614, 220, 52, '', () => this.selectAbility('barrage'), {
         fontSize: 21,
         variant: 'secondary',
         small: false
       }),
-      torpedo: new Button(this, 940, 623, 220, 58, '', () => this.selectAbility('torpedo'), {
+      torpedo: new Button(this, 940, 614, 220, 52, '', () => this.selectAbility('torpedo'), {
         fontSize: 21,
         variant: 'secondary',
         small: false
       })
     };
+    this.abilityChargeTexts = {
+      radar: this.add.text(340, 653, '', this.createChargeTextStyle()).setOrigin(0.5),
+      barrage: this.add.text(640, 653, '', this.createChargeTextStyle()).setOrigin(0.5),
+      torpedo: this.add.text(940, 653, '', this.createChargeTextStyle()).setOrigin(0.5)
+    };
 
     this.updateAbilityButtons();
   }
 
+  createChargeTextStyle() {
+    return {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '16px',
+      color: '#d9fbff',
+      align: 'center'
+    };
+  }
+
   updateStatus() {
-    this.goldText.setText(`Золото: ${this.profile.gold}  |  добыча боя: ${this.battleGold}`);
+    this.goldText.setText(`Золото: ${this.profile.gold}`);
     this.turnText.setText(this.playerTurn ? t('your_turn') : t('opponent_turn'));
     document.body.dataset.turn = this.playerTurn ? 'player' : 'bot';
     document.body.dataset.battleGold = String(this.battleGold);
@@ -361,17 +380,20 @@ export class GameScene extends Phaser.Scene {
     document.body.dataset.torpedoAxis = this.torpedoAxis;
     document.body.dataset.abilityCharges = JSON.stringify(this.abilityCharges);
     this.abilityButtons.radar
-      .setLabel(`${t('radar')} ${this.abilityCharges.radar}`)
+      .setLabel(t('radar'))
       .setEnabled(canAct && this.abilityCharges.radar > 0)
       .setSelected(this.selectedAbility === 'radar');
     this.abilityButtons.barrage
-      .setLabel(`${t('barrage')} ${this.abilityCharges.barrage}`)
+      .setLabel(t('barrage'))
       .setEnabled(canAct && this.abilityCharges.barrage > 0)
       .setSelected(this.selectedAbility === 'barrage');
     this.abilityButtons.torpedo
-      .setLabel(`${t('torpedo')} ${this.abilityCharges.torpedo}`)
+      .setLabel(t('torpedo'))
       .setEnabled(canAct && this.abilityCharges.torpedo > 0)
       .setSelected(this.selectedAbility === 'torpedo');
+    this.abilityChargeTexts.radar.setText(`В наличии: ${this.abilityCharges.radar}`);
+    this.abilityChargeTexts.barrage.setText(`В наличии: ${this.abilityCharges.barrage}`);
+    this.abilityChargeTexts.torpedo.setText(`В наличии: ${this.abilityCharges.torpedo}`);
     this.exitButton?.setEnabled(!this.battleEnded && !this.exitConfirmOpen);
     this.settingsButton?.setEnabled(!this.battleEnded && !this.exitConfirmOpen);
   }
@@ -392,16 +414,16 @@ export class GameScene extends Phaser.Scene {
   }
 
   drawBoard(cellViews, board, layout, revealShips) {
-    for (let y = 0; y < 8; y += 1) {
-      for (let x = 0; x < 8; x += 1) {
+    for (let y = 0; y < board.length; y += 1) {
+      for (let x = 0; x < board[y].length; x += 1) {
         this.drawCell(cellViews[y][x], board[y][x], layout, revealShips);
       }
     }
   }
 
   drawCell(view, cell, layout, revealShips) {
-    const px = layout.x + cell.x * layout.cell;
-    const py = layout.y + cell.y * layout.cell;
+    const px = Math.round(layout.x + cell.x * layout.cell);
+    const py = Math.round(layout.y + cell.y * layout.cell);
     const size = layout.cell - 4;
     const isEnemy = !revealShips;
     const hover = isEnemy && this.hoveredEnemyCell?.x === cell.x && this.hoveredEnemyCell?.y === cell.y;
@@ -417,13 +439,6 @@ export class GameScene extends Phaser.Scene {
       stroke = 0xf0c35a;
     }
 
-    if (!revealShips && cell.hint && !cell.shot) {
-      fill = 0x244a59;
-      stroke = 0xf0c35a;
-      icon = '◇';
-      iconColor = '#fff0bf';
-    }
-
     if (cell.shot) {
       if (cell.shipId !== null) {
         fill = cell.sunk ? 0x2a1b1b : 0x8f2f24;
@@ -436,20 +451,6 @@ export class GameScene extends Phaser.Scene {
         icon = '•';
         iconColor = '#c7fbff';
 
-        if (cell.event) {
-          const eventData = EVENT_LABELS[cell.event];
-          icon = eventData.icon;
-          iconColor = eventData.color;
-          if (cell.event === EVENT_TYPES.Mine) {
-            fill = 0x442432;
-          }
-          if (cell.event === EVENT_TYPES.Vortex) {
-            fill = 0x123c5d;
-          }
-          if (cell.event === EVENT_TYPES.Chest) {
-            fill = 0x5b4215;
-          }
-        }
       }
     }
 
@@ -589,7 +590,6 @@ export class GameScene extends Phaser.Scene {
 
     let validShot = false;
     let anyHit = false;
-    let forceEndTurn = false;
 
     for (const cell of cells) {
       if (this.battleEnded) {
@@ -603,9 +603,8 @@ export class GameScene extends Phaser.Scene {
 
       validShot = true;
       await this.animatePlayerShot(result);
-      const outcome = await this.resolvePlayerShot(result);
-      anyHit = anyHit || result.hit || outcome.extraHit;
-      forceEndTurn = forceEndTurn || outcome.forceEndTurn;
+      await this.resolvePlayerShot(result);
+      anyHit = anyHit || result.hit;
       this.updateAllBoards();
 
       if (allShipsSunk(this.enemyShips)) {
@@ -625,8 +624,8 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    if (forceEndTurn || !anyHit) {
-      this.addLog(forceEndTurn ? 'Ход уносит водоворот.' : `${t('miss')} ${t('opponent_turn')}.`);
+    if (!anyHit) {
+      this.addLog(`${t('miss')} ${t('opponent_turn')}.`);
       this.startBotTurn();
       return;
     }
@@ -639,8 +638,6 @@ export class GameScene extends Phaser.Scene {
 
   async resolvePlayerShot(result) {
     const center = this.getEnemyCellCenter(result.x, result.y);
-    let extraHit = false;
-    let forceEndTurn = false;
 
     if (result.hit) {
       spawnExplosion(this, center.x, center.y);
@@ -651,103 +648,12 @@ export class GameScene extends Phaser.Scene {
         cameraShake(this, 0.007, 250);
         spawnSmoke(this, center.x, center.y - 8);
       }
-      return { extraHit, forceEndTurn };
+      return;
     }
 
     spawnSplash(this, center.x, center.y);
     SoundService.playSfx(this, SoundService.keys.sfx_miss);
-    if (!result.event) {
-      this.addLog(t('miss'));
-      return { extraHit, forceEndTurn };
-    }
-
-    const eventOutcome = await this.resolveEnemyEvent(result);
-    extraHit = extraHit || eventOutcome.extraHit;
-    forceEndTurn = forceEndTurn || eventOutcome.forceEndTurn;
-    return { extraHit, forceEndTurn };
-  }
-
-  async resolveEnemyEvent(result, visited = new Set()) {
-    const key = `${result.x}:${result.y}`;
-    if (visited.has(key)) {
-      return { extraHit: false, forceEndTurn: false };
-    }
-    visited.add(key);
-
-    const center = this.getEnemyCellCenter(result.x, result.y);
-
-    if (result.event === EVENT_TYPES.Chest) {
-      this.battleGold += this.level.eventGold;
-      SoundService.playSfx(this, SoundService.keys.sfx_reward);
-      this.addLog(`Найден сундук! +${this.level.eventGold} золота.`);
-      flyCoins(this, center, this.layout.goldCounter, 9);
-      return { extraHit: false, forceEndTurn: false };
-    }
-
-    if (result.event === EVENT_TYPES.Wreck) {
-      const hintCell = findHintCellNearShip(this.enemyBoard, this.enemyShips);
-      this.addLog(hintCell ? 'Обломки дали подсказку рядом с кораблем.' : 'Обломки молчат.');
-      if (hintCell) {
-        const hintCenter = this.getEnemyCellCenter(hintCell.x, hintCell.y);
-        pulseTarget(this, hintCenter.x, hintCenter.y, 34, 0xd9fbff);
-      }
-      return { extraHit: false, forceEndTurn: false };
-    }
-
-    if (result.event === EVENT_TYPES.Vortex) {
-      this.addLog('Водоворот! Вы теряете ход.');
-      pulseTarget(this, center.x, center.y, 38, 0x8fefff);
-      return { extraHit: false, forceEndTurn: true };
-    }
-
-    if (result.event === EVENT_TYPES.Mine) {
-      this.battleGold = Math.max(0, this.battleGold - this.level.minePenalty);
-      this.addLog(`Мина! Штраф ${this.level.minePenalty} золота.`);
-      spawnExplosion(this, center.x, center.y, { count: 10 });
-      SoundService.playSfx(this, SoundService.keys.sfx_explosion);
-      cameraShake(this, 0.004, 180);
-      return { extraHit: false, forceEndTurn: false };
-    }
-
-    if (result.event === EVENT_TYPES.Barrel) {
-      this.addLog('Бочка с порохом взрывает крест!');
-      spawnExplosion(this, center.x, center.y, { count: 22 });
-      SoundService.playSfx(this, SoundService.keys.sfx_explosion);
-      cameraShake(this, 0.006, 220);
-      let extraHit = false;
-
-      const blastCells = getCellsInCross(result.x, result.y, this.enemyBoard.length, false);
-      for (const cell of blastCells) {
-        const blastResult = fireAt(this.enemyBoard, this.enemyShips, cell.x, cell.y);
-        if (!blastResult.valid) {
-          continue;
-        }
-
-        await this.wait(95);
-        const blastCenter = this.getEnemyCellCenter(cell.x, cell.y);
-        if (blastResult.hit) {
-          extraHit = true;
-          spawnExplosion(this, blastCenter.x, blastCenter.y, { count: 10 });
-          SoundService.playSfx(this, SoundService.keys.sfx_hit);
-          this.addLog(blastResult.sunk ? 'Взрыв потопил корабль!' : 'Взрыв задел корабль!');
-          if (blastResult.sunk) {
-            spawnSmoke(this, blastCenter.x, blastCenter.y);
-          }
-        } else {
-          spawnSplash(this, blastCenter.x, blastCenter.y);
-          SoundService.playSfx(this, SoundService.keys.sfx_miss);
-          if (blastResult.event && blastResult.event !== EVENT_TYPES.Barrel) {
-            const nestedOutcome = await this.resolveEnemyEvent(blastResult, visited);
-            extraHit = extraHit || nestedOutcome.extraHit;
-          }
-        }
-        this.updateEnemyBoard();
-      }
-
-      return { extraHit, forceEndTurn: false };
-    }
-
-    return { extraHit: false, forceEndTurn: false };
+    this.addLog(t('miss'));
   }
 
   async startBotTurn() {
