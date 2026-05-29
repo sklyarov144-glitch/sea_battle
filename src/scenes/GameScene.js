@@ -150,20 +150,20 @@ export class GameScene extends Phaser.Scene {
       align: 'center'
     }).setOrigin(0.5);
 
-    this.add.text(940, 54, `Капитан ур. ${this.profile.captainLevel}`, {
+    this.add.text(800, 54, `Капитан ур. ${this.profile.captainLevel}`, {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '22px',
+      fontSize: '18px',
       color: '#fff5d6'
     });
 
-    this.settingsButton = new Button(this, 1000, 66, 150, 50, t('settings'), () => this.openSettings(), {
-      fontSize: 16,
+    this.settingsButton = new Button(this, 1040, 66, 124, 44, t('settings'), () => this.openSettings(), {
+      fontSize: 13,
       variant: 'secondary',
       small: true
     });
 
-    this.exitButton = new Button(this, 1158, 66, 150, 50, t('menu'), () => this.showExitConfirm(), {
-      fontSize: 18,
+    this.exitButton = new Button(this, 1164, 66, 116, 44, t('menu'), () => this.showExitConfirm(), {
+      fontSize: 15,
       variant: 'danger',
       small: true
     });
@@ -275,7 +275,7 @@ export class GameScene extends Phaser.Scene {
         const graphics = this.add.graphics();
         const icon = this.add.text(px + layout.cell / 2, py + layout.cell / 2, '', {
           fontFamily: 'Arial, sans-serif',
-          fontSize: `${Math.round(layout.cell * 0.46)}px`,
+          fontSize: `${Math.round(layout.cell * 0.38)}px`,
           color: '#ffffff',
           align: 'center'
         }).setOrigin(0.5);
@@ -324,37 +324,23 @@ export class GameScene extends Phaser.Scene {
   }
 
   createAbilityPanel() {
-    drawNavalPanel(this, 70, 570, 1114, 106);
+    drawNavalPanel(this, 170, 570, 940, 106);
 
     this.abilityButtons = {
-      radar: new Button(this, 170, 623, 180, 52, '', () => this.selectAbility('radar'), {
-        fontSize: 20,
+      radar: new Button(this, 340, 623, 220, 58, '', () => this.selectAbility('radar'), {
+        fontSize: 21,
         variant: 'secondary',
-        small: true
+        small: false
       }),
-      barrage: new Button(this, 380, 623, 180, 52, '', () => this.selectAbility('barrage'), {
-        fontSize: 20,
+      barrage: new Button(this, 640, 623, 220, 58, '', () => this.selectAbility('barrage'), {
+        fontSize: 21,
         variant: 'secondary',
-        small: true
+        small: false
       }),
-      torpedo: new Button(this, 590, 623, 190, 52, '', () => this.selectAbility('torpedo'), {
-        fontSize: 20,
+      torpedo: new Button(this, 940, 623, 220, 58, '', () => this.selectAbility('torpedo'), {
+        fontSize: 21,
         variant: 'secondary',
-        small: true
-      }),
-      cancel: new Button(this, 804, 623, 196, 60, t('cancel'), () => this.cancelAbility(), {
-        fontSize: 22,
-        variant: 'danger'
-      }),
-      row: new Button(this, 1010, 606, 150, 38, t('row'), () => this.setTorpedoAxis('row'), {
-        fontSize: 18,
-        variant: 'secondary',
-        small: true
-      }),
-      column: new Button(this, 1010, 646, 150, 38, t('column'), () => this.setTorpedoAxis('column'), {
-        fontSize: 18,
-        variant: 'secondary',
-        small: true
+        small: false
       })
     };
 
@@ -386,13 +372,6 @@ export class GameScene extends Phaser.Scene {
       .setLabel(`${t('torpedo')} ${this.abilityCharges.torpedo}`)
       .setEnabled(canAct && this.abilityCharges.torpedo > 0)
       .setSelected(this.selectedAbility === 'torpedo');
-    this.abilityButtons.cancel.setEnabled(canAct && Boolean(this.selectedAbility));
-    this.abilityButtons.row
-      .setEnabled(canAct && this.selectedAbility === 'torpedo')
-      .setSelected(this.selectedAbility === 'torpedo' && this.torpedoAxis === 'row');
-    this.abilityButtons.column
-      .setEnabled(canAct && this.selectedAbility === 'torpedo')
-      .setSelected(this.selectedAbility === 'torpedo' && this.torpedoAxis === 'column');
     this.exitButton?.setEnabled(!this.battleEnded && !this.exitConfirmOpen);
     this.settingsButton?.setEnabled(!this.battleEnded && !this.exitConfirmOpen);
   }
@@ -436,8 +415,6 @@ export class GameScene extends Phaser.Scene {
     if (revealShips && cell.shipId !== null) {
       fill = this.profile.selectedSkins.ship === 'goldCorsair' ? 0xb98622 : 0x654321;
       stroke = 0xf0c35a;
-      icon = '■';
-      iconColor = '#f7d783';
     }
 
     if (!revealShips && cell.hint && !cell.shot) {
@@ -493,6 +470,18 @@ export class GameScene extends Phaser.Scene {
     if (hover && this.playerTurn && !this.busy) {
       view.graphics.lineStyle(2, this.selectedAbility ? 0xff786e : 0xf0c35a, 0.85);
       view.graphics.strokeCircle(px + layout.cell / 2, py + layout.cell / 2, layout.cell * 0.32);
+    }
+
+    if (revealShips && cell.shipId !== null) {
+      const segment = Math.min(layout.cell * 0.72, layout.cell - 14);
+      const cx = px + layout.cell / 2;
+      const cy = py + layout.cell / 2;
+      view.graphics.fillStyle(this.profile.selectedSkins.ship === 'goldCorsair' ? 0xc99634 : 0x9a642f, 0.96);
+      view.graphics.fillRoundedRect(cx - segment / 2, cy - segment / 2, segment, segment, 7);
+      view.graphics.lineStyle(2, 0xf0c35a, 0.92);
+      view.graphics.strokeRoundedRect(cx - segment / 2, cy - segment / 2, segment, segment, 7);
+      view.graphics.fillStyle(0xffe0a6, 0.82);
+      view.graphics.fillCircle(cx, cy, Math.max(2.5, segment * 0.12));
     }
 
     view.icon.setText(icon);

@@ -143,7 +143,7 @@ export class Button extends Phaser.GameObjects.Container {
 
     this.graphics.clear();
     this.graphics.fillStyle(0x010711, 0.48);
-    this.graphics.fillRoundedRect(-w / 2 + 5, -h / 2 + 7 + yOffset, w, h, radius);
+    this.graphics.fillRoundedRect(-w / 2 + 4, -h / 2 + 5 + yOffset, w - 8, h - 8, radius);
 
     this.graphics.lineStyle(7, variant.glow, glowAlpha);
     this.graphics.strokeRoundedRect(-w / 2 + 2, -h / 2 + 2 + yOffset, w - 4, h - 4, radius);

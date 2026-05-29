@@ -28,7 +28,7 @@ export class PreparationScene extends Phaser.Scene {
   init(data) {
     this.levelId = data.levelId ?? 1;
     this.battleMode = data.battleMode ?? 'campaign';
-    this.returnScene = data.returnScene ?? 'MapScene';
+    this.returnScene = data.returnScene ?? 'MenuScene';
   }
 
   create() {
@@ -56,6 +56,9 @@ export class PreparationScene extends Phaser.Scene {
     this.placedTemplateIds = new Set();
     this.cellViews = [];
     this.previewCells = [];
+    this.draggingTemplate = null;
+    this.dragPreviewValid = false;
+    this.shipItems = [];
     this.timeLeft = 30;
 
     this.shipTemplates = SHIP_BLUEPRINTS.flatMap((blueprint) =>
@@ -131,49 +134,42 @@ export class PreparationScene extends Phaser.Scene {
       color: '#d9fbff'
     });
 
-    this.shipButtons = this.shipTemplates.map((template, index) => {
-      const x = 802 + (index % 2) * 210;
-      const y = 232 + Math.floor(index / 2) * 70;
-      return new Button(this, x, y, 188, 48, `${template.length} пал.`, () => {
-        if (!this.placedTemplateIds.has(template.id)) {
-          this.selectedTemplateIndex = index;
-          this.updateShipList();
-          this.updateBoard();
-        }
-      }, {
-        fontSize: 19,
-        variant: 'secondary',
-        small: true
-      });
+    this.shipItems = this.shipTemplates.map((template, index) => {
+      const x = 794 + (index % 2) * 214;
+      const y = 246 + Math.floor(index / 2) * 62;
+      return this.createShipItem(template, index, x, y);
     });
   }
 
   addControls() {
-    drawNavalPanel(this, 690, 418, 482, 202, { title: t('commands'), titleSize: 24 });
-    this.directionButton = new Button(this, 825, 474, 228, 52, t('rotate_horizontal'), () => {
+    drawNavalPanel(this, 690, 414, 482, 226, { title: t('commands'), titleSize: 24 });
+    this.directionButton = new Button(this, 810, 470, 220, 46, t('rotate_horizontal'), () => {
       this.direction = this.direction === 'horizontal' ? 'vertical' : 'horizontal';
       this.directionButton.setLabel(this.direction === 'horizontal' ? t('rotate_horizontal') : t('rotate_vertical'));
       this.updateBoard();
     }, {
-      fontSize: 18,
-      variant: 'secondary'
+      fontSize: 16,
+      variant: 'secondary',
+      small: true
     });
 
-    this.autoButton = new Button(this, 1044, 474, 260, 64, t('auto_place'), () => this.autoPlace(), {
+    this.autoButton = new Button(this, 1052, 470, 218, 46, t('auto_place'), () => this.autoPlace(), {
+      fontSize: 16,
+      variant: 'primary',
+      small: true
+    });
+
+    this.readyButton = new Button(this, 936, 540, 318, 58, t('ready_to_battle'), () => this.startBattle(), {
       fontSize: 20,
-      variant: 'primary'
-    });
-
-    this.readyButton = new Button(this, 936, 556, 330, 82, t('ready_to_battle'), () => this.startBattle(), {
-      fontSize: 22,
       variant: 'ready'
     });
 
-    new Button(this, 112, GAME_HEIGHT - 50, 190, 56, t('back'), () => {
-      this.scene.start(this.returnScene);
+    new Button(this, 936, 604, 218, 44, t('back'), () => {
+      this.scene.start(this.returnScene ?? 'MenuScene');
     }, {
-      fontSize: 18,
-      variant: 'danger'
+      fontSize: 16,
+      variant: 'danger',
+      small: true
     });
   }
 
@@ -187,6 +183,151 @@ export class PreparationScene extends Phaser.Scene {
 
   get selectedTemplate() {
     return this.shipTemplates[this.selectedTemplateIndex] ?? null;
+  }
+
+  createShipItem(template, index, x, y) {
+    const container = this.add.container(x, y);
+    const graphics = this.add.graphics();
+    const width = 128;
+    const height = 42;
+    container.add(graphics);
+    container.setSize(width, height);
+    container.setInteractive(
+      new Phaser.Geom.Rectangle(-width / 2, -height / 2, width, height),
+      Phaser.Geom.Rectangle.Contains
+    );
+    this.input.setDraggable(container);
+
+    container.on('pointerup', () => {
+      if (this.placedTemplateIds.has(template.id)) {
+        return;
+      }
+      this.selectedTemplateIndex = index;
+      this.updateShipList();
+      this.updateBoard();
+    });
+    container.on('dragstart', (pointer) => this.startShipDrag(template, index, pointer));
+    container.on('drag', (pointer) => this.updateShipDrag(pointer));
+    container.on('dragend', (pointer) => this.endShipDrag(template, pointer));
+
+    const item = { template, index, container, graphics, x, y, width, height };
+    this.drawShipItem(item);
+    return item;
+  }
+
+  drawMiniShip(graphics, length, x, y, options = {}) {
+    const segment = options.segment ?? 24;
+    const gap = options.gap ?? 3;
+    const height = options.height ?? 20;
+    const totalWidth = length * segment + (length - 1) * gap;
+    const left = x - totalWidth / 2;
+    const fill = options.fill ?? 0x9a642f;
+    const stroke = options.stroke ?? 0xf0c35a;
+
+    graphics.fillStyle(0x010711, 0.32);
+    graphics.fillRoundedRect(left + 3, y - height / 2 + 4, totalWidth, height, 8);
+    for (let i = 0; i < length; i += 1) {
+      const sx = left + i * (segment + gap);
+      graphics.fillStyle(fill, options.alpha ?? 0.96);
+      graphics.fillRoundedRect(sx, y - height / 2, segment, height, 7);
+      graphics.lineStyle(2, stroke, options.alpha ?? 0.9);
+      graphics.strokeRoundedRect(sx, y - height / 2, segment, height, 7);
+      graphics.fillStyle(0xffe0a6, options.alpha ?? 0.75);
+      graphics.fillCircle(sx + segment / 2, y, Math.max(2, segment * 0.12));
+    }
+  }
+
+  drawShipItem(item) {
+    const { template, index, graphics, width, height } = item;
+    const placed = this.placedTemplateIds.has(template.id);
+    const selected = !placed && index === this.selectedTemplateIndex;
+    graphics.clear();
+    graphics.fillStyle(selected ? 0x113a58 : 0x061827, placed ? 0.34 : 0.86);
+    graphics.fillRoundedRect(-width / 2, -height / 2, width, height, 10);
+    graphics.lineStyle(selected ? 3 : 1, selected ? 0xf8d77a : 0x6db7d4, placed ? 0.35 : 0.86);
+    graphics.strokeRoundedRect(-width / 2 + 1, -height / 2 + 1, width - 2, height - 2, 10);
+    this.drawMiniShip(graphics, template.length, 0, 0, {
+      alpha: placed ? 0.36 : 0.96,
+      segment: 22,
+      height: 18,
+      fill: placed ? 0x46525b : 0x9a642f,
+      stroke: placed ? 0x77828f : 0xf0c35a
+    });
+    item.container.setAlpha(placed ? 0.5 : 1);
+    item.container.disableInteractive();
+    if (!placed) {
+      item.container.setInteractive(
+        new Phaser.Geom.Rectangle(-width / 2, -height / 2, width, height),
+        Phaser.Geom.Rectangle.Contains
+      );
+      this.input.setDraggable(item.container);
+    }
+  }
+
+  startShipDrag(template, index, pointer) {
+    if (this.placedTemplateIds.has(template.id)) {
+      return;
+    }
+    this.selectedTemplateIndex = index;
+    this.draggingTemplate = template;
+    this.updateShipList();
+    this.ghostShip = this.add.graphics().setDepth(200);
+    this.updateShipGhost(pointer.x, pointer.y, true);
+  }
+
+  updateShipDrag(pointer) {
+    if (!this.draggingTemplate) {
+      return;
+    }
+    const cell = this.getCellFromPointer(pointer);
+    this.previewCells = cell ? this.getPlacementCells(cell.x, cell.y, this.draggingTemplate) : [];
+    this.dragPreviewValid = Boolean(
+      cell && canPlaceShip(this.board, cell.x, cell.y, this.draggingTemplate.length, this.direction, true)
+    );
+    this.updateShipGhost(pointer.x, pointer.y, this.dragPreviewValid);
+    this.updateBoard();
+  }
+
+  endShipDrag(template, pointer) {
+    const cell = this.getCellFromPointer(pointer);
+    const valid = Boolean(cell && canPlaceShip(this.board, cell.x, cell.y, template.length, this.direction, true));
+    this.ghostShip?.destroy();
+    this.ghostShip = null;
+    this.draggingTemplate = null;
+    this.previewCells = [];
+
+    if (valid) {
+      this.placeTemplate(template, cell.x, cell.y);
+    } else {
+      Toast.show(this, t('cannot_place'), { y: 112 });
+      this.updateBoard();
+      this.updateShipList();
+    }
+  }
+
+  updateShipGhost(x, y, valid) {
+    if (!this.ghostShip || !this.draggingTemplate) {
+      return;
+    }
+    this.ghostShip.clear();
+    this.ghostShip.setPosition(x, y);
+    this.drawMiniShip(this.ghostShip, this.draggingTemplate.length, 0, 0, {
+      alpha: 0.78,
+      segment: 24,
+      height: 20,
+      fill: valid ? 0x2fbf71 : 0xb93632,
+      stroke: valid ? 0xb8ffd2 : 0xffb0a8
+    });
+  }
+
+  getCellFromPointer(pointer) {
+    const { x, y, cell } = this.boardLayout;
+    const boardX = Math.floor((pointer.x - x) / cell);
+    const boardY = Math.floor((pointer.y - y) / cell);
+    if (boardX < 0 || boardY < 0 || boardX >= BOARD_SIZE || boardY >= BOARD_SIZE) {
+      return null;
+    }
+    return { x: boardX, y: boardY };
   }
 
   getPlacementCells(x, y, template = this.selectedTemplate) {
@@ -211,6 +352,13 @@ export class PreparationScene extends Phaser.Scene {
       return;
     }
 
+    this.placeTemplate(template, x, y);
+  }
+
+  placeTemplate(template, x, y) {
+    if (!template || this.placedTemplateIds.has(template.id)) {
+      return;
+    }
     const ship = createShip(template.length, this.nextShipId);
     this.nextShipId += 1;
     placeShip(this.board, ship, x, y, this.direction);
@@ -270,7 +418,7 @@ export class PreparationScene extends Phaser.Scene {
         let alpha = 0.8;
 
         if (cell.shipId !== null) {
-          fill = 0x8a5528;
+          fill = 0x113a58;
           stroke = 0xf0c35a;
           alpha = 0.96;
         }
@@ -292,19 +440,23 @@ export class PreparationScene extends Phaser.Scene {
         view.graphics.fillRoundedRect(px + 1, py + 1, this.boardLayout.cell - 4, this.boardLayout.cell - 4, 5);
         view.graphics.lineStyle(2, stroke, 0.9);
         view.graphics.strokeRoundedRect(px + 1, py + 1, this.boardLayout.cell - 4, this.boardLayout.cell - 4, 5);
+        if (cell.shipId !== null) {
+          const segment = Math.min(this.boardLayout.cell * 0.72, this.boardLayout.cell - 16);
+          const cx = px + this.boardLayout.cell / 2;
+          const cy = py + this.boardLayout.cell / 2;
+          view.graphics.fillStyle(0x9a642f, 0.96);
+          view.graphics.fillRoundedRect(cx - segment / 2, cy - segment / 2, segment, segment, 8);
+          view.graphics.lineStyle(2, 0xf0c35a, 0.95);
+          view.graphics.strokeRoundedRect(cx - segment / 2, cy - segment / 2, segment, segment, 8);
+          view.graphics.fillStyle(0xffe0a6, 0.85);
+          view.graphics.fillCircle(cx, cy, Math.max(3, segment * 0.13));
+        }
       }
     }
   }
 
   updateShipList() {
-    this.shipButtons.forEach((button, index) => {
-      const template = this.shipTemplates[index];
-      const placed = this.placedTemplateIds.has(template.id);
-      button
-        .setEnabled(!placed)
-        .setSelected(!placed && index === this.selectedTemplateIndex)
-        .setLabel(placed ? `${template.length} пал. ✓` : `${template.length} пал.`);
-    });
+    this.shipItems.forEach((item) => this.drawShipItem(item));
   }
 
   updateReadyState() {
