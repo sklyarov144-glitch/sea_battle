@@ -1,10 +1,13 @@
 import Phaser from 'phaser';
 import { SHOP_ITEMS } from '../config/balanceConfig.js';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
+import { LocalizationService, t } from '../services/LocalizationService.js';
+import { SoundService } from '../services/SoundService.js';
 import { StorageService } from '../services/StorageService.js';
 import { Button } from '../ui/Button.js';
+import { drawNavalPanel } from '../ui/NavalPanel.js';
 import { Toast } from '../ui/Toast.js';
-import { createSeaBackground, drawWoodPanel, flyCoins } from '../utils/effects.js';
+import { createSeaBackground, flyCoins } from '../utils/effects.js';
 
 export class ShopScene extends Phaser.Scene {
   constructor() {
@@ -18,6 +21,9 @@ export class ShopScene extends Phaser.Scene {
   create() {
     document.body.dataset.scene = 'ShopScene';
     this.profile = StorageService.loadProfile();
+    LocalizationService.init(this.profile);
+    SoundService.init(this.profile);
+    SoundService.playMusic(this, SoundService.keys.music_menu);
     createSeaBackground(this, { waterSkin: this.profile.selectedSkins.water });
     this.addHeader();
     this.addItems();
@@ -25,9 +31,9 @@ export class ShopScene extends Phaser.Scene {
   }
 
   addHeader() {
-    drawWoodPanel(this, 44, 26, 1192, 86);
+    drawNavalPanel(this, 44, 26, 1192, 86);
 
-    this.add.text(80, 54, 'Пиратская лавка', {
+    this.add.text(80, 54, t('shop_title'), {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '36px',
       color: '#fff0bf'
@@ -47,7 +53,7 @@ export class ShopScene extends Phaser.Scene {
 
     SHOP_ITEMS.forEach((item, index) => {
       const y = startY + index * 96;
-      drawWoodPanel(this, 104, y - 34, 1072, 74, { fill: 0x5f381b, alpha: 0.92 });
+      drawNavalPanel(this, 104, y - 34, 1072, 74, { alpha: 0.92, radius: 9 });
 
       this.add.text(134, y - 18, item.name, {
         fontFamily: 'Georgia, "Times New Roman", serif',
@@ -69,7 +75,7 @@ export class ShopScene extends Phaser.Scene {
 
       const button = new Button(this, 1038, y, 190, 48, '', () => {
         this.buyItem(item, { x: button.x, y: button.y });
-      }, { fontSize: 20, icon: item.type === 'skin' ? '★' : '+' });
+      }, { fontSize: 20, variant: 'secondary', small: true });
 
       this.itemRows.push({ item, button, priceText });
     });
@@ -78,9 +84,9 @@ export class ShopScene extends Phaser.Scene {
   }
 
   addBackButton() {
-    new Button(this, 130, GAME_HEIGHT - 54, 180, 50, 'Назад', () => {
+    new Button(this, 130, GAME_HEIGHT - 54, 180, 50, t('back'), () => {
       this.scene.start(this.fromScene);
-    }, { icon: '←', fontSize: 22 });
+    }, { variant: 'danger', fontSize: 20 });
   }
 
   buyItem(item, from) {
@@ -88,11 +94,11 @@ export class ShopScene extends Phaser.Scene {
     this.profile = profile;
 
     if (profile.__purchaseStatus === 'notEnoughGold') {
-      Toast.show(this, 'Не хватает золота');
+      Toast.show(this, t('not_enough_gold'));
     } else if (profile.__purchaseStatus === 'selected') {
-      Toast.show(this, 'Скин выбран');
+      Toast.show(this, t('skin_selected'));
     } else {
-      Toast.show(this, 'Покупка готова');
+      Toast.show(this, t('purchase_ready'));
       flyCoins(this, from, { x: 972, y: 70 }, 8);
     }
 
@@ -102,7 +108,7 @@ export class ShopScene extends Phaser.Scene {
 
   refreshGold() {
     this.profile = StorageService.loadProfile();
-    this.goldText.setText(`Золото: ${this.profile.gold}`);
+    this.goldText.setText(`${t('gold')}: ${this.profile.gold}`);
   }
 
   refreshItemButtons() {
@@ -110,7 +116,7 @@ export class ShopScene extends Phaser.Scene {
     this.itemRows.forEach(({ item, button }) => {
       if (item.type === 'consumable') {
         const count = this.profile.purchasedItems[item.id] ?? 0;
-        button.setLabel(count > 0 ? `Купить (${count})` : 'Купить');
+        button.setLabel(count > 0 ? `${t('buy')} (${count})` : t('buy'));
         button.setEnabled(this.profile.gold >= item.price);
         return;
       }
@@ -119,11 +125,11 @@ export class ShopScene extends Phaser.Scene {
       const selected = this.profile.selectedSkins[item.skinGroup] === item.skinValue;
 
       if (selected) {
-        button.setLabel('Выбрано').setEnabled(false);
+        button.setLabel(t('selected')).setEnabled(false);
       } else if (purchased) {
-        button.setLabel('Выбрать').setEnabled(true);
+        button.setLabel(t('select')).setEnabled(true);
       } else {
-        button.setLabel('Купить').setEnabled(this.profile.gold >= item.price);
+        button.setLabel(t('buy')).setEnabled(this.profile.gold >= item.price);
       }
     });
   }

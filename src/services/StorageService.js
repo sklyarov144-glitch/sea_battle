@@ -1,4 +1,5 @@
-import { CAPTAIN_XP_PER_LEVEL, DAILY_REWARD } from '../config/balanceConfig.js';
+import { CAPTAIN_XP_PER_LEVEL } from '../config/balanceConfig.js';
+import { CareerService } from './CareerService.js';
 
 const STORAGE_KEY = 'pirateSeaBattle.profile.v1';
 
@@ -7,6 +8,8 @@ const DEFAULT_PROFILE = {
   gold: 250,
   captainXp: 0,
   captainLevel: 1,
+  careerXp: 0,
+  careerRankIndex: 0,
   purchasedItems: {
     radarCharge: 0,
     barrageCharge: 0,
@@ -20,8 +23,11 @@ const DEFAULT_PROFILE = {
   },
   dailyRewardLastClaim: null,
   settings: {
+    language: 'ru',
     sound: true,
     music: true,
+    musicVolume: 0.45,
+    sfxVolume: 0.7,
     vibration: true
   },
   totalWins: 0,
@@ -67,7 +73,7 @@ function hasLocalStorage() {
 function normalizeCaptainLevel(profile) {
   const levelFromXp = Math.floor(profile.captainXp / CAPTAIN_XP_PER_LEVEL) + 1;
   profile.captainLevel = Math.max(1, levelFromXp);
-  return profile;
+  return CareerService.normalize(profile);
 }
 
 function stripTransientFields(profile) {
@@ -135,18 +141,31 @@ export const StorageService = {
     return this.saveProfile(updated ?? current);
   },
 
+  updateSettings(partialSettings) {
+    return this.updateProfile((profile) => {
+      profile.settings = {
+        ...profile.settings,
+        ...partialSettings
+      };
+      return profile;
+    });
+  },
+
   addRewards({ gold = 0, xp = 0 }) {
     return this.updateProfile((profile) => {
-      profile.gold = Math.max(0, profile.gold + gold);
-      profile.captainXp = Math.max(0, profile.captainXp + xp);
+      const previousRankIndex = profile.careerRankIndex ?? CareerService.getRankIndex(profile);
+      CareerService.addGold(profile, gold);
+      CareerService.addXp(profile, xp);
+      CareerService.checkRankUp(profile, previousRankIndex);
       return profile;
     });
   },
 
   applyBattleResult({ victory, levelId, gold = 0, xp = 0 }) {
     return this.updateProfile((profile) => {
-      profile.gold = Math.max(0, profile.gold + gold);
-      profile.captainXp = Math.max(0, profile.captainXp + xp);
+      const previousRankIndex = profile.careerRankIndex ?? CareerService.getRankIndex(profile);
+      CareerService.addGold(profile, gold);
+      CareerService.addXp(profile, xp);
 
       if (victory) {
         profile.totalWins += 1;
@@ -158,7 +177,7 @@ export const StorageService = {
         profile.currentWinStreak = 0;
       }
 
-      return profile;
+      return CareerService.checkRankUp(profile, previousRankIndex);
     });
   },
 
@@ -223,8 +242,17 @@ export const StorageService = {
       }
 
       profile.dailyRewardLastClaim = today;
-      profile.gold += DAILY_REWARD.gold;
+      const previousRankIndex = profile.careerRankIndex ?? CareerService.getRankIndex(profile);
+      const rewardGold = Math.floor(80 + Math.random() * 71);
+      const xpBonus = Math.random() < 0.35 ? 10 : 0;
+      CareerService.addGold(profile, rewardGold);
+      if (xpBonus > 0) {
+        CareerService.addXp(profile, xpBonus);
+      }
+      CareerService.checkRankUp(profile, previousRankIndex);
       profile.__dailyRewardClaimed = true;
+      profile.__dailyRewardGold = rewardGold;
+      profile.__dailyRewardXp = xpBonus;
       return profile;
     });
   },

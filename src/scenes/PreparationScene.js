@@ -2,7 +2,12 @@ import Phaser from 'phaser';
 import { AssetKeys } from '../config/assetKeys.js';
 import { BOARD_SIZE } from '../config/balanceConfig.js';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
+import { LocalizationService, t } from '../services/LocalizationService.js';
+import { SoundService } from '../services/SoundService.js';
+import { StorageService } from '../services/StorageService.js';
 import { Button } from '../ui/Button.js';
+import { drawNavalPanel } from '../ui/NavalPanel.js';
+import { SettingsModal } from '../ui/SettingsModal.js';
 import { Toast } from '../ui/Toast.js';
 import {
   canPlaceShip,
@@ -13,7 +18,7 @@ import {
   placeShip,
   SHIP_BLUEPRINTS
 } from '../utils/boardUtils.js';
-import { createCoverImageBackground, drawWoodPanel } from '../utils/effects.js';
+import { createCoverImageBackground } from '../utils/effects.js';
 
 export class PreparationScene extends Phaser.Scene {
   constructor() {
@@ -22,11 +27,17 @@ export class PreparationScene extends Phaser.Scene {
 
   init(data) {
     this.levelId = data.levelId ?? 1;
+    this.battleMode = data.battleMode ?? 'campaign';
+    this.returnScene = data.returnScene ?? 'MapScene';
   }
 
   create() {
     document.body.dataset.scene = 'PreparationScene';
     document.body.dataset.level = String(this.levelId);
+    this.profile = StorageService.loadProfile();
+    LocalizationService.init(this.profile);
+    SoundService.init(this.profile);
+    SoundService.playMusic(this, SoundService.keys.music_battle);
     createCoverImageBackground(this, AssetKeys.Images.BattleOceanBg, {
       overlayAlpha: 0.42,
       overlayColor: 0x031827,
@@ -59,6 +70,7 @@ export class PreparationScene extends Phaser.Scene {
     this.addBoard();
     this.addShipList();
     this.addControls();
+    this.addSettingsButton();
     this.updateBoard();
     this.updateShipList();
     this.updateReadyState();
@@ -66,13 +78,13 @@ export class PreparationScene extends Phaser.Scene {
   }
 
   addHeader() {
-    drawWoodPanel(this, 48, 24, 1184, 86);
-    this.add.text(82, 50, 'Подготовка флота', {
+    drawNavalPanel(this, 48, 24, 1184, 86);
+    this.add.text(82, 50, t('fleet_preparation'), {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '34px',
       color: '#fff0bf'
     });
-    this.timerText = this.add.text(GAME_WIDTH / 2, 67, 'Подготовка: 00:30', {
+    this.timerText = this.add.text(GAME_WIDTH / 2, 67, `${t('preparation_timer')}: 00:30`, {
       fontFamily: 'Arial, sans-serif',
       fontSize: '34px',
       color: '#d9fbff',
@@ -112,12 +124,11 @@ export class PreparationScene extends Phaser.Scene {
   }
 
   addShipList() {
-    drawWoodPanel(this, 690, 132, 482, 260, { fill: 0x563218, alpha: 0.94 });
-    this.add.image(724, 168, AssetKeys.Icons.Ships).setDisplaySize(42, 42);
-    this.add.text(760, 151, 'Корабли', {
+    drawNavalPanel(this, 690, 132, 482, 260, { title: t('ships'), titleSize: 28 });
+    this.add.text(724, 188, t('ships_hint'), {
       fontFamily: 'Georgia, "Times New Roman", serif',
-      fontSize: '30px',
-      color: '#fff0bf'
+      fontSize: '19px',
+      color: '#d9fbff'
     });
 
     this.shipButtons = this.shipTemplates.map((template, index) => {
@@ -131,44 +142,46 @@ export class PreparationScene extends Phaser.Scene {
         }
       }, {
         fontSize: 19,
-        iconKey: AssetKeys.Icons.Ships,
-        iconSize: 28
+        variant: 'secondary',
+        small: true
       });
     });
   }
 
   addControls() {
-    drawWoodPanel(this, 690, 418, 482, 202, { fill: 0x563218, alpha: 0.94 });
-    this.directionButton = new Button(this, 825, 474, 228, 52, 'Поворот: горизонт.', () => {
+    drawNavalPanel(this, 690, 418, 482, 202, { title: t('commands'), titleSize: 24 });
+    this.directionButton = new Button(this, 825, 474, 228, 52, t('rotate_horizontal'), () => {
       this.direction = this.direction === 'horizontal' ? 'vertical' : 'horizontal';
-      this.directionButton.setLabel(this.direction === 'horizontal' ? 'Поворот: горизонт.' : 'Поворот: вертик.');
+      this.directionButton.setLabel(this.direction === 'horizontal' ? t('rotate_horizontal') : t('rotate_vertical'));
       this.updateBoard();
     }, {
       fontSize: 18,
-      icon: '↻'
+      variant: 'secondary'
     });
 
-    this.autoButton = new Button(this, 1044, 474, 260, 72, 'Авто', () => this.autoPlace(), {
+    this.autoButton = new Button(this, 1044, 474, 260, 64, t('auto_place'), () => this.autoPlace(), {
       fontSize: 20,
-      iconKey: AssetKeys.Icons.AutoPlace,
-      backgroundKey: AssetKeys.Buttons.AutoPlace,
-      iconSize: 38
+      variant: 'primary'
     });
 
-    this.readyButton = new Button(this, 936, 556, 330, 82, 'Готов к бою', () => this.startBattle(), {
+    this.readyButton = new Button(this, 936, 556, 330, 82, t('ready_to_battle'), () => this.startBattle(), {
       fontSize: 22,
-      iconKey: AssetKeys.Icons.Ready,
-      backgroundKey: AssetKeys.Buttons.Ready,
-      iconSize: 44
+      variant: 'ready'
     });
 
-    new Button(this, 112, GAME_HEIGHT - 50, 190, 56, 'Назад', () => {
-      this.scene.start('MapScene');
+    new Button(this, 112, GAME_HEIGHT - 50, 190, 56, t('back'), () => {
+      this.scene.start(this.returnScene);
     }, {
       fontSize: 18,
-      iconKey: AssetKeys.Icons.Cancel,
-      backgroundKey: AssetKeys.Buttons.Cancel,
-      iconSize: 30
+      variant: 'danger'
+    });
+  }
+
+  addSettingsButton() {
+    new Button(this, GAME_WIDTH - 118, 67, 142, 46, t('settings'), () => this.openSettings(), {
+      variant: 'secondary',
+      fontSize: 16,
+      small: true
     });
   }
 
@@ -194,7 +207,7 @@ export class PreparationScene extends Phaser.Scene {
 
     if (!canPlaceShip(this.board, x, y, template.length, this.direction, true)) {
       this.flashError(this.getPlacementCells(x, y, template));
-      Toast.show(this, 'Нельзя поставить сюда', { y: 112 });
+      Toast.show(this, t('cannot_place'), { y: 112 });
       return;
     }
 
@@ -229,7 +242,7 @@ export class PreparationScene extends Phaser.Scene {
     this.ships = setup.ships;
     this.placedTemplateIds = new Set(this.shipTemplates.map((template) => template.id));
     this.selectedTemplateIndex = 0;
-    Toast.show(this, 'Флот расставлен', { y: 112 });
+    Toast.show(this, t('fleet_ready'), { y: 112 });
     this.updateBoard();
     this.updateShipList();
     this.updateReadyState();
@@ -297,21 +310,7 @@ export class PreparationScene extends Phaser.Scene {
   updateReadyState() {
     const ready = this.ships.length === this.shipTemplates.length;
     this.readyButton.setEnabled(ready);
-    if (ready && !this.readyPulse) {
-      this.readyPulse = this.tweens.add({
-        targets: this.readyButton,
-        scale: 1.045,
-        duration: 720,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.inOut'
-      });
-    }
-    if (!ready && this.readyPulse) {
-      this.readyPulse.stop();
-      this.readyPulse = null;
-      this.readyButton.setScale(1);
-    }
+    this.readyButton.setPulse(ready);
   }
 
   startTimer() {
@@ -331,7 +330,7 @@ export class PreparationScene extends Phaser.Scene {
   }
 
   updateTimer() {
-    this.timerText.setText(`Подготовка: 00:${String(Math.max(0, this.timeLeft)).padStart(2, '0')}`);
+    this.timerText.setText(`${t('preparation_timer')}: 00:${String(Math.max(0, this.timeLeft)).padStart(2, '0')}`);
     this.timerText.setColor(this.timeLeft <= 5 ? '#ff9d66' : '#d9fbff');
   }
 
@@ -347,11 +346,32 @@ export class PreparationScene extends Phaser.Scene {
       return;
     }
     this.timerEvent?.remove(false);
-    this.readyPulse?.stop();
     const playerSetup = cloneBoardSetup(this.board, this.ships);
     this.scene.start('GameScene', {
       levelId: this.levelId,
-      playerSetup
+      playerSetup,
+      battleMode: this.battleMode
+    });
+  }
+
+  openSettings() {
+    if (this.settingsModal) {
+      return;
+    }
+    this.settingsModal = new SettingsModal(this, {
+      onLanguageChanged: () => this.scene.restart({
+        levelId: this.levelId,
+        battleMode: this.battleMode,
+        returnScene: this.returnScene
+      }),
+      onMusicChanged: (enabled) => {
+        if (enabled) {
+          SoundService.playMusic(this, SoundService.keys.music_battle);
+        }
+      },
+      onClose: () => {
+        this.settingsModal = null;
+      }
     });
   }
 }

@@ -1,11 +1,13 @@
 import Phaser from 'phaser';
-import { AssetKeys } from '../config/assetKeys.js';
 import { LEVELS } from '../config/balanceConfig.js';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
+import { LocalizationService, t } from '../services/LocalizationService.js';
+import { SoundService } from '../services/SoundService.js';
 import { StorageService } from '../services/StorageService.js';
 import { Button } from '../ui/Button.js';
+import { drawNavalPanel } from '../ui/NavalPanel.js';
 import { Toast } from '../ui/Toast.js';
-import { createSeaBackground, drawWoodPanel } from '../utils/effects.js';
+import { createSeaBackground } from '../utils/effects.js';
 
 export class MapScene extends Phaser.Scene {
   constructor() {
@@ -15,6 +17,9 @@ export class MapScene extends Phaser.Scene {
   create() {
     document.body.dataset.scene = 'MapScene';
     this.profile = StorageService.loadProfile();
+    LocalizationService.init(this.profile);
+    SoundService.init(this.profile);
+    SoundService.playMusic(this, SoundService.keys.music_menu);
     createSeaBackground(this, { waterSkin: this.profile.selectedSkins.water });
 
     this.addHeader();
@@ -23,13 +28,13 @@ export class MapScene extends Phaser.Scene {
   }
 
   addHeader() {
-    drawWoodPanel(this, 44, 28, 1192, 82);
-    this.add.text(80, 54, 'Кампания', {
+    drawNavalPanel(this, 44, 28, 1192, 82);
+    this.add.text(80, 54, t('campaign'), {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '36px',
       color: '#fff0bf'
     });
-    this.add.text(730, 58, `Открыто: ${this.profile.unlockedLevel}/10   Золото: ${this.profile.gold}`, {
+    this.add.text(730, 58, `${t('campaign')}: ${this.profile.unlockedLevel}/10   ${t('gold')}: ${this.profile.gold}`, {
       fontFamily: 'Arial, sans-serif',
       fontSize: '25px',
       color: '#d9fbff'
@@ -107,27 +112,29 @@ export class MapScene extends Phaser.Scene {
     if (unlocked) {
       hitZone.on('pointerover', () => this.tweens.add({ targets: container, scale: 1.08, duration: 140 }));
       hitZone.on('pointerout', () => this.tweens.add({ targets: container, scale: 1, duration: 140 }));
-      hitZone.on('pointerup', () => this.scene.start('PreparationScene', { levelId: level.id }));
+      hitZone.on('pointerup', () => this.scene.start('PreparationScene', {
+        levelId: level.id,
+        battleMode: 'campaign',
+        returnScene: 'MapScene'
+      }));
     } else {
       hitZone.on('pointerup', () => Toast.show(this, 'Этот остров пока закрыт'));
     }
   }
 
   addNavigation() {
-    new Button(this, 128, GAME_HEIGHT - 58, 196, 58, 'Назад', () => {
+    new Button(this, 128, GAME_HEIGHT - 58, 196, 58, t('back'), () => {
       this.scene.start('MenuScene');
     }, {
-      iconKey: AssetKeys.Icons.Cancel,
-      backgroundKey: AssetKeys.Buttons.Cancel,
-      iconSize: 30
+      variant: 'danger',
+      fontSize: 20
     });
 
-    new Button(this, GAME_WIDTH - 136, GAME_HEIGHT - 58, 214, 58, 'Магазин', () => {
+    new Button(this, GAME_WIDTH - 136, GAME_HEIGHT - 58, 214, 58, t('shop'), () => {
       this.scene.start('ShopScene', { from: 'MapScene' });
     }, {
-      iconKey: AssetKeys.Icons.Upgrades,
-      fontSize: 22,
-      iconSize: 30
+      variant: 'secondary',
+      fontSize: 22
     });
   }
 }

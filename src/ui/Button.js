@@ -1,4 +1,13 @@
 import Phaser from 'phaser';
+import { SoundService } from '../services/SoundService.js';
+
+const VARIANTS = {
+  primary: { fill: 0x09263f, fill2: 0x0f3a5c, glow: 0xd7a748, text: '#f8d77a' },
+  secondary: { fill: 0x071d32, fill2: 0x0b2b48, glow: 0x6db7d4, text: '#f2d48a' },
+  ready: { fill: 0x083326, fill2: 0x0d5a3e, glow: 0x5ee0a1, text: '#e9ffd8' },
+  danger: { fill: 0x35111a, fill2: 0x5c1d28, glow: 0xff6d5e, text: '#ffe2cc' },
+  disabled: { fill: 0x1d2732, fill2: 0x27313b, glow: 0x56616e, text: '#9aa6b2' }
+};
 
 export class Button extends Phaser.GameObjects.Container {
   constructor(scene, x, y, width, height, label, onClick, options = {}) {
@@ -9,102 +18,76 @@ export class Button extends Phaser.GameObjects.Container {
     this.label = label;
     this.onClick = onClick;
     this.options = {
-      fill: 0x8a5528,
-      hoverFill: 0xa96f35,
-      disabledFill: 0x4f4f58,
-      selectedFill: 0x0f7d8a,
-      textColor: '#fff4cf',
-      stroke: 0xf0c35a,
+      variant: 'primary',
       fontSize: 24,
-      icon: null,
-      iconKey: null,
-      backgroundKey: null,
-      imageButtonWithTextInside: null,
-      iconSize: null,
-      iconOffsetX: null,
-      radius: 8,
+      pulse: false,
+      selected: false,
+      disabled: false,
+      small: false,
       ...options
     };
-    this.imageButtonWithTextInside = this.options.imageButtonWithTextInside ?? Boolean(this.options.backgroundKey);
-    this.enabled = true;
-    this.selected = false;
+    this.enabled = !this.options.disabled && this.options.variant !== 'disabled';
+    this.selected = Boolean(this.options.selected);
     this.hovered = false;
     this.pressed = false;
+    this.pulseTween = null;
+    this.pulsing = false;
 
-    this.backgroundImage = null;
-    this.background = scene.add.graphics();
-    if (this.options.backgroundKey && scene.textures.exists(this.options.backgroundKey)) {
-      this.backgroundImage = scene.add.image(0, 0, this.options.backgroundKey);
-      this.backgroundImage.setOrigin(0.5);
-      this.backgroundImage.setDisplaySize(width, height);
-      this.add(this.backgroundImage);
-    } else {
-      this.add(this.background);
-    }
+    this.graphics = scene.add.graphics();
+    this.add(this.graphics);
 
-    this.iconText = null;
-    this.iconImage = null;
-    const iconLeft = this.options.iconOffsetX ?? -width / 2 + Math.max(28, height * 0.62);
-    if (this.options.iconKey && scene.textures.exists(this.options.iconKey)) {
-      this.iconImage = scene.add.image(iconLeft, 0, this.options.iconKey);
-      this.iconImage.setOrigin(0.5);
-      const iconSize = this.options.iconSize ?? Math.round(height * 0.62);
-      this.iconImage.setDisplaySize(iconSize, iconSize);
-      this.add(this.iconImage);
-    } else if (this.options.icon) {
-      this.iconText = scene.add.text(-width / 2 + 30, 0, this.options.icon, {
-        fontSize: `${Math.round(this.options.fontSize * 1.05)}px`
-      }).setOrigin(0.5);
-      this.add(this.iconText);
-    }
-
-    this.text = null;
-    if (!this.imageButtonWithTextInside) {
-      const hasIcon = Boolean(this.options.icon || this.iconImage);
-      this.text = scene.add.text(hasIcon ? Math.round(height * 0.28) : 0, 0, label, {
-        fontFamily: 'Georgia, "Times New Roman", serif',
-        fontSize: `${this.options.fontSize}px`,
-        color: this.options.textColor,
-        align: 'center',
-        fixedWidth: width - (hasIcon ? Math.round(height * 1.35) : 22),
-        wordWrap: { width: width - (hasIcon ? Math.round(height * 1.35) : 22), useAdvancedWrap: true }
-      }).setOrigin(0.5);
-      this.add(this.text);
-    }
-
-    this.hitTarget = scene.add.rectangle(0, 0, width, height, 0xffffff, 0.001);
-    this.hitTarget.setOrigin(0.5);
-    this.add(this.hitTarget);
+    this.text = scene.add.text(0, 1, this.formatLabel(label), {
+      fontFamily: 'Georgia, "Times New Roman", serif',
+      fontSize: `${this.options.fontSize}px`,
+      color: '#f8d77a',
+      align: 'center',
+      fixedWidth: width - 24,
+      wordWrap: { width: width - 24, useAdvancedWrap: true },
+      shadow: {
+        offsetX: 0,
+        offsetY: 2,
+        color: '#020812',
+        blur: 5,
+        fill: true
+      }
+    }).setOrigin(0.5);
+    this.add(this.text);
 
     this.setSize(width, height);
-    this.updateHitArea();
+    this.setInteractive(
+      new Phaser.Geom.Rectangle(-width / 2, -height / 2, width, height),
+      Phaser.Geom.Rectangle.Contains
+    );
+    this.input.cursor = this.enabled ? 'pointer' : 'default';
 
-    this.hitTarget.on('pointerover', () => this.handlePointerOver());
-    this.hitTarget.on('pointerout', () => this.handlePointerOut());
-    this.hitTarget.on('pointerdown', () => this.handlePointerDown());
-    this.hitTarget.on('pointerup', () => this.handlePointerUp());
+    this.on('pointerover', () => this.handlePointerOver());
+    this.on('pointerout', () => this.handlePointerOut());
+    this.on('pointerdown', () => this.handlePointerDown());
+    this.on('pointerup', () => this.handlePointerUp());
 
     scene.add.existing(this);
     this.draw();
+    this.setPulse(Boolean(this.options.pulse));
   }
 
-  updateHitArea() {
-    this.hitTarget.setSize(this.widthValue, this.heightValue);
-    this.hitTarget.setDisplaySize(this.widthValue, this.heightValue);
-    this.hitTarget.setInteractive({
-      useHandCursor: this.enabled,
-      hitArea: new Phaser.Geom.Rectangle(0, 0, this.widthValue, this.heightValue),
-      hitAreaCallback: Phaser.Geom.Rectangle.Contains
-    });
+  formatLabel(label) {
+    return String(label ?? '').toLocaleUpperCase('ru-RU');
+  }
+
+  getVariant() {
+    if (!this.enabled) {
+      return VARIANTS.disabled;
+    }
+    return VARIANTS[this.options.variant] ?? VARIANTS.primary;
   }
 
   handlePointerOver() {
     this.hovered = true;
     this.draw();
-
     if (this.enabled) {
-      this.scene.tweens.killTweensOf(this);
-      this.scene.tweens.add({ targets: this, scale: 1.035, duration: 120, ease: 'Sine.easeOut' });
+      SoundService.playSfx(this.scene, SoundService.keys.sfx_button_hover);
+      this.stopPulseTween();
+      this.scene.tweens.add({ targets: this, scale: 1.03, duration: 120, ease: 'Sine.easeOut' });
     }
   }
 
@@ -112,102 +95,132 @@ export class Button extends Phaser.GameObjects.Container {
     this.hovered = false;
     this.pressed = false;
     this.draw();
-    this.scene.tweens.killTweensOf(this);
-    this.scene.tweens.add({ targets: this, scale: 1, duration: 120, ease: 'Sine.easeOut' });
+    if (this.pulsing && this.enabled) {
+      this.startPulseTween();
+    } else {
+      this.scene.tweens.killTweensOf(this);
+      this.scene.tweens.add({ targets: this, scale: 1, duration: 120, ease: 'Sine.easeOut' });
+    }
   }
 
   handlePointerDown() {
     if (!this.enabled) {
       return;
     }
-
     this.pressed = true;
     this.draw();
-    this.scene.tweens.killTweensOf(this);
-    this.scene.tweens.add({ targets: this, scale: 0.975, duration: 80, ease: 'Sine.easeOut' });
+    this.stopPulseTween();
+    this.scene.tweens.add({ targets: this, scale: 0.97, duration: 70, ease: 'Sine.easeOut' });
   }
 
   handlePointerUp() {
     if (!this.enabled) {
       return;
     }
-
     this.pressed = false;
     this.draw();
-    this.scene.tweens.killTweensOf(this);
-    this.scene.tweens.add({ targets: this, scale: this.hovered ? 1.035 : 1, duration: 100, ease: 'Sine.easeOut' });
+    SoundService.playSfx(this.scene, SoundService.keys.sfx_click);
+    this.scene.tweens.add({ targets: this, scale: this.hovered ? 1.03 : 1, duration: 90, ease: 'Sine.easeOut' });
     this.onClick?.();
   }
 
   draw() {
-    this.background.clear();
-
-    const radius = this.options.radius;
-    const fill = this.selected
-      ? this.options.selectedFill
-      : this.enabled
-        ? this.hovered
-          ? this.options.hoverFill
-          : this.options.fill
-        : this.options.disabledFill;
-    const alpha = this.enabled ? 1 : 0.55;
+    const variant = this.getVariant();
+    const w = this.widthValue;
+    const h = this.heightValue;
+    const radius = this.options.small ? 7 : 10;
+    const glowAlpha = this.selected || this.hovered ? 0.34 : 0.16;
     const yOffset = this.pressed ? 2 : 0;
 
-    if (this.backgroundImage) {
-      this.backgroundImage.setY(yOffset);
-      this.backgroundImage.setAlpha(alpha);
-      this.backgroundImage.clearTint();
-      if (this.selected) {
-        this.backgroundImage.setTint(0x9ff3ff);
-      } else if (this.hovered && this.enabled) {
-        this.backgroundImage.setTint(0xfff0bf);
-      } else if (!this.enabled) {
-        this.backgroundImage.setTint(0x666b75);
-      }
-    } else {
-      this.background.fillStyle(0x261509, alpha);
-      this.background.fillRoundedRect(-this.widthValue / 2 + 3, -this.heightValue / 2 + 5 + yOffset, this.widthValue, this.heightValue, radius);
-      this.background.fillStyle(fill, alpha);
-      this.background.fillRoundedRect(-this.widthValue / 2, -this.heightValue / 2 + yOffset, this.widthValue, this.heightValue, radius);
-      this.background.lineStyle(2, this.options.stroke, alpha);
-      this.background.strokeRoundedRect(-this.widthValue / 2 + 2, -this.heightValue / 2 + 2 + yOffset, this.widthValue - 4, this.heightValue - 4, radius - 1);
-    }
-    if (this.iconImage) {
-      this.iconImage.setAlpha(this.enabled ? 1 : 0.55);
-      this.iconImage.setY(yOffset);
-    }
-    if (this.iconText) {
-      this.iconText.setAlpha(this.enabled ? 1 : 0.55);
-      this.iconText.setY(yOffset);
-    }
-    this.text?.setY(yOffset);
-    this.setAlpha(this.enabled ? 1 : 0.68);
+    this.graphics.clear();
+    this.graphics.fillStyle(0x010711, 0.48);
+    this.graphics.fillRoundedRect(-w / 2 + 5, -h / 2 + 7 + yOffset, w, h, radius);
+
+    this.graphics.lineStyle(7, variant.glow, glowAlpha);
+    this.graphics.strokeRoundedRect(-w / 2 + 2, -h / 2 + 2 + yOffset, w - 4, h - 4, radius);
+
+    this.graphics.fillStyle(0x07121f, this.enabled ? 0.98 : 0.72);
+    this.graphics.fillRoundedRect(-w / 2, -h / 2 + yOffset, w, h, radius);
+    this.graphics.fillStyle(variant.fill, this.enabled ? 0.98 : 0.78);
+    this.graphics.fillRoundedRect(-w / 2 + 5, -h / 2 + 5 + yOffset, w - 10, h - 10, radius - 2);
+    this.graphics.fillStyle(variant.fill2, 0.62);
+    this.graphics.fillRoundedRect(-w / 2 + 8, -h / 2 + h * 0.48 + yOffset, w - 16, h * 0.42, radius - 3);
+
+    this.graphics.lineStyle(3, 0x9c6b2f, this.enabled ? 1 : 0.45);
+    this.graphics.strokeRoundedRect(-w / 2 + 1, -h / 2 + 1 + yOffset, w - 2, h - 2, radius);
+    this.graphics.lineStyle(1, 0xf6d37c, this.enabled ? 0.82 : 0.32);
+    this.graphics.strokeRoundedRect(-w / 2 + 7, -h / 2 + 7 + yOffset, w - 14, h - 14, radius - 3);
+
+    const rivetColor = this.enabled ? 0xd7a748 : 0x707987;
+    this.graphics.fillStyle(rivetColor, 0.92);
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy]) => {
+      this.graphics.fillCircle(sx * (w / 2 - 14), sy * (h / 2 - 14) + yOffset, this.options.small ? 2.5 : 3.6);
+    });
+
+    this.text.setY(1 + yOffset);
+    this.text.setColor(variant.text);
+    this.setAlpha(this.enabled ? 1 : 0.72);
   }
 
-  setEnabled(enabled) {
-    this.enabled = enabled;
-    if (enabled) {
-      this.updateHitArea();
-    } else {
-      this.hitTarget.disableInteractive();
+  setEnabled(value) {
+    this.enabled = Boolean(value);
+    this.input.cursor = this.enabled ? 'pointer' : 'default';
+    if (!this.enabled) {
       this.hovered = false;
       this.pressed = false;
-      this.scene.tweens.killTweensOf(this);
+      this.stopPulseTween();
       this.setScale(1);
     }
     this.draw();
     return this;
   }
 
-  setSelected(selected) {
-    this.selected = selected;
+  setLabel(value) {
+    this.label = value;
+    this.text.setText(this.formatLabel(value));
+    return this;
+  }
+
+  setPulse(value) {
+    this.pulsing = Boolean(value);
+    this.stopPulseTween();
+    if (this.pulsing && this.enabled && !this.hovered && !this.pressed) {
+      this.startPulseTween();
+    }
+    return this;
+  }
+
+  startPulseTween() {
+    this.stopPulseTween(false);
+    this.pulseTween = this.scene.tweens.add({
+      targets: this,
+      scale: 1.035,
+      duration: 760,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.inOut'
+    });
+  }
+
+  stopPulseTween(resetScale = true) {
+    this.scene.tweens.killTweensOf(this);
+    if (this.pulseTween) {
+      this.pulseTween.stop();
+      this.pulseTween = null;
+    }
+    if (resetScale) {
+      this.setScale(1);
+    }
+  }
+
+  setSelected(value) {
+    this.selected = Boolean(value);
     this.draw();
     return this;
   }
 
-  setLabel(label) {
-    this.label = label;
-    this.text?.setText(label);
-    return this;
+  destroy(fromScene) {
+    this.pulseTween?.stop();
+    super.destroy(fromScene);
   }
 }

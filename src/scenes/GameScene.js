@@ -2,8 +2,12 @@ import Phaser from 'phaser';
 import { AssetKeys } from '../config/assetKeys.js';
 import { BASE_ABILITY_CHARGES, LEVELS } from '../config/balanceConfig.js';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
+import { LocalizationService, t } from '../services/LocalizationService.js';
+import { SoundService } from '../services/SoundService.js';
 import { StorageService } from '../services/StorageService.js';
 import { Button } from '../ui/Button.js';
+import { drawNavalPanel } from '../ui/NavalPanel.js';
+import { SettingsModal } from '../ui/SettingsModal.js';
 import { Toast } from '../ui/Toast.js';
 import {
   allShipsSunk,
@@ -21,7 +25,6 @@ import {
   cameraShake,
   createCannonArc,
   createCoverImageBackground,
-  drawWoodPanel,
   flyCoins,
   pulseTarget,
   spawnExplosion,
@@ -45,6 +48,7 @@ export class GameScene extends Phaser.Scene {
   init(data) {
     this.levelId = data.levelId ?? 1;
     this.playerSetup = data.playerSetup ?? null;
+    this.battleMode = data.battleMode ?? 'campaign';
   }
 
   create() {
@@ -52,6 +56,9 @@ export class GameScene extends Phaser.Scene {
     document.body.dataset.level = String(this.levelId);
     this.level = LEVELS[this.levelId - 1] ?? LEVELS[0];
     this.profile = StorageService.loadProfile();
+    LocalizationService.init(this.profile);
+    SoundService.init(this.profile);
+    SoundService.playMusic(this, SoundService.keys.music_battle);
     this.boosts = StorageService.consumeBattleBoosts() ?? { radar: 0, barrage: 0, torpedo: 0 };
     this.profile = StorageService.loadProfile();
     this.battle = createBattleSetup(this.level);
@@ -95,7 +102,7 @@ export class GameScene extends Phaser.Scene {
     this.createCenterPanel();
     this.createAbilityPanel();
     this.updateAllBoards();
-    this.addLog('Ваш ход. Цельтесь по вражескому полю.');
+    this.addLog(`${t('your_turn')}.`);
   }
 
   createLayout() {
@@ -121,7 +128,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   createStatusPanel() {
-    drawWoodPanel(this, 42, 22, 1196, 86);
+    drawNavalPanel(this, 42, 22, 1196, 86);
 
     this.add.text(72, 48, `Остров ${this.level.id}: ${this.level.name}`, {
       fontFamily: 'Georgia, "Times New Roman", serif',
@@ -148,13 +155,16 @@ export class GameScene extends Phaser.Scene {
       color: '#fff5d6'
     });
 
-    this.exitButton = new Button(this, 1158, 66, 150, 50, 'Меню', () => this.showExitConfirm(), {
-      iconKey: AssetKeys.Icons.Cancel,
-      backgroundKey: AssetKeys.Buttons.Cancel,
-      iconSize: 28,
+    this.settingsButton = new Button(this, 1000, 66, 150, 50, t('settings'), () => this.openSettings(), {
+      fontSize: 16,
+      variant: 'secondary',
+      small: true
+    });
+
+    this.exitButton = new Button(this, 1158, 66, 150, 50, t('menu'), () => this.showExitConfirm(), {
       fontSize: 18,
-      fill: 0x6d3440,
-      hoverFill: 0x843e4c
+      variant: 'danger',
+      small: true
     });
 
     this.updateStatus();
@@ -172,40 +182,31 @@ export class GameScene extends Phaser.Scene {
     this.exitOverlay = this.add.container(0, 0).setDepth(500);
     const dim = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x020812, 0.68);
     dim.setInteractive();
-    const panel = drawWoodPanel(this, GAME_WIDTH / 2 - 270, GAME_HEIGHT / 2 - 116, 540, 232, {
-      fill: 0x5f381b,
-      alpha: 0.98
-    });
-    const title = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 62, 'Покинуть бой?', {
+    const panel = drawNavalPanel(this, GAME_WIDTH / 2 - 270, GAME_HEIGHT / 2 - 116, 540, 232, { alpha: 0.98 });
+    const title = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 62, t('leave_battle'), {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '34px',
       color: '#fff0bf',
       stroke: '#2b170b',
       strokeThickness: 4
     }).setOrigin(0.5);
-    const message = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 12, 'Текущий бой будет завершён без награды.', {
+    const message = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 12, t('leave_battle_text'), {
       fontFamily: 'Arial, sans-serif',
       fontSize: '22px',
       color: '#fff5d6',
       align: 'center'
     }).setOrigin(0.5);
-    const stayButton = new Button(this, GAME_WIDTH / 2 - 128, GAME_HEIGHT / 2 + 62, 238, 64, 'Остаться', () => {
+    const stayButton = new Button(this, GAME_WIDTH / 2 - 128, GAME_HEIGHT / 2 + 62, 238, 64, t('stay'), () => {
       this.closeExitConfirm();
     }, {
       fontSize: 21,
-      iconKey: AssetKeys.Icons.Cancel,
-      backgroundKey: AssetKeys.Buttons.Cancel,
-      iconSize: 34
+      variant: 'secondary'
     });
-    const leaveButton = new Button(this, GAME_WIDTH / 2 + 128, GAME_HEIGHT / 2 + 62, 238, 64, 'В меню', () => {
+    const leaveButton = new Button(this, GAME_WIDTH / 2 + 128, GAME_HEIGHT / 2 + 62, 238, 64, t('to_menu'), () => {
       this.scene.start('MenuScene');
     }, {
       fontSize: 21,
-      iconKey: AssetKeys.Icons.Campaign,
-      backgroundKey: AssetKeys.Buttons.Campaign,
-      iconSize: 34,
-      fill: 0x6d3440,
-      hoverFill: 0x843e4c
+      variant: 'danger'
     });
 
     this.exitOverlay.add([dim, panel, title, message, stayButton, leaveButton]);
@@ -218,8 +219,31 @@ export class GameScene extends Phaser.Scene {
     this.updateAbilityButtons();
   }
 
+  openSettings() {
+    if (this.settingsModal || this.exitConfirmOpen || this.battleEnded) {
+      return;
+    }
+    this.cancelAbility();
+    this.settingsModal = new SettingsModal(this, {
+      onLanguageChanged: () => {
+        this.updateStatus();
+        this.updateAbilityButtons();
+      },
+      onMusicChanged: (enabled) => {
+        if (enabled) {
+          SoundService.playMusic(this, SoundService.keys.music_battle);
+        }
+      },
+      onClose: () => {
+        this.settingsModal = null;
+        this.updateAbilityButtons();
+      }
+    });
+    this.updateAbilityButtons();
+  }
+
   createBoards() {
-    this.add.text(238, 166, 'Ваш флот', {
+    this.add.text(238, 166, t('your_fleet'), {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '28px',
       color: '#fff0bf',
@@ -227,7 +251,7 @@ export class GameScene extends Phaser.Scene {
       strokeThickness: 4
     }).setOrigin(0.5);
 
-    this.add.text(952, 116, 'Вражеские воды', {
+    this.add.text(952, 116, t('enemy_waters'), {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '30px',
       color: '#fff0bf',
@@ -278,9 +302,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   createCenterPanel() {
-    drawWoodPanel(this, 432, 138, 244, 360, { fill: 0x563218 });
+    drawNavalPanel(this, 432, 138, 244, 360);
 
-    this.add.text(554, 160, 'Бортовой журнал', {
+    this.add.text(554, 160, t('logbook'), {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '24px',
       color: '#fff0bf'
@@ -299,38 +323,37 @@ export class GameScene extends Phaser.Scene {
   }
 
   createAbilityPanel() {
-    drawWoodPanel(this, 70, 570, 1114, 106, { fill: 0x563218 });
+    drawNavalPanel(this, 70, 570, 1114, 106);
 
     this.abilityButtons = {
       radar: new Button(this, 170, 623, 180, 52, '', () => this.selectAbility('radar'), {
-        icon: '◉',
-        fontSize: 22
+        fontSize: 20,
+        variant: 'secondary',
+        small: true
       }),
       barrage: new Button(this, 380, 623, 180, 52, '', () => this.selectAbility('barrage'), {
-        icon: '✚',
-        fontSize: 22
+        fontSize: 20,
+        variant: 'secondary',
+        small: true
       }),
       torpedo: new Button(this, 590, 623, 190, 52, '', () => this.selectAbility('torpedo'), {
-        icon: '➜',
-        fontSize: 22
+        fontSize: 20,
+        variant: 'secondary',
+        small: true
       }),
-      cancel: new Button(this, 804, 623, 196, 60, 'Отмена', () => this.cancelAbility(), {
-        iconKey: AssetKeys.Icons.Cancel,
-        backgroundKey: AssetKeys.Buttons.Cancel,
-        iconSize: 34,
+      cancel: new Button(this, 804, 623, 196, 60, t('cancel'), () => this.cancelAbility(), {
         fontSize: 22,
-        fill: 0x6d3440,
-        hoverFill: 0x843e4c
+        variant: 'danger'
       }),
-      row: new Button(this, 1010, 606, 150, 38, 'Строка', () => this.setTorpedoAxis('row'), {
+      row: new Button(this, 1010, 606, 150, 38, t('row'), () => this.setTorpedoAxis('row'), {
         fontSize: 18,
-        fill: 0x0f6477,
-        hoverFill: 0x147f93
+        variant: 'secondary',
+        small: true
       }),
-      column: new Button(this, 1010, 646, 150, 38, 'Колонка', () => this.setTorpedoAxis('column'), {
+      column: new Button(this, 1010, 646, 150, 38, t('column'), () => this.setTorpedoAxis('column'), {
         fontSize: 18,
-        fill: 0x0f6477,
-        hoverFill: 0x147f93
+        variant: 'secondary',
+        small: true
       })
     };
 
@@ -339,7 +362,7 @@ export class GameScene extends Phaser.Scene {
 
   updateStatus() {
     this.goldText.setText(`Золото: ${this.profile.gold}  |  добыча боя: ${this.battleGold}`);
-    this.turnText.setText(this.playerTurn ? 'Ваш ход' : 'Ход соперника');
+    this.turnText.setText(this.playerTurn ? t('your_turn') : t('opponent_turn'));
     document.body.dataset.turn = this.playerTurn ? 'player' : 'bot';
     document.body.dataset.battleGold = String(this.battleGold);
   }
@@ -351,15 +374,15 @@ export class GameScene extends Phaser.Scene {
     document.body.dataset.torpedoAxis = this.torpedoAxis;
     document.body.dataset.abilityCharges = JSON.stringify(this.abilityCharges);
     this.abilityButtons.radar
-      .setLabel(`Радар ${this.abilityCharges.radar}`)
+      .setLabel(`${t('radar')} ${this.abilityCharges.radar}`)
       .setEnabled(canAct && this.abilityCharges.radar > 0)
       .setSelected(this.selectedAbility === 'radar');
     this.abilityButtons.barrage
-      .setLabel(`Залп ${this.abilityCharges.barrage}`)
+      .setLabel(`${t('barrage')} ${this.abilityCharges.barrage}`)
       .setEnabled(canAct && this.abilityCharges.barrage > 0)
       .setSelected(this.selectedAbility === 'barrage');
     this.abilityButtons.torpedo
-      .setLabel(`Торпеда ${this.abilityCharges.torpedo}`)
+      .setLabel(`${t('torpedo')} ${this.abilityCharges.torpedo}`)
       .setEnabled(canAct && this.abilityCharges.torpedo > 0)
       .setSelected(this.selectedAbility === 'torpedo');
     this.abilityButtons.cancel.setEnabled(canAct && Boolean(this.selectedAbility));
@@ -370,6 +393,7 @@ export class GameScene extends Phaser.Scene {
       .setEnabled(canAct && this.selectedAbility === 'torpedo')
       .setSelected(this.selectedAbility === 'torpedo' && this.torpedoAxis === 'column');
     this.exitButton?.setEnabled(!this.battleEnded && !this.exitConfirmOpen);
+    this.settingsButton?.setEnabled(!this.battleEnded && !this.exitConfirmOpen);
   }
 
   updateAllBoards() {
@@ -504,9 +528,9 @@ export class GameScene extends Phaser.Scene {
 
     this.selectedAbility = this.selectedAbility === ability ? null : ability;
     const labels = {
-      radar: 'Радар: выберите центр области 3x3.',
-      barrage: 'Залп: выберите центр креста.',
-      torpedo: 'Торпеда: выберите строку или колонку и клетку.'
+      radar: `${t('radar')}: выберите центр области 3x3.`,
+      barrage: `${t('barrage')}: выберите центр креста.`,
+      torpedo: `${t('torpedo')}: выберите строку или колонку и клетку.`
     };
     this.addLog(labels[ability]);
     this.updateAbilityButtons();
@@ -514,7 +538,7 @@ export class GameScene extends Phaser.Scene {
 
   cancelAbility() {
     this.selectedAbility = null;
-    this.addLog('Способность отменена.');
+    this.addLog(t('cancel'));
     this.updateAbilityButtons();
   }
 
@@ -612,14 +636,14 @@ export class GameScene extends Phaser.Scene {
     }
 
     if (forceEndTurn || !anyHit) {
-      this.addLog(forceEndTurn ? 'Ход уносит водоворот.' : 'Промах. Соперник готовит ответ.');
+      this.addLog(forceEndTurn ? 'Ход уносит водоворот.' : `${t('miss')} ${t('opponent_turn')}.`);
       this.startBotTurn();
       return;
     }
 
     this.busy = false;
     this.playerTurn = true;
-    this.addLog('Попадание дает еще один ход.');
+    this.addLog(`${t('hit')} ${t('your_turn')}.`);
     this.updateAllBoards();
   }
 
@@ -630,8 +654,10 @@ export class GameScene extends Phaser.Scene {
 
     if (result.hit) {
       spawnExplosion(this, center.x, center.y);
-      this.addLog(result.sunk ? 'Корабль врага потоплен!' : 'Попадание!');
+      SoundService.playSfx(this, SoundService.keys.sfx_hit);
+      this.addLog(result.sunk ? 'Корабль врага потоплен!' : t('hit'));
       if (result.sunk) {
+        SoundService.playSfx(this, SoundService.keys.sfx_explosion);
         cameraShake(this, 0.007, 250);
         spawnSmoke(this, center.x, center.y - 8);
       }
@@ -639,8 +665,9 @@ export class GameScene extends Phaser.Scene {
     }
 
     spawnSplash(this, center.x, center.y);
+    SoundService.playSfx(this, SoundService.keys.sfx_miss);
     if (!result.event) {
-      this.addLog('Промах!');
+      this.addLog(t('miss'));
       return { extraHit, forceEndTurn };
     }
 
@@ -661,6 +688,7 @@ export class GameScene extends Phaser.Scene {
 
     if (result.event === EVENT_TYPES.Chest) {
       this.battleGold += this.level.eventGold;
+      SoundService.playSfx(this, SoundService.keys.sfx_reward);
       this.addLog(`Найден сундук! +${this.level.eventGold} золота.`);
       flyCoins(this, center, this.layout.goldCounter, 9);
       return { extraHit: false, forceEndTurn: false };
@@ -686,6 +714,7 @@ export class GameScene extends Phaser.Scene {
       this.battleGold = Math.max(0, this.battleGold - this.level.minePenalty);
       this.addLog(`Мина! Штраф ${this.level.minePenalty} золота.`);
       spawnExplosion(this, center.x, center.y, { count: 10 });
+      SoundService.playSfx(this, SoundService.keys.sfx_explosion);
       cameraShake(this, 0.004, 180);
       return { extraHit: false, forceEndTurn: false };
     }
@@ -693,6 +722,7 @@ export class GameScene extends Phaser.Scene {
     if (result.event === EVENT_TYPES.Barrel) {
       this.addLog('Бочка с порохом взрывает крест!');
       spawnExplosion(this, center.x, center.y, { count: 22 });
+      SoundService.playSfx(this, SoundService.keys.sfx_explosion);
       cameraShake(this, 0.006, 220);
       let extraHit = false;
 
@@ -708,12 +738,14 @@ export class GameScene extends Phaser.Scene {
         if (blastResult.hit) {
           extraHit = true;
           spawnExplosion(this, blastCenter.x, blastCenter.y, { count: 10 });
+          SoundService.playSfx(this, SoundService.keys.sfx_hit);
           this.addLog(blastResult.sunk ? 'Взрыв потопил корабль!' : 'Взрыв задел корабль!');
           if (blastResult.sunk) {
             spawnSmoke(this, blastCenter.x, blastCenter.y);
           }
         } else {
           spawnSplash(this, blastCenter.x, blastCenter.y);
+          SoundService.playSfx(this, SoundService.keys.sfx_miss);
           if (blastResult.event && blastResult.event !== EVENT_TYPES.Barrel) {
             const nestedOutcome = await this.resolveEnemyEvent(blastResult, visited);
             extraHit = extraHit || nestedOutcome.extraHit;
@@ -764,7 +796,7 @@ export class GameScene extends Phaser.Scene {
 
     this.playerTurn = true;
     this.busy = false;
-    this.addLog('Ваш ход.');
+    this.addLog(t('your_turn'));
     this.updateAllBoards();
   }
 
@@ -773,8 +805,10 @@ export class GameScene extends Phaser.Scene {
 
     if (result.hit) {
       spawnExplosion(this, center.x, center.y);
-      this.addLog(result.sunk ? 'Соперник потопил ваш корабль!' : 'Соперник попал!');
+      SoundService.playSfx(this, SoundService.keys.sfx_hit);
+      this.addLog(result.sunk ? 'Соперник потопил ваш корабль!' : t('opponent_hit'));
       if (result.sunk) {
+        SoundService.playSfx(this, SoundService.keys.sfx_explosion);
         cameraShake(this, 0.008, 260);
         spawnSmoke(this, center.x, center.y);
       }
@@ -782,16 +816,19 @@ export class GameScene extends Phaser.Scene {
     }
 
     spawnSplash(this, center.x, center.y);
-    this.addLog('Соперник промахнулся.');
+    SoundService.playSfx(this, SoundService.keys.sfx_miss);
+    this.addLog(t('opponent_miss'));
   }
 
   async animatePlayerShot(result) {
     const target = this.getEnemyCellCenter(result.x, result.y);
+    SoundService.playSfx(this, SoundService.keys.sfx_shot);
     await createCannonArc(this, this.layout.playerCannon, target, { duration: 380, arc: 110, scale: 0.82 });
   }
 
   async animateBotShot(result) {
     const target = this.getPlayerCellCenter(result.x, result.y);
+    SoundService.playSfx(this, SoundService.keys.sfx_shot);
     await createCannonArc(this, this.layout.enemyCannon, target, { duration: 420, arc: 92, scale: 0.72 });
   }
 
@@ -848,7 +885,8 @@ export class GameScene extends Phaser.Scene {
         rewardGold: rewards.gold,
         rewardXp: rewards.xp,
         chestGold: victory ? this.level.rewards.chest : 0,
-        battleGold: this.battleGold
+        battleGold: this.battleGold,
+        battleMode: this.battleMode
       });
     });
   }

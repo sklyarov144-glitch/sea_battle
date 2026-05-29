@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { AssetKeys } from '../config/assetKeys.js';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
-import { createSeaBackground, drawWoodPanel } from '../utils/effects.js';
+import { drawNavalPanel } from '../ui/NavalPanel.js';
+import { createSeaBackground } from '../utils/effects.js';
 
 export class PreloadScene extends Phaser.Scene {
   constructor() {
@@ -12,28 +13,28 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image(AssetKeys.Images.MenuBattleBg, '/assets/backgrounds/menu_battle_bg.png');
     this.load.image(AssetKeys.Images.BattleOceanBg, '/assets/backgrounds/battle_ocean_bg.png');
 
-    this.load.image(AssetKeys.Buttons.AutoPlace, '/assets/ui/buttons/button_auto_place.png');
-    this.load.image(AssetKeys.Buttons.Campaign, '/assets/ui/buttons/button_campaign.png');
-    this.load.image(AssetKeys.Buttons.Cancel, '/assets/ui/buttons/button_cancel.png');
-    this.load.image(AssetKeys.Buttons.Map, '/assets/ui/buttons/button_map.png');
-    this.load.image(AssetKeys.Buttons.Play, '/assets/ui/buttons/button_play.png');
-    this.load.image(AssetKeys.Buttons.QuickBattle, '/assets/ui/buttons/button_quick_battle.png');
-    this.load.image(AssetKeys.Buttons.Ready, '/assets/ui/buttons/button_ready.png');
-    this.load.image(AssetKeys.Buttons.Settings, '/assets/ui/buttons/button_settings.png');
+    this.load.audio('music_menu', '/assets/audio/music_menu.mp3');
+    this.load.audio('music_battle', '/assets/audio/music_battle.mp3');
+    this.load.audio('sfx_click', '/assets/audio/click.wav');
+    this.load.audio('sfx_shot', '/assets/audio/shot.wav');
+    this.load.audio('sfx_hit', '/assets/audio/hit.wav');
+    this.load.audio('sfx_miss', '/assets/audio/miss.wav');
+    this.load.audio('sfx_explosion', '/assets/audio/explosion.wav');
+    this.load.audio('sfx_reward', '/assets/audio/reward.wav');
+    this.load.audio('sfx_rank_up', '/assets/audio/rank_up.wav');
+    this.load.audio('sfx_button_hover', '/assets/audio/button_hover.wav');
 
-    this.load.image(AssetKeys.Icons.AutoPlace, '/assets/ui/icons_clean/auto_place.png');
-    this.load.image(AssetKeys.Icons.Campaign, '/assets/ui/icons_clean/campaign.png');
-    this.load.image(AssetKeys.Icons.Cancel, '/assets/ui/icons_clean/cancel.png');
-    this.load.image(AssetKeys.Icons.Ready, '/assets/ui/icons_clean/ready.png');
-    this.load.image(AssetKeys.Icons.Settings, '/assets/ui/icons_clean/settings.png');
-    this.load.image(AssetKeys.Icons.Ships, '/assets/ui/icons_clean/ships.png');
-    this.load.image(AssetKeys.Icons.Upgrades, '/assets/ui/icons_clean/upgrades.png');
+    this.load.on('loaderror', (file) => {
+      if (file?.type === 'audio') {
+        console.warn(`[PreloadScene] Audio asset skipped: ${file.key}`);
+      }
+    });
   }
 
   create() {
     document.body.dataset.scene = 'PreloadScene';
     createSeaBackground(this);
-    drawWoodPanel(this, GAME_WIDTH / 2 - 240, GAME_HEIGHT / 2 - 58, 480, 116);
+    drawNavalPanel(this, GAME_WIDTH / 2 - 240, GAME_HEIGHT / 2 - 58, 480, 116);
 
     this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 20, 'Поднимаем паруса...', {
       fontFamily: 'Georgia, "Times New Roman", serif',
