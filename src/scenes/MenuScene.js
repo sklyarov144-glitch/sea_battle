@@ -142,35 +142,43 @@ export class MenuScene extends Phaser.Scene {
 
   addAdmiralChest() {
     const x = GAME_WIDTH / 2;
-    const y = GAME_HEIGHT - 86;
+    const y = GAME_HEIGHT - 133;
     if (this.textures.exists(AssetKeys.Images.DailyChestReward)) {
-      this.chestButton = this.add.image(x, y, AssetKeys.Images.DailyChestReward)
-        .setDisplaySize(128, 160)
+      this.chestContainer = this.add.container(x, y);
+      this.chestGlow = this.add.graphics();
+      this.chestGlow.fillStyle(0x020812, 0.62);
+      this.chestGlow.fillRoundedRect(-168, -58, 336, 132, 24);
+      this.chestGlow.fillStyle(0xd7a748, 0.12);
+      this.chestGlow.fillEllipse(0, 18, 330, 196);
+      this.chestGlow.lineStyle(2, 0xd7a748, 0.46);
+      this.chestGlow.strokeRoundedRect(-168, -58, 336, 132, 24);
+      this.chestButton = this.add.image(0, -2, AssetKeys.Images.DailyChestReward)
+        .setDisplaySize(244, 265);
+      this.chestHitZone = this.add.zone(0, 8, 312, 248)
         .setInteractive({ useHandCursor: true });
-      this.chestBaseScale = { x: this.chestButton.scaleX, y: this.chestButton.scaleY };
-      this.chestButton.on('pointerover', () => {
+      this.chestContainer.add([this.chestGlow, this.chestButton, this.chestHitZone]);
+      this.chestBaseScale = 1;
+      this.chestHitZone.on('pointerover', () => {
         if (StorageService.canClaimDailyReward()) {
           this.tweens.add({
-            targets: this.chestButton,
-            scaleX: this.chestBaseScale.x * 1.04,
-            scaleY: this.chestBaseScale.y * 1.04,
+            targets: this.chestContainer,
+            scale: this.chestBaseScale * 1.04,
             duration: 120,
             ease: 'Sine.easeOut'
           });
         }
       });
-      this.chestButton.on('pointerout', () => {
+      this.chestHitZone.on('pointerout', () => {
         this.tweens.add({
-          targets: this.chestButton,
-          scaleX: this.chestBaseScale.x,
-          scaleY: this.chestBaseScale.y,
+          targets: this.chestContainer,
+          scale: this.chestBaseScale,
           duration: 120,
           ease: 'Sine.easeOut'
         });
       });
-      this.chestButton.on('pointerup', () => this.claimDailyReward());
+      this.chestHitZone.on('pointerup', () => this.claimDailyReward());
     } else {
-      this.chestButton = new Button(this, x, y, 260, 56, t('admiral_chest'), () => this.claimDailyReward(), {
+      this.chestButton = new Button(this, x, GAME_HEIGHT - 76, 260, 56, t('admiral_chest'), () => this.claimDailyReward(), {
         variant: 'primary',
         fontSize: 18
       });
@@ -184,7 +192,7 @@ export class MenuScene extends Phaser.Scene {
       this.chestButton.setEnabled(canClaim);
       this.chestButton.setLabel(canClaim ? t('admiral_chest') : t('tomorrow'));
     } else {
-      this.chestButton.setAlpha(canClaim ? 1 : 0.62);
+      this.chestContainer.setAlpha(canClaim ? 1 : 0.62);
       this.chestButton.clearTint();
       if (!canClaim) {
         this.chestButton.setTint(0x6f7784);
@@ -200,8 +208,8 @@ export class MenuScene extends Phaser.Scene {
     if (this.chestButton instanceof Button) {
       this.chestButton.setEnabled(false);
     } else {
-      this.chestButton.disableInteractive();
-      this.chestButton.setAlpha(0.62);
+      this.chestHitZone.disableInteractive();
+      this.chestContainer.setAlpha(0.62);
     }
     YandexService.showRewardedAd(() => this.grantDailyReward());
   }
@@ -224,7 +232,7 @@ export class MenuScene extends Phaser.Scene {
     this.refreshCareerPanel();
     this.refreshChest();
     if (!(this.chestButton instanceof Button)) {
-      this.chestButton.setInteractive({ useHandCursor: true });
+      this.chestHitZone.setInteractive({ useHandCursor: true });
     }
 
     if (profile.__rankUp) {
