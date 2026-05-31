@@ -243,44 +243,48 @@ export const LEVELS = generateCampaignLevels();
 export const SHOP_ITEMS = [
   {
     id: 'radarCharge',
-    name: '+1 заряд радара',
-    description: 'Дополнительный скан 3x3 в следующем бою.',
     price: 120,
     type: 'consumable',
-    ability: 'radar'
+    ability: 'radar',
+    inventoryKey: 'radar'
   },
   {
-    id: 'barrageCharge',
-    name: '+1 заряд залпа',
-    description: 'Один дополнительный выстрел крестом.',
-    price: 190,
+    id: 'salvoCharge',
+    price: 160,
     type: 'consumable',
-    ability: 'barrage'
+    ability: 'barrage',
+    inventoryKey: 'salvo'
   },
   {
     id: 'torpedoCharge',
-    name: '+1 заряд торпеды',
-    description: 'Дополнительная атака по строке или колонке.',
     price: 220,
     type: 'consumable',
-    ability: 'torpedo'
+    ability: 'torpedo',
+    inventoryKey: 'torpedo'
   },
   {
-    id: 'shipSkinGoldCorsair',
-    name: 'Скин корабля “Золотой корсар”',
-    description: 'Золотые флаги и теплый оттенок кораблей.',
-    price: 520,
-    type: 'skin',
-    skinGroup: 'ship',
-    skinValue: 'goldCorsair'
+    id: 'radarLevel',
+    type: 'upgrade',
+    upgradeId: 'radarLevel'
   },
   {
-    id: 'waterSkinTropical',
-    name: 'Скин воды “Тропическое море”',
-    description: 'Более яркий тропический оттенок моря.',
-    price: 460,
-    type: 'skin',
-    skinGroup: 'water',
-    skinValue: 'tropical'
+    id: 'salvoLevel',
+    type: 'upgrade',
+    upgradeId: 'salvoLevel'
+  },
+  {
+    id: 'torpedoLevel',
+    type: 'upgrade',
+    upgradeId: 'torpedoLevel'
+  },
+  {
+    id: 'goldBonusLevel',
+    type: 'upgrade',
+    upgradeId: 'goldBonusLevel'
+  },
+  {
+    id: 'xpBonusLevel',
+    type: 'upgrade',
+    upgradeId: 'xpBonusLevel'
   }
 ];

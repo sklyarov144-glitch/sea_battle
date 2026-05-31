@@ -13,6 +13,7 @@ export class PreloadScene extends Phaser.Scene {
     this.load.image(AssetKeys.Images.MenuBattleBg, '/assets/backgrounds/menu_battle_bg.png');
     this.load.image(AssetKeys.Images.BattleOceanBg, '/assets/backgrounds/battle_ocean_bg.png');
     this.load.image(AssetKeys.Images.DailyChestReward, '/assets/ui/daily_chest_reward.png');
+    this.load.image(AssetKeys.Images.RareChestReward, '/assets/ui/rare_chest_reward.png');
 
     this.load.audio('music_menu', '/assets/audio/music_menu.mp3');
     this.load.audio('music_battle', '/assets/audio/music_battle.mp3');
@@ -26,8 +27,8 @@ export class PreloadScene extends Phaser.Scene {
     this.load.audio('sfx_button_hover', '/assets/audio/button_hover.wav');
 
     this.load.on('loaderror', (file) => {
-      if (file?.type === 'audio') {
-        console.warn(`[PreloadScene] Audio asset skipped: ${file.key}`);
+      if (file?.type === 'audio' || file?.key === AssetKeys.Images.RareChestReward) {
+        console.warn(`[PreloadScene] Optional asset skipped: ${file.key}`);
       }
     });
   }

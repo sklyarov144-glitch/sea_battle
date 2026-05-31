@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
 import { AssetKeys } from '../config/assetKeys.js';
-import { DAILY_REWARD } from '../config/balanceConfig.js';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
 import { CareerService } from '../services/CareerService.js';
 import { LocalizationService, t } from '../services/LocalizationService.js';
@@ -39,6 +38,7 @@ export class MenuScene extends Phaser.Scene {
     this.addMenuButtons();
     this.addCareerPanel();
     this.addAdmiralChest();
+    this.addRareChest();
   }
 
   addTitle() {
@@ -202,7 +202,7 @@ export class MenuScene extends Phaser.Scene {
 
   claimDailyReward() {
     if (!StorageService.canClaimDailyReward()) {
-      Toast.show(this, t('available_tomorrow'));
+      Toast.show(this, this.getDailyCooldownText());
       return;
     }
     if (this.chestButton instanceof Button) {
@@ -223,9 +223,10 @@ export class MenuScene extends Phaser.Scene {
       return;
     }
 
-    const rewardGold = profile.__dailyRewardGold ?? DAILY_REWARD.gold;
+    const rewardGold = profile.__dailyRewardGold ?? 100;
     const xpLine = profile.__dailyRewardXp > 0 ? t('daily_xp_bonus', { amount: profile.__dailyRewardXp }) : '';
-    Toast.show(this, `${t('admiral_chest')}: +${rewardGold} ${t('gold').toLowerCase()}${xpLine}`);
+    const abilityLine = profile.__dailyRewardAbility ? `, +1 ${t(profile.__dailyRewardAbility)}` : '';
+    Toast.show(this, `${t('admiral_chest')}: +${rewardGold} ${t('gold').toLowerCase()}${xpLine}${abilityLine}`);
     SoundService.playSfx(this, SoundService.keys.sfx_reward);
     flyCoins(this, { x: GAME_WIDTH / 2, y: GAME_HEIGHT - 78 }, { x: 930, y: 132 }, 14);
     this.profile = profile;
@@ -238,6 +239,50 @@ export class MenuScene extends Phaser.Scene {
     if (profile.__rankUp) {
       this.showRankUpPopup(profile.__rankUp);
     }
+  }
+
+  addRareChest() {
+    this.rareChestButton = new Button(this, 224, GAME_HEIGHT - 72, 300, 50, t('rare_chest_open'), () => this.claimRareChest(), {
+      variant: 'secondary',
+      fontSize: 16,
+      small: true
+    });
+    this.refreshRareChest();
+  }
+
+  refreshRareChest() {
+    this.rareChestButton?.setEnabled(StorageService.canClaimRareChest());
+  }
+
+  claimRareChest() {
+    const profile = StorageService.claimRareChest();
+    if (!profile.__rareChestClaimed) {
+      Toast.show(this, t('rare_chest_later'));
+      this.refreshRareChest();
+      return;
+    }
+
+    const reward = profile.__rareChestReward;
+    Toast.show(this, `${t('rare_chest')}: +${reward.gold} ${t('gold').toLowerCase()}, +${reward.xp} XP`);
+    SoundService.playSfx(this, SoundService.keys.sfx_reward);
+    flyCoins(this, { x: 224, y: GAME_HEIGHT - 72 }, { x: 930, y: 132 }, 14);
+    this.profile = profile;
+    this.refreshCareerPanel();
+    this.refreshRareChest();
+    if (profile.__rankUp) {
+      this.showRankUpPopup(profile.__rankUp);
+    }
+  }
+
+  getDailyCooldownText() {
+    const last = this.profile?.dailyReward?.lastDailyChestAt ?? this.profile?.dailyRewardLastClaim;
+    if (!last) {
+      return t('available_tomorrow');
+    }
+    const ms = Math.max(0, 24 * 60 * 60 * 1000 - (Date.now() - new Date(last).getTime()));
+    const hours = Math.floor(ms / 3600000);
+    const minutes = Math.ceil((ms % 3600000) / 60000);
+    return t('daily_chest_cooldown', { time: `${hours}:${String(minutes).padStart(2, '0')}` });
   }
 
   showRankUpPopup(rankUp) {

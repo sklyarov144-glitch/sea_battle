@@ -1,22 +1,10 @@
-export const CAREER_RANKS = [
-  { name: 'Матрос', xp: 0 },
-  { name: 'Старший матрос', xp: 100 },
-  { name: 'Старшина 2 статьи', xp: 240 },
-  { name: 'Старшина 1 статьи', xp: 420 },
-  { name: 'Главный старшина', xp: 650 },
-  { name: 'Мичман', xp: 930 },
-  { name: 'Старший мичман', xp: 1260 },
-  { name: 'Младший лейтенант', xp: 1640 },
-  { name: 'Лейтенант', xp: 2080 },
-  { name: 'Старший лейтенант', xp: 2580 },
-  { name: 'Капитан-лейтенант', xp: 3150 },
-  { name: 'Капитан 3 ранга', xp: 3790 },
-  { name: 'Капитан 2 ранга', xp: 4500 },
-  { name: 'Капитан 1 ранга', xp: 5280 },
-  { name: 'Контр-адмирал', xp: 6130 },
-  { name: 'Вице-адмирал', xp: 7050 },
-  { name: 'Адмирал', xp: 8040 }
-];
+import { RANKS } from './EconomyService.js';
+
+export const CAREER_RANKS = RANKS.map((rank) => ({
+  name: rank.title,
+  xp: rank.xpRequired,
+  rewardGold: rank.rewardGold
+}));
 
 export const CareerService = {
   economy: null,

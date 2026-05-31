@@ -2,7 +2,8 @@ export const AssetKeys = {
   Images: {
     MenuBattleBg: 'menu_battle_bg',
     BattleOceanBg: 'battle_ocean_bg',
-    DailyChestReward: 'daily_chest_reward'
+    DailyChestReward: 'daily_chest_reward',
+    RareChestReward: 'rare_chest_reward'
   },
   Buttons: {
     AutoPlace: 'button_auto_place',

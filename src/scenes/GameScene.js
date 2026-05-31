@@ -48,8 +48,6 @@ export class GameScene extends Phaser.Scene {
     LocalizationService.init(this.profile);
     SoundService.init(this.profile);
     SoundService.playMusic(this, SoundService.keys.music_battle);
-    this.boosts = StorageService.consumeBattleBoosts() ?? { radar: 0, barrage: 0, torpedo: 0 };
-    this.profile = StorageService.loadProfile();
     this.battle = createBattleSetup(this.level);
 
     this.playerBoard = this.playerSetup?.board ?? this.battle.player.board;
@@ -69,11 +67,7 @@ export class GameScene extends Phaser.Scene {
     this.hoveredEnemyCell = null;
     this.radarHighlights = new Map();
 
-    this.abilityCharges = {
-      radar: (this.boosts.radar ?? 0) + EconomyService.getAbilityBonus(this.profile, 'radar'),
-      barrage: (this.boosts.barrage ?? 0) + EconomyService.getAbilityBonus(this.profile, 'barrage'),
-      torpedo: (this.boosts.torpedo ?? 0) + EconomyService.getAbilityBonus(this.profile, 'torpedo')
-    };
+    this.abilityCharges = EconomyService.getAbilityCharges(this.profile);
 
     createCoverImageBackground(this, AssetKeys.Images.BattleOceanBg, {
       fallback: { waterSkin: this.profile.selectedSkins.water },
@@ -552,7 +546,11 @@ export class GameScene extends Phaser.Scene {
   }
 
   selectAbility(ability) {
-    if (!this.playerTurn || this.busy || this.abilityCharges[ability] <= 0) {
+    if (!this.playerTurn || this.busy) {
+      return;
+    }
+    if (this.abilityCharges[ability] <= 0) {
+      Toast.show(this, t('no_charges'));
       return;
     }
 
@@ -579,6 +577,7 @@ export class GameScene extends Phaser.Scene {
 
   useRadar(x, y) {
     this.abilityCharges.radar -= 1;
+    StorageService.consumeAbilityCharge('radar');
     this.selectedAbility = null;
     const hasShip = findShipPresenceInArea(this.enemyBoard, x, y, 1);
     const color = hasShip ? 0xffd36e : 0x65e4ff;
@@ -606,6 +605,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.abilityCharges.barrage -= 1;
+    StorageService.consumeAbilityCharge('barrage');
     this.selectedAbility = null;
     this.playerFireSequence(cells, { source: 'barrage' });
   }
@@ -618,6 +618,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.abilityCharges.torpedo -= 1;
+    StorageService.consumeAbilityCharge('torpedo');
     this.selectedAbility = null;
     this.playerFireSequence(cells, { source: 'torpedo', stopOnHit: true });
   }

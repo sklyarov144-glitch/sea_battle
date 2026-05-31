@@ -13,6 +13,12 @@ const DEFAULT_PROFILE = {
   captainLevel: 1,
   careerXp: 0,
   careerRankIndex: 0,
+  completedLevels: [],
+  inventory: {
+    radar: 0,
+    salvo: 0,
+    torpedo: 0
+  },
   upgrades: createDefaultUpgrades(),
   purchasedItems: {
     radarCharge: 0,
@@ -26,6 +32,14 @@ const DEFAULT_PROFILE = {
     water: 'classic'
   },
   dailyRewardLastClaim: null,
+  dailyReward: {
+    lastDailyChestAt: null,
+    dailyStreak: 0
+  },
+  rareChest: {
+    lastRareChestAt: null,
+    winsSinceRareChest: 0
+  },
   settings: {
     language: 'ru',
     sound: true,
@@ -54,6 +68,10 @@ function mergeProfile(saved) {
       ...profile.purchasedItems,
       ...(saved?.purchasedItems ?? {})
     },
+    inventory: {
+      ...profile.inventory,
+      ...(saved?.inventory ?? {})
+    },
     selectedSkins: {
       ...profile.selectedSkins,
       ...(saved?.selectedSkins ?? {})
@@ -65,6 +83,14 @@ function mergeProfile(saved) {
     upgrades: {
       ...profile.upgrades,
       ...(saved?.upgrades ?? {})
+    },
+    dailyReward: {
+      ...profile.dailyReward,
+      ...(saved?.dailyReward ?? {})
+    },
+    rareChest: {
+      ...profile.rareChest,
+      ...(saved?.rareChest ?? {})
     }
   };
 }
@@ -94,12 +120,19 @@ function stripTransientFields(profile) {
   return cleanProfile;
 }
 
-function todayKey() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+function isWithinHours(dateValue, hours) {
+  if (!dateValue) {
+    return false;
+  }
+  return Date.now() - new Date(dateValue).getTime() < hours * 60 * 60 * 1000;
+}
+
+function isConsecutiveDailyClaim(dateValue) {
+  if (!dateValue) {
+    return false;
+  }
+  const diff = Date.now() - new Date(dateValue).getTime();
+  return diff >= 18 * 60 * 60 * 1000 && diff < 48 * 60 * 60 * 1000;
 }
 
 export const StorageService = {
@@ -180,6 +213,8 @@ export const StorageService = {
         profile.currentWinStreak += 1;
         profile.bestWinStreak = Math.max(profile.bestWinStreak, profile.currentWinStreak);
         profile.unlockedLevel = Math.max(profile.unlockedLevel, Math.min(CAMPAIGN_LEVEL_COUNT, levelId + 1));
+        profile.completedLevels = [...new Set([...(profile.completedLevels ?? []), levelId])];
+        profile.rareChest.winsSinceRareChest = (profile.rareChest.winsSinceRareChest ?? 0) + 1;
       } else {
         profile.totalLosses += 1;
         profile.currentWinStreak = 0;
@@ -190,46 +225,31 @@ export const StorageService = {
   },
 
   consumeBattleBoosts() {
-    return this.updateProfile((profile) => {
-      const boosts = {
-        radar: profile.purchasedItems.radarCharge,
-        barrage: profile.purchasedItems.barrageCharge,
-        torpedo: profile.purchasedItems.torpedoCharge
-      };
-
-      profile.purchasedItems.radarCharge = 0;
-      profile.purchasedItems.barrageCharge = 0;
-      profile.purchasedItems.torpedoCharge = 0;
-      profile.__lastConsumedBoosts = boosts;
-      return profile;
-    }).__lastConsumedBoosts;
+    const profile = this.loadProfile();
+    return EconomyService.getAbilityCharges(profile);
   },
 
   buyItem(item) {
     return this.updateProfile((profile) => {
       if (item.type === 'upgrade') {
-        return EconomyService.buyUpgrade(profile, item.id);
+        return EconomyService.buyUpgrade(profile, item.upgradeId ?? item.id);
       }
-
-      if (profile.gold < item.price) {
-        profile.__purchaseStatus = 'notEnoughGold';
-        return profile;
-      }
-
-      if (item.type === 'skin' && profile.purchasedItems[item.id]) {
-        profile.selectedSkins[item.skinGroup] = item.skinValue;
-        profile.__purchaseStatus = 'selected';
-        return profile;
-      }
-
-      profile.gold -= item.price;
 
       if (item.type === 'consumable') {
-        profile.purchasedItems[item.id] = (profile.purchasedItems[item.id] ?? 0) + 1;
-        profile.__purchaseStatus = 'purchased';
+        return EconomyService.buyConsumable(profile, item.inventoryKey, item.price);
       }
 
       if (item.type === 'skin') {
+        if (profile.gold < item.price) {
+          profile.__purchaseStatus = 'notEnoughGold';
+          return profile;
+        }
+        if (profile.purchasedItems[item.id]) {
+          profile.selectedSkins[item.skinGroup] = item.skinValue;
+          profile.__purchaseStatus = 'selected';
+          return profile;
+        }
+        profile.gold -= item.price;
         profile.purchasedItems[item.id] = true;
         profile.selectedSkins[item.skinGroup] = item.skinValue;
         profile.__purchaseStatus = 'purchased';
@@ -241,39 +261,78 @@ export const StorageService = {
 
   canClaimDailyReward() {
     const profile = this.loadProfile();
-    return profile.dailyRewardLastClaim !== todayKey();
+    return !isWithinHours(profile.dailyReward?.lastDailyChestAt ?? profile.dailyRewardLastClaim, 24);
   },
 
   claimDailyReward() {
-    const today = todayKey();
-
     return this.updateProfile((profile) => {
-      if (profile.dailyRewardLastClaim === today) {
+      if (isWithinHours(profile.dailyReward?.lastDailyChestAt ?? profile.dailyRewardLastClaim, 24)) {
         profile.__dailyRewardClaimed = false;
         return profile;
       }
 
-      profile.dailyRewardLastClaim = today;
+      const previousClaim = profile.dailyReward?.lastDailyChestAt ?? profile.dailyRewardLastClaim;
+      const now = new Date().toISOString();
+      profile.dailyReward.dailyStreak = isConsecutiveDailyClaim(previousClaim)
+        ? (profile.dailyReward.dailyStreak ?? 0) + 1
+        : 1;
+      profile.dailyReward.lastDailyChestAt = now;
+      profile.dailyRewardLastClaim = now;
       const previousRankIndex = profile.careerRankIndex ?? CareerService.getRankIndex(profile);
-      const rewardGold = EconomyService.getDailyGold(profile);
-      const xpBonus = Math.random() < 0.35 ? 10 : 0;
-      CareerService.addGold(profile, rewardGold);
-      if (xpBonus > 0) {
-        CareerService.addXp(profile, xpBonus);
+      const reward = EconomyService.calculateDailyChestReward(profile);
+      CareerService.addGold(profile, reward.gold);
+      CareerService.addXp(profile, reward.xp);
+      if (reward.ability) {
+        profile.inventory[reward.ability] = (profile.inventory[reward.ability] ?? 0) + reward.abilityCount;
       }
       CareerService.checkRankUp(profile, previousRankIndex);
       profile.__dailyRewardClaimed = true;
-      profile.__dailyRewardGold = rewardGold;
-      profile.__dailyRewardXp = xpBonus;
+      profile.__dailyRewardGold = reward.gold;
+      profile.__dailyRewardXp = reward.xp;
+      profile.__dailyRewardAbility = reward.ability;
+      return profile;
+    });
+  },
+
+  canClaimRareChest() {
+    return EconomyService.canClaimRareChest(this.loadProfile());
+  },
+
+  claimRareChest() {
+    return this.updateProfile((profile) => {
+      if (!EconomyService.canClaimRareChest(profile)) {
+        profile.__rareChestClaimed = false;
+        return profile;
+      }
+      const previousRankIndex = profile.careerRankIndex ?? CareerService.getRankIndex(profile);
+      const reward = EconomyService.calculateRareChestReward(profile);
+      CareerService.addGold(profile, reward.gold);
+      CareerService.addXp(profile, reward.xp);
+      reward.abilities.forEach((ability) => {
+        profile.inventory[ability] = (profile.inventory[ability] ?? 0) + 1;
+      });
+      profile.rareChest.lastRareChestAt = new Date().toISOString();
+      profile.rareChest.winsSinceRareChest = 0;
+      CareerService.checkRankUp(profile, previousRankIndex);
+      profile.__rareChestClaimed = true;
+      profile.__rareChestReward = reward;
       return profile;
     });
   },
 
   claimRewardedChest() {
+    return this.claimRareChest();
+  },
+
+  consumeAbilityCharge(ability) {
+    const key = ability === 'barrage' ? 'salvo' : ability;
     return this.updateProfile((profile) => {
-      const rewardGold = EconomyService.getRewardedChestGold(profile);
-      CareerService.addGold(profile, rewardGold);
-      profile.__rewardedChestGold = rewardGold;
+      if ((profile.inventory?.[key] ?? 0) > 0) {
+        profile.inventory[key] -= 1;
+        profile.__abilityConsumed = true;
+      } else {
+        profile.__abilityConsumed = false;
+      }
       return profile;
     });
   },

@@ -162,28 +162,22 @@ export class ResultScene extends Phaser.Scene {
       return;
     }
 
+    this.rewardDoubled = true;
     this.doubleButton.setEnabled(false).setLabel(t('reward_received'));
-    YandexService.showRewardedAd(() => {
-      this.rewardDoubled = true;
+    Toast.show(this, t('ad_placeholder'));
+    if (import.meta.env.DEV) {
       StorageService.addRewards({ gold: this.appliedGold, xp: 0 });
       Toast.show(this, `+${this.appliedGold} ${t('gold').toLowerCase()}`);
       SoundService.playSfx(this, SoundService.keys.sfx_reward);
       flyCoins(this, { x: GAME_WIDTH / 2, y: 574 }, { x: GAME_WIDTH / 2, y: 380 }, 16);
-    });
+    }
   }
 
   continueAfterDefeat() {
     if (this.result.victory || this.continuedAfterDefeat) {
       return;
     }
-    YandexService.showRewardedAd(() => {
-      this.continuedAfterDefeat = true;
-      this.scene.start('PreparationScene', {
-        levelId: this.result.levelId,
-        battleMode: this.result.battleMode,
-        returnScene: this.result.battleMode === 'quick' ? 'MenuScene' : 'MapScene'
-      });
-    });
+    Toast.show(this, t('ad_placeholder'));
   }
 
   showRankUpPopup(rankUp) {
