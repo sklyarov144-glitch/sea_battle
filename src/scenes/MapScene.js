@@ -64,7 +64,7 @@ export class MapScene extends Phaser.Scene {
     route.strokePath();
 
     positions.forEach((position, index) => {
-      const level = LEVELS[index];
+      const level = { ...LEVELS[index], name: t(`level_${LEVELS[index].id}`) };
       const unlocked = level.id <= this.profile.unlockedLevel;
       this.createMissionMarker(position, level, unlocked);
     });
@@ -116,7 +116,7 @@ export class MapScene extends Phaser.Scene {
         returnScene: 'MapScene'
       }));
     } else {
-      hitZone.on('pointerup', () => Toast.show(this, 'Этот остров пока закрыт'));
+      hitZone.on('pointerup', () => Toast.show(this, t('locked_island')));
     }
   }
 

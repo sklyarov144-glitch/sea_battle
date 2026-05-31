@@ -91,7 +91,7 @@ export class ResultScene extends Phaser.Scene {
       strokeThickness: 6
     }).setOrigin(0.5);
 
-    this.add.text(GAME_WIDTH / 2, 202, level?.name ?? 'Остров', {
+    this.add.text(GAME_WIDTH / 2, 202, level ? t(`level_${level.id}`) : t('campaign'), {
       fontFamily: 'Arial, sans-serif',
       fontSize: '24px',
       color: '#d9fbff'
@@ -114,7 +114,7 @@ export class ResultScene extends Phaser.Scene {
       lineSpacing: 8
     }).setOrigin(0.5);
 
-    new Button(this, GAME_WIDTH / 2 - 170, 498, 310, 56, 'Главное меню', () => {
+    new Button(this, GAME_WIDTH / 2 - 170, 498, 310, 56, t('main_menu'), () => {
       this.scene.start('MenuScene');
     }, {
       variant: 'secondary',
@@ -134,7 +134,7 @@ export class ResultScene extends Phaser.Scene {
       hitPadding: 0
     });
 
-    this.doubleButton = new Button(this, GAME_WIDTH / 2, 572, 520, 56, 'Удвоить награду за рекламу', () => {
+    this.doubleButton = new Button(this, GAME_WIDTH / 2, 572, 520, 56, t('double_reward_full'), () => {
       this.doubleReward();
     }, {
       fontSize: 21,

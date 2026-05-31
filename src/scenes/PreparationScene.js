@@ -65,7 +65,7 @@ export class PreparationScene extends Phaser.Scene {
       Array.from({ length: blueprint.count }, (_, index) => ({
         id: `${blueprint.length}-${index}`,
         length: blueprint.length,
-        label: `${blueprint.length} клетки`
+        label: t('ship_deck', { count: blueprint.length })
       }))
     );
 
@@ -126,7 +126,7 @@ export class PreparationScene extends Phaser.Scene {
   }
 
   addShipList() {
-    drawNavalPanel(this, 690, 132, 482, 260, { title: 'Текущий корабль', titleSize: 26 });
+    drawNavalPanel(this, 690, 132, 482, 260, { title: t('current_ship'), titleSize: 26 });
     this.currentShipText = this.add.text(931, 184, '', {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '22px',
@@ -136,9 +136,12 @@ export class PreparationScene extends Phaser.Scene {
       wordWrap: { width: 360, useAdvancedWrap: true }
     }).setOrigin(0.5, 0);
     this.currentShipPreview = this.add.graphics();
-    this.orientationButton = new Button(this, 931, 340, 240, 44, 'Горизонтально', () => {
+    this.orientationButton = new Button(this, 931, 340, 240, 44, t('orientation_horizontal'), () => {
       this.direction = this.direction === 'horizontal' ? 'vertical' : 'horizontal';
-      this.orientationButton.setLabel(this.direction === 'horizontal' ? 'Горизонтально' : 'Вертикально');
+      this.orientationButton.setLabel(this.direction === 'horizontal' ? t('orientation_horizontal') : t('orientation_vertical'));
+      if (this.hoveredPlacementCell) {
+        this.updatePlacementPreview(this.hoveredPlacementCell.x, this.hoveredPlacementCell.y);
+      }
       this.updateBoard();
       this.updateShipList();
     }, {
@@ -152,7 +155,7 @@ export class PreparationScene extends Phaser.Scene {
   addControls() {
     drawNavalPanel(this, 690, 420, 482, 208);
 
-    this.autoButton = new Button(this, 931, 482, 300, 54, 'Авторасстановка', () => this.autoPlace(), {
+    this.autoButton = new Button(this, 931, 482, 300, 54, t('auto_place'), () => this.autoPlace(), {
       fontSize: 18,
       variant: 'primary',
       pulse: true
@@ -421,6 +424,7 @@ export class PreparationScene extends Phaser.Scene {
   }
 
   updatePlacementPreview(x, y) {
+    this.hoveredPlacementCell = { x, y };
     if (this.draggingTemplate) {
       return;
     }
@@ -435,6 +439,7 @@ export class PreparationScene extends Phaser.Scene {
   }
 
   clearPlacementPreview() {
+    this.hoveredPlacementCell = null;
     if (this.draggingTemplate || this.previewCells.length === 0) {
       return;
     }
@@ -599,10 +604,11 @@ export class PreparationScene extends Phaser.Scene {
     const current = this.selectedTemplate;
     const remaining = this.shipTemplates.length - this.placedTemplateIds.size;
     if (current && remaining > 0) {
-      this.currentShipText.setText(`${current.length}-палубный корабль`);
+      this.currentShipText.setText(t('ship_deck', { count: current.length }));
       this.orientationButton.setVisible(true);
+      this.orientationButton.setLabel(this.direction === 'horizontal' ? t('orientation_horizontal') : t('orientation_vertical'));
     } else {
-      this.currentShipText.setText('Флот готов');
+      this.currentShipText.setText(t('fleet_ready'));
       this.orientationButton.setVisible(false);
     }
     this.currentShipPreview.clear();

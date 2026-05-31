@@ -55,13 +55,13 @@ export class ShopScene extends Phaser.Scene {
       const y = startY + index * 100;
       drawNavalPanel(this, 104, y - 32, 1072, 88, { alpha: 0.92, radius: 9 });
 
-      this.add.text(144, y - 12, item.name, {
+      this.add.text(144, y - 12, t(`shop_${item.id}_name`), {
         fontFamily: 'Georgia, "Times New Roman", serif',
         fontSize: '22px',
         color: '#fff0bf'
       }).setOrigin(0, 0.5);
 
-      this.add.text(144, y + 21, item.description, {
+      this.add.text(144, y + 21, t(`shop_${item.id}_desc`), {
         fontFamily: 'Arial, sans-serif',
         fontSize: '16px',
         color: '#d9fbff',
@@ -69,7 +69,7 @@ export class ShopScene extends Phaser.Scene {
         wordWrap: { width: 610, useAdvancedWrap: true }
       }).setOrigin(0, 0.5);
 
-      const priceText = this.add.text(810, y + 4, `${item.price} золота`, {
+      const priceText = this.add.text(810, y + 4, t('price_gold', { amount: item.price }), {
         fontFamily: 'Arial, sans-serif',
         fontSize: '20px',
         color: '#fff5d6'
@@ -127,7 +127,7 @@ export class ShopScene extends Phaser.Scene {
       if (item.type === 'consumable') {
         const count = this.profile.purchasedItems[item.id] ?? 0;
         button.setLabel(t('buy'));
-        stockText.setText(`В наличии: ${count}`);
+        stockText.setText(t('in_stock', { count }));
         button.setEnabled(this.profile.gold >= item.price);
         return;
       }

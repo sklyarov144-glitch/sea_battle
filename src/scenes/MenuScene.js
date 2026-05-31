@@ -181,7 +181,7 @@ export class MenuScene extends Phaser.Scene {
     }
 
     const rewardGold = profile.__dailyRewardGold ?? DAILY_REWARD.gold;
-    const xpLine = profile.__dailyRewardXp > 0 ? ` и +${profile.__dailyRewardXp} XP` : '';
+    const xpLine = profile.__dailyRewardXp > 0 ? t('daily_xp_bonus', { amount: profile.__dailyRewardXp }) : '';
     Toast.show(this, `${t('admiral_chest')}: +${rewardGold} ${t('gold').toLowerCase()}${xpLine}`);
     SoundService.playSfx(this, SoundService.keys.sfx_reward);
     flyCoins(this, { x: GAME_WIDTH / 2, y: GAME_HEIGHT - 78 }, { x: 930, y: 132 }, 14);

@@ -29,13 +29,6 @@ import {
   spawnSplash
 } from '../utils/effects.js';
 
-const QUICK_BATTLE_LOCATIONS = [
-  'Открытое море',
-  'Штормовая линия',
-  'Торговый фарватер',
-  'Безымянная отмель'
-];
-
 export class GameScene extends Phaser.Scene {
   constructor() {
     super('GameScene');
@@ -143,8 +136,8 @@ export class GameScene extends Phaser.Scene {
     drawNavalPanel(this, 42, 18, 1196, 78);
 
     const locationName = this.battleMode === 'quick'
-      ? QUICK_BATTLE_LOCATIONS[(this.levelId - 1) % QUICK_BATTLE_LOCATIONS.length]
-      : `Остров ${this.level.id}: ${this.level.name}`;
+      ? t(`quick_location_${((this.levelId - 1) % 4) + 1}`)
+      : t('island_status', { id: this.level.id, name: t(`level_${this.level.id}`) });
 
     this.add.text(72, 43, locationName, {
       fontFamily: 'Georgia, "Times New Roman", serif',
@@ -165,7 +158,7 @@ export class GameScene extends Phaser.Scene {
       align: 'center'
     }).setOrigin(0.5);
 
-    this.add.text(800, 48, `Капитан ур. ${this.profile.captainLevel}`, {
+    this.add.text(800, 48, t('captain_level', { level: this.profile.captainLevel }), {
       fontFamily: 'Arial, sans-serif',
       fontSize: '18px',
       color: '#fff5d6'
@@ -435,9 +428,9 @@ export class GameScene extends Phaser.Scene {
       .setLabel(t('torpedo'))
       .setEnabled(canAct && this.abilityCharges.torpedo > 0)
       .setSelected(this.selectedAbility === 'torpedo');
-    this.abilityChargeTexts.radar.setText(`В наличии: ${this.abilityCharges.radar}`);
-    this.abilityChargeTexts.barrage.setText(`В наличии: ${this.abilityCharges.barrage}`);
-    this.abilityChargeTexts.torpedo.setText(`В наличии: ${this.abilityCharges.torpedo}`);
+    this.abilityChargeTexts.radar.setText(t('in_stock', { count: this.abilityCharges.radar }));
+    this.abilityChargeTexts.barrage.setText(t('in_stock', { count: this.abilityCharges.barrage }));
+    this.abilityChargeTexts.torpedo.setText(t('in_stock', { count: this.abilityCharges.torpedo }));
     this.exitButton?.setEnabled(!this.battleEnded && !this.exitConfirmOpen);
     this.settingsButton?.setEnabled(!this.battleEnded && !this.exitConfirmOpen);
   }
@@ -565,9 +558,9 @@ export class GameScene extends Phaser.Scene {
 
     this.selectedAbility = this.selectedAbility === ability ? null : ability;
     const labels = {
-      radar: `${t('radar')}: выберите центр области 3x3.`,
-      barrage: `${t('barrage')}: выберите центр креста.`,
-      torpedo: `${t('torpedo')}: выберите строку или колонку и клетку.`
+      radar: t('radar_hint', { ability: t('radar') }),
+      barrage: t('barrage_hint', { ability: t('barrage') }),
+      torpedo: t('torpedo_hint', { ability: t('torpedo') })
     };
     this.addLog(labels[ability]);
     this.updateAbilityButtons();
@@ -596,7 +589,7 @@ export class GameScene extends Phaser.Scene {
 
     const center = this.getEnemyCellCenter(x, y);
     pulseTarget(this, center.x, center.y, 92, color);
-    this.addLog(hasShip ? 'Радар поймал корабельный сигнал!' : 'Радар показывает пустую воду.');
+    this.addLog(hasShip ? t('radar_found') : t('radar_empty'));
     this.updateAllBoards();
 
     this.time.delayedCall(1700, () => {
@@ -608,7 +601,7 @@ export class GameScene extends Phaser.Scene {
   useBarrage(x, y) {
     const cells = getCellsInCross(x, y).filter((cell) => !this.enemyBoard[cell.y][cell.x].shot);
     if (cells.length === 0) {
-      Toast.show(this, 'Все клетки залпа уже разведаны.');
+      Toast.show(this, t('barrage_empty'));
       return;
     }
 
@@ -620,7 +613,7 @@ export class GameScene extends Phaser.Scene {
   useTorpedo(x, y) {
     const cells = getLineCells(x, y, this.torpedoAxis).filter((cell) => !this.enemyBoard[cell.y][cell.x].shot);
     if (cells.length === 0) {
-      Toast.show(this, 'Эта линия уже прострелена.');
+      Toast.show(this, t('torpedo_empty'));
       return;
     }
 
@@ -664,7 +657,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     if (!validShot) {
-      Toast.show(this, 'Эта клетка уже разведана.');
+      Toast.show(this, t('cell_already'));
       this.busy = false;
       this.updateAllBoards();
       return;
@@ -688,7 +681,7 @@ export class GameScene extends Phaser.Scene {
     if (result.hit) {
       spawnExplosion(this, center.x, center.y);
       SoundService.playSfx(this, SoundService.keys.sfx_hit);
-      this.addLog(result.sunk ? 'Корабль врага потоплен!' : t('hit'));
+      this.addLog(result.sunk ? t('enemy_ship_sunk') : t('hit'));
       if (result.sunk) {
         SoundService.playSfx(this, SoundService.keys.sfx_explosion);
         cameraShake(this, 0.007, 250);
@@ -706,7 +699,7 @@ export class GameScene extends Phaser.Scene {
     this.playerTurn = false;
     this.busy = true;
     this.updateAllBoards();
-    this.addLog('Соперник целится...');
+    this.addLog(t('opponent_aiming'));
     await this.wait(Phaser.Math.Between(1000, 3000));
 
     while (!this.battleEnded) {
@@ -734,7 +727,7 @@ export class GameScene extends Phaser.Scene {
         break;
       }
 
-      this.addLog('Соперник целится...');
+      this.addLog(t('opponent_aiming'));
       await this.wait(Phaser.Math.Between(1000, 3000));
     }
 
@@ -750,7 +743,7 @@ export class GameScene extends Phaser.Scene {
     if (result.hit) {
       spawnExplosion(this, center.x, center.y);
       SoundService.playSfx(this, SoundService.keys.sfx_hit);
-      this.addLog(result.sunk ? 'Соперник потопил ваш корабль!' : t('opponent_hit'));
+      this.addLog(result.sunk ? t('opponent_ship_sunk') : t('opponent_hit'));
       if (result.sunk) {
         SoundService.playSfx(this, SoundService.keys.sfx_explosion);
         cameraShake(this, 0.008, 260);
@@ -852,9 +845,9 @@ export class GameScene extends Phaser.Scene {
     this.updateAllBoards();
 
     if (victory) {
-      this.addLog('Победа! Сундук ждёт капитана.');
+      this.addLog(t('victory_log'));
     } else {
-      this.addLog('Флот разбит. Команда отступает.');
+      this.addLog(t('defeat_log'));
     }
 
     const profile = StorageService.loadProfile();
