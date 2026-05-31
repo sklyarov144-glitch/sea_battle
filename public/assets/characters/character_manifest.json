@@ -1,0 +1,282 @@
+[
+  {
+    "file": "admiral_neutral.png",
+    "character_key": "admiral",
+    "character_ru": "Адмирал-наставник",
+    "emotion_key": "neutral",
+    "emotion_ru": "нейтрально / обычная реплика",
+    "use_for": "обычные подсказки, ожидание хода, спокойное обучение"
+  },
+  {
+    "file": "admiral_teach.png",
+    "character_key": "admiral",
+    "character_ru": "Адмирал-наставник",
+    "emotion_key": "teach",
+    "emotion_ru": "обучение / объяснение",
+    "use_for": "первые уровни, обучение, объяснение кнопок и правил"
+  },
+  {
+    "file": "admiral_hit.png",
+    "character_key": "admiral",
+    "character_ru": "Адмирал-наставник",
+    "emotion_key": "hit",
+    "emotion_ru": "радость: игрок попал",
+    "use_for": "игрок попал по кораблю противника"
+  },
+  {
+    "file": "admiral_miss.png",
+    "character_key": "admiral",
+    "character_ru": "Адмирал-наставник",
+    "emotion_key": "miss",
+    "emotion_ru": "промах игрока / лёгкое огорчение",
+    "use_for": "игрок промахнулся"
+  },
+  {
+    "file": "admiral_hurt.png",
+    "character_key": "admiral",
+    "character_ru": "Адмирал-наставник",
+    "emotion_key": "hurt",
+    "emotion_ru": "тревога: по игроку попали",
+    "use_for": "противник попал по кораблю игрока"
+  },
+  {
+    "file": "admiral_victory.png",
+    "character_key": "admiral",
+    "character_ru": "Адмирал-наставник",
+    "emotion_key": "victory",
+    "emotion_ru": "победа / восторг",
+    "use_for": "игрок победил / потопил последний корабль"
+  },
+  {
+    "file": "admiral_defeat.png",
+    "character_key": "admiral",
+    "character_ru": "Адмирал-наставник",
+    "emotion_key": "defeat",
+    "emotion_ru": "поражение / грусть",
+    "use_for": "игрок проиграл"
+  },
+  {
+    "file": "navigator_neutral.png",
+    "character_key": "navigator",
+    "character_ru": "Штурман-наставница",
+    "emotion_key": "neutral",
+    "emotion_ru": "нейтрально / обычная реплика",
+    "use_for": "обычные подсказки, ожидание хода, спокойное обучение"
+  },
+  {
+    "file": "navigator_teach.png",
+    "character_key": "navigator",
+    "character_ru": "Штурман-наставница",
+    "emotion_key": "teach",
+    "emotion_ru": "обучение / объяснение",
+    "use_for": "первые уровни, обучение, объяснение кнопок и правил"
+  },
+  {
+    "file": "navigator_hit.png",
+    "character_key": "navigator",
+    "character_ru": "Штурман-наставница",
+    "emotion_key": "hit",
+    "emotion_ru": "радость: игрок попал",
+    "use_for": "игрок попал по кораблю противника"
+  },
+  {
+    "file": "navigator_miss.png",
+    "character_key": "navigator",
+    "character_ru": "Штурман-наставница",
+    "emotion_key": "miss",
+    "emotion_ru": "промах игрока / лёгкое огорчение",
+    "use_for": "игрок промахнулся"
+  },
+  {
+    "file": "navigator_hurt.png",
+    "character_key": "navigator",
+    "character_ru": "Штурман-наставница",
+    "emotion_key": "hurt",
+    "emotion_ru": "тревога: по игроку попали",
+    "use_for": "противник попал по кораблю игрока"
+  },
+  {
+    "file": "navigator_victory.png",
+    "character_key": "navigator",
+    "character_ru": "Штурман-наставница",
+    "emotion_key": "victory",
+    "emotion_ru": "победа / восторг",
+    "use_for": "игрок победил / потопил последний корабль"
+  },
+  {
+    "file": "navigator_defeat.png",
+    "character_key": "navigator",
+    "character_ru": "Штурман-наставница",
+    "emotion_key": "defeat",
+    "emotion_ru": "поражение / грусть",
+    "use_for": "игрок проиграл"
+  },
+  {
+    "file": "engineer_neutral.png",
+    "character_key": "engineer",
+    "character_ru": "Корабельный механик",
+    "emotion_key": "neutral",
+    "emotion_ru": "нейтрально / обычная реплика",
+    "use_for": "обычные подсказки, ожидание хода, спокойное обучение"
+  },
+  {
+    "file": "engineer_teach.png",
+    "character_key": "engineer",
+    "character_ru": "Корабельный механик",
+    "emotion_key": "teach",
+    "emotion_ru": "обучение / объяснение",
+    "use_for": "первые уровни, обучение, объяснение кнопок и правил"
+  },
+  {
+    "file": "engineer_hit.png",
+    "character_key": "engineer",
+    "character_ru": "Корабельный механик",
+    "emotion_key": "hit",
+    "emotion_ru": "радость: игрок попал",
+    "use_for": "игрок попал по кораблю противника"
+  },
+  {
+    "file": "engineer_miss.png",
+    "character_key": "engineer",
+    "character_ru": "Корабельный механик",
+    "emotion_key": "miss",
+    "emotion_ru": "промах игрока / лёгкое огорчение",
+    "use_for": "игрок промахнулся"
+  },
+  {
+    "file": "engineer_hurt.png",
+    "character_key": "engineer",
+    "character_ru": "Корабельный механик",
+    "emotion_key": "hurt",
+    "emotion_ru": "тревога: по игроку попали",
+    "use_for": "противник попал по кораблю игрока"
+  },
+  {
+    "file": "engineer_victory.png",
+    "character_key": "engineer",
+    "character_ru": "Корабельный механик",
+    "emotion_key": "victory",
+    "emotion_ru": "победа / восторг",
+    "use_for": "игрок победил / потопил последний корабль"
+  },
+  {
+    "file": "engineer_defeat.png",
+    "character_key": "engineer",
+    "character_ru": "Корабельный механик",
+    "emotion_key": "defeat",
+    "emotion_ru": "поражение / грусть",
+    "use_for": "игрок проиграл"
+  },
+  {
+    "file": "strategist_neutral.png",
+    "character_key": "strategist",
+    "character_ru": "Мудрый стратег",
+    "emotion_key": "neutral",
+    "emotion_ru": "нейтрально / обычная реплика",
+    "use_for": "обычные подсказки, ожидание хода, спокойное обучение"
+  },
+  {
+    "file": "strategist_teach.png",
+    "character_key": "strategist",
+    "character_ru": "Мудрый стратег",
+    "emotion_key": "teach",
+    "emotion_ru": "обучение / объяснение",
+    "use_for": "первые уровни, обучение, объяснение кнопок и правил"
+  },
+  {
+    "file": "strategist_hit.png",
+    "character_key": "strategist",
+    "character_ru": "Мудрый стратег",
+    "emotion_key": "hit",
+    "emotion_ru": "радость: игрок попал",
+    "use_for": "игрок попал по кораблю противника"
+  },
+  {
+    "file": "strategist_miss.png",
+    "character_key": "strategist",
+    "character_ru": "Мудрый стратег",
+    "emotion_key": "miss",
+    "emotion_ru": "промах игрока / лёгкое огорчение",
+    "use_for": "игрок промахнулся"
+  },
+  {
+    "file": "strategist_hurt.png",
+    "character_key": "strategist",
+    "character_ru": "Мудрый стратег",
+    "emotion_key": "hurt",
+    "emotion_ru": "тревога: по игроку попали",
+    "use_for": "противник попал по кораблю игрока"
+  },
+  {
+    "file": "strategist_victory.png",
+    "character_key": "strategist",
+    "character_ru": "Мудрый стратег",
+    "emotion_key": "victory",
+    "emotion_ru": "победа / восторг",
+    "use_for": "игрок победил / потопил последний корабль"
+  },
+  {
+    "file": "strategist_defeat.png",
+    "character_key": "strategist",
+    "character_ru": "Мудрый стратег",
+    "emotion_key": "defeat",
+    "emotion_ru": "поражение / грусть",
+    "use_for": "игрок проиграл"
+  },
+  {
+    "file": "corsair_neutral.png",
+    "character_key": "corsair",
+    "character_ru": "Капитанша-корсар",
+    "emotion_key": "neutral",
+    "emotion_ru": "нейтрально / обычная реплика",
+    "use_for": "обычные подсказки, ожидание хода, спокойное обучение"
+  },
+  {
+    "file": "corsair_teach.png",
+    "character_key": "corsair",
+    "character_ru": "Капитанша-корсар",
+    "emotion_key": "teach",
+    "emotion_ru": "обучение / объяснение",
+    "use_for": "первые уровни, обучение, объяснение кнопок и правил"
+  },
+  {
+    "file": "corsair_hit.png",
+    "character_key": "corsair",
+    "character_ru": "Капитанша-корсар",
+    "emotion_key": "hit",
+    "emotion_ru": "радость: игрок попал",
+    "use_for": "игрок попал по кораблю противника"
+  },
+  {
+    "file": "corsair_miss.png",
+    "character_key": "corsair",
+    "character_ru": "Капитанша-корсар",
+    "emotion_key": "miss",
+    "emotion_ru": "промах игрока / лёгкое огорчение",
+    "use_for": "игрок промахнулся"
+  },
+  {
+    "file": "corsair_hurt.png",
+    "character_key": "corsair",
+    "character_ru": "Капитанша-корсар",
+    "emotion_key": "hurt",
+    "emotion_ru": "тревога: по игроку попали",
+    "use_for": "противник попал по кораблю игрока"
+  },
+  {
+    "file": "corsair_victory.png",
+    "character_key": "corsair",
+    "character_ru": "Капитанша-корсар",
+    "emotion_key": "victory",
+    "emotion_ru": "победа / восторг",
+    "use_for": "игрок победил / потопил последний корабль"
+  },
+  {
+    "file": "corsair_defeat.png",
+    "character_key": "corsair",
+    "character_ru": "Капитанша-корсар",
+    "emotion_key": "defeat",
+    "emotion_ru": "поражение / грусть",
+    "use_for": "игрок проиграл"
+  }
+]
