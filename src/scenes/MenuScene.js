@@ -286,11 +286,16 @@ export class MenuScene extends Phaser.Scene {
   }
 
   showRankUpPopup(rankUp) {
+    this.rankPopupOverlay?.destroy();
     const overlay = this.add.container(0, 0).setDepth(800);
+    this.rankPopupOverlay = overlay;
     const dim = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x020812, 0.72);
-    const panel = drawNavalPanel(this, GAME_WIDTH / 2 - 260, GAME_HEIGHT / 2 - 142, 520, 284, {
-      title: t('rank_up_title'),
-      titleSize: 28
+    const panel = drawNavalPanel(this, GAME_WIDTH / 2 - 260, GAME_HEIGHT / 2 - 142, 520, 284);
+    const title = this.add.text(GAME_WIDTH / 2 - 236, GAME_HEIGHT / 2 - 126, t('rank_up_title'), {
+      fontFamily: 'Georgia, "Times New Roman", serif',
+      fontSize: '28px',
+      color: '#f8d77a',
+      fontStyle: 'bold'
     });
     const text = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 54, t('rank_up_text'), {
       fontFamily: 'Arial, sans-serif',
@@ -309,12 +314,23 @@ export class MenuScene extends Phaser.Scene {
       fontSize: '22px',
       color: '#f8d77a'
     }).setOrigin(0.5);
-    const button = new Button(this, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 98, 230, 56, t('continue'), () => overlay.destroy(), {
+    const closePopup = () => {
+      overlay.destroy();
+      if (this.rankPopupOverlay === overlay) {
+        this.rankPopupOverlay = null;
+      }
+    };
+    const button = new Button(this, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 98, 230, 56, t('continue'), closePopup, {
       variant: 'primary',
       fontSize: 20
     });
 
-    overlay.add([dim, panel, text, rank, reward, button]);
+    overlay.add([dim, panel, title, text, rank, reward, button]);
+    overlay.once(Phaser.GameObjects.Events.DESTROY, () => {
+      if (this.rankPopupOverlay === overlay) {
+        this.rankPopupOverlay = null;
+      }
+    });
     SoundService.playSfx(this, SoundService.keys.sfx_rank_up);
     overlay.setScale(0.94);
     this.tweens.add({ targets: overlay, scale: 1, duration: 220, ease: 'Back.easeOut' });
