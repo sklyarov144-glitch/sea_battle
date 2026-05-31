@@ -141,33 +141,68 @@ export class MenuScene extends Phaser.Scene {
   }
 
   addAdmiralChest() {
-    const panelX = GAME_WIDTH / 2 - 300;
-    const panelY = GAME_HEIGHT - 126;
-    drawNavalPanel(this, panelX, panelY, 600, 96, { title: t('admiral_chest'), titleSize: 20 });
-
-    this.chestRewardText = this.add.text(panelX + 28, panelY + 48, `${t('open_for_ad')}  •  +${DAILY_REWARD.gold} ${t('gold').toLowerCase()}`, {
-      fontFamily: 'Arial, sans-serif',
-      fontSize: '20px',
-      color: '#d9fbff'
-    });
-
-    this.chestButton = new Button(this, panelX + 498, panelY + 52, 154, 46, t('open'), () => this.claimDailyReward(), {
-      variant: 'primary',
-      fontSize: 18,
-      small: true
-    });
+    const x = GAME_WIDTH / 2;
+    const y = GAME_HEIGHT - 86;
+    if (this.textures.exists(AssetKeys.Images.DailyChestReward)) {
+      this.chestButton = this.add.image(x, y, AssetKeys.Images.DailyChestReward)
+        .setDisplaySize(128, 160)
+        .setInteractive({ useHandCursor: true });
+      this.chestBaseScale = { x: this.chestButton.scaleX, y: this.chestButton.scaleY };
+      this.chestButton.on('pointerover', () => {
+        if (StorageService.canClaimDailyReward()) {
+          this.tweens.add({
+            targets: this.chestButton,
+            scaleX: this.chestBaseScale.x * 1.04,
+            scaleY: this.chestBaseScale.y * 1.04,
+            duration: 120,
+            ease: 'Sine.easeOut'
+          });
+        }
+      });
+      this.chestButton.on('pointerout', () => {
+        this.tweens.add({
+          targets: this.chestButton,
+          scaleX: this.chestBaseScale.x,
+          scaleY: this.chestBaseScale.y,
+          duration: 120,
+          ease: 'Sine.easeOut'
+        });
+      });
+      this.chestButton.on('pointerup', () => this.claimDailyReward());
+    } else {
+      this.chestButton = new Button(this, x, y, 260, 56, t('admiral_chest'), () => this.claimDailyReward(), {
+        variant: 'primary',
+        fontSize: 18
+      });
+    }
     this.refreshChest();
   }
 
   refreshChest() {
     const canClaim = StorageService.canClaimDailyReward();
-    this.chestButton.setEnabled(canClaim);
-    this.chestButton.setLabel(canClaim ? t('open') : t('tomorrow'));
-    this.chestRewardText.setText(canClaim ? `${t('open_for_ad')}  •  +80–150 ${t('gold').toLowerCase()}` : t('available_tomorrow'));
+    if (this.chestButton instanceof Button) {
+      this.chestButton.setEnabled(canClaim);
+      this.chestButton.setLabel(canClaim ? t('admiral_chest') : t('tomorrow'));
+    } else {
+      this.chestButton.setAlpha(canClaim ? 1 : 0.62);
+      this.chestButton.clearTint();
+      if (!canClaim) {
+        this.chestButton.setTint(0x6f7784);
+      }
+    }
   }
 
   claimDailyReward() {
-    this.chestButton.setEnabled(false);
+    if (!StorageService.canClaimDailyReward()) {
+      Toast.show(this, t('available_tomorrow'));
+      return;
+    }
+    if (this.chestButton instanceof Button) {
+      this.chestButton.setEnabled(false);
+    } else {
+      this.chestButton.disableInteractive();
+      this.chestButton.setAlpha(0.62);
+    }
     YandexService.showRewardedAd(() => this.grantDailyReward());
   }
 
@@ -188,6 +223,9 @@ export class MenuScene extends Phaser.Scene {
     this.profile = profile;
     this.refreshCareerPanel();
     this.refreshChest();
+    if (!(this.chestButton instanceof Button)) {
+      this.chestButton.setInteractive({ useHandCursor: true });
+    }
 
     if (profile.__rankUp) {
       this.showRankUpPopup(profile.__rankUp);
