@@ -49,33 +49,33 @@ export class ShopScene extends Phaser.Scene {
 
   addItems() {
     this.itemRows = [];
-    const startY = 146;
+    const startY = 142;
 
     SHOP_ITEMS.forEach((item, index) => {
-      const y = startY + index * 96;
-      drawNavalPanel(this, 104, y - 30, 1072, 78, { alpha: 0.92, radius: 9 });
+      const y = startY + index * 100;
+      drawNavalPanel(this, 104, y - 32, 1072, 88, { alpha: 0.92, radius: 9 });
 
-      this.add.text(140, y - 14, item.name, {
+      this.add.text(144, y - 12, item.name, {
         fontFamily: 'Georgia, "Times New Roman", serif',
         fontSize: '22px',
         color: '#fff0bf'
       }).setOrigin(0, 0.5);
 
-      this.add.text(140, y + 16, item.description, {
+      this.add.text(144, y + 21, item.description, {
         fontFamily: 'Arial, sans-serif',
         fontSize: '16px',
         color: '#d9fbff',
-        fixedWidth: 560,
-        wordWrap: { width: 560, useAdvancedWrap: true }
+        fixedWidth: 610,
+        wordWrap: { width: 610, useAdvancedWrap: true }
       }).setOrigin(0, 0.5);
 
-      const priceText = this.add.text(802, y + 2, `${item.price} золота`, {
+      const priceText = this.add.text(810, y + 4, `${item.price} золота`, {
         fontFamily: 'Arial, sans-serif',
         fontSize: '20px',
         color: '#fff5d6'
       }).setOrigin(0.5);
 
-      const stockText = this.add.text(1038, y + 32, '', {
+      const stockText = this.add.text(1038, y + 34, '', {
         fontFamily: 'Arial, sans-serif',
         fontSize: '12px',
         color: '#d9fbff',

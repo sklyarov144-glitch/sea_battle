@@ -113,6 +113,9 @@ export class PreparationScene extends Phaser.Scene {
         const zone = this.add.zone(px + this.boardLayout.cell / 2, py + this.boardLayout.cell / 2, this.boardLayout.cell - 2, this.boardLayout.cell - 2);
         zone.setInteractive({ useHandCursor: true });
         this.input.setDraggable(zone);
+        zone.on('pointerover', () => this.updatePlacementPreview(x, y));
+        zone.on('pointermove', () => this.updatePlacementPreview(x, y));
+        zone.on('pointerout', () => this.clearPlacementPreview());
         zone.on('pointerup', () => this.tryPlaceSelectedShip(x, y));
         zone.on('dragstart', (pointer) => this.startPlacedShipDrag(x, y, pointer));
         zone.on('drag', (pointer) => this.updateShipDrag(pointer));
@@ -311,24 +314,23 @@ export class PreparationScene extends Phaser.Scene {
       return;
     }
     const cell = this.getCellFromPointer(pointer);
-    this.previewCells = cell ? this.getPlacementCells(cell.x, cell.y, this.draggingTemplate) : [];
-    this.dragPreviewValid = Boolean(
-      cell && canPlaceShip(this.board, cell.x, cell.y, this.draggingTemplate.length, this.direction, true)
-    );
+    const placement = cell ? this.getResolvedPlacement(cell.x, cell.y, this.draggingTemplate) : null;
+    this.previewCells = placement ? this.getPlacementCells(placement.x, placement.y, this.draggingTemplate) : cell ? this.getPlacementCells(cell.x, cell.y, this.draggingTemplate) : [];
+    this.dragPreviewValid = Boolean(placement);
     this.updateShipGhost(pointer.x, pointer.y, this.dragPreviewValid);
     this.updateBoard();
   }
 
   endShipDrag(template, pointer) {
     const cell = this.getCellFromPointer(pointer);
-    const valid = Boolean(cell && canPlaceShip(this.board, cell.x, cell.y, template.length, this.direction, true));
+    const placement = cell ? this.getResolvedPlacement(cell.x, cell.y, template) : null;
     this.ghostShip?.destroy();
     this.ghostShip = null;
     this.draggingTemplate = null;
     this.previewCells = [];
 
-    if (valid) {
-      this.placeTemplate(template, cell.x, cell.y);
+    if (placement) {
+      this.placeTemplate(template, placement.x, placement.y);
     } else {
       Toast.show(this, t('cannot_place'), { y: 112 });
       this.updateBoard();
@@ -342,15 +344,15 @@ export class PreparationScene extends Phaser.Scene {
     }
     const { template, ship } = this.dragRestore;
     const cell = this.getCellFromPointer(pointer);
-    const valid = Boolean(cell && canPlaceShip(this.board, cell.x, cell.y, template.length, this.direction, true));
+    const placement = cell ? this.getResolvedPlacement(cell.x, cell.y, template) : null;
     this.ghostShip?.destroy();
     this.ghostShip = null;
     this.draggingTemplate = null;
     this.previewCells = [];
     this.dragRestore = null;
 
-    if (valid) {
-      this.placeTemplate(template, cell.x, cell.y);
+    if (placement) {
+      this.placeTemplate(template, placement.x, placement.y);
     } else {
       ship.cells = [];
       placeShip(this.board, ship, ship.origin.x, ship.origin.y, ship.direction);
@@ -403,6 +405,12 @@ export class PreparationScene extends Phaser.Scene {
     if (canPlaceShip(this.board, x, y, template.length, this.direction, true)) {
       return { x, y };
     }
+    if (this.direction === 'horizontal') {
+      const leftX = x - template.length + 1;
+      if (canPlaceShip(this.board, leftX, y, template.length, this.direction, true)) {
+        return { x: leftX, y };
+      }
+    }
     if (this.direction === 'vertical') {
       const upwardY = y - template.length + 1;
       if (canPlaceShip(this.board, x, upwardY, template.length, this.direction, true)) {
@@ -410,6 +418,28 @@ export class PreparationScene extends Phaser.Scene {
       }
     }
     return null;
+  }
+
+  updatePlacementPreview(x, y) {
+    if (this.draggingTemplate) {
+      return;
+    }
+    const template = this.selectedTemplate;
+    if (!template || this.placedTemplateIds.has(template.id)) {
+      this.clearPlacementPreview();
+      return;
+    }
+    const placement = this.getResolvedPlacement(x, y, template);
+    this.previewCells = placement ? this.getPlacementCells(placement.x, placement.y, template) : this.getPlacementCells(x, y, template);
+    this.updateBoard();
+  }
+
+  clearPlacementPreview() {
+    if (this.draggingTemplate || this.previewCells.length === 0) {
+      return;
+    }
+    this.previewCells = [];
+    this.updateBoard();
   }
 
   tryPlaceSelectedShip(x, y) {
@@ -508,11 +538,12 @@ export class PreparationScene extends Phaser.Scene {
   updateBoard() {
     const previewKeys = new Set(this.previewCells.map((cell) => `${cell.x}:${cell.y}`));
     const errorKeys = new Set((this.errorCells ?? []).map((cell) => `${cell.x}:${cell.y}`));
-    const previewOrigin = this.previewCells[0];
-    const previewValid = Boolean(
-      this.draggingTemplate &&
-      previewOrigin &&
-      canPlaceShip(this.board, previewOrigin.x, previewOrigin.y, this.draggingTemplate.length, this.direction, true)
+    const previewValid = this.previewCells.length > 0 && this.previewCells.every((cell) =>
+      cell.x >= 0 &&
+      cell.y >= 0 &&
+      cell.x < BOARD_SIZE &&
+      cell.y < BOARD_SIZE &&
+      this.board[cell.y][cell.x].shipId === null
     );
 
     for (let y = 0; y < BOARD_SIZE; y += 1) {

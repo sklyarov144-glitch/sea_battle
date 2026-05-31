@@ -26,11 +26,14 @@ export class SettingsModal {
     };
     const dim = this.scene.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x020812, 0.72);
     dim.setInteractive();
-    const panel = drawNavalPanel(this.scene, this.panel.x, this.panel.y, this.panel.width, this.panel.height, {
-      title: t('settings'),
-      titleSize: 30
+    const panel = drawNavalPanel(this.scene, this.panel.x, this.panel.y, this.panel.width, this.panel.height);
+    const title = this.scene.add.text(this.panel.x + 24, this.panel.y + 16, t('settings'), {
+      fontFamily: 'Georgia, "Times New Roman", serif',
+      fontSize: '30px',
+      color: '#f8d77a',
+      fontStyle: 'bold'
     });
-    this.container.add([dim, panel]);
+    this.container.add([dim, panel, title]);
 
     this.addLanguageControls();
     this.addToggleRow(255, t('sfx'), 'sound');
@@ -169,6 +172,10 @@ export class SettingsModal {
   }
 
   close() {
+    if (this.closed) {
+      return;
+    }
+    this.closed = true;
     this.scene.tweens.killTweensOf(this.container);
     this.controls.forEach((control) => {
       control.button?.destroy();

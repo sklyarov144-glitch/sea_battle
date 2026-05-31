@@ -34,10 +34,11 @@ export class MapScene extends Phaser.Scene {
       fontSize: '36px',
       color: '#fff0bf'
     });
-    this.add.text(730, 58, `${t('campaign')}: ${this.profile.unlockedLevel}/10   ${t('gold')}: ${this.profile.gold}`, {
+    this.add.text(370, 58, `${t('campaign')}: ${this.profile.unlockedLevel}/10   ${t('gold')}: ${this.profile.gold}`, {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '25px',
-      color: '#d9fbff'
+      fontSize: '22px',
+      color: '#d9fbff',
+      fixedWidth: 430
     });
   }
 
@@ -123,7 +124,7 @@ export class MapScene extends Phaser.Scene {
   }
 
   addNavigation() {
-    new Button(this, 965, 70, 170, 46, t('back'), () => {
+    new Button(this, 1010, 70, 150, 46, t('back'), () => {
       this.scene.start('MenuScene');
     }, {
       variant: 'danger',
@@ -131,7 +132,7 @@ export class MapScene extends Phaser.Scene {
       small: true
     });
 
-    new Button(this, 1140, 70, 170, 46, t('shop'), () => {
+    new Button(this, 1158, 70, 150, 46, t('shop'), () => {
       this.scene.start('ShopScene', { from: 'MapScene' });
     }, {
       variant: 'secondary',
