@@ -38,26 +38,26 @@ export class MapScene extends Phaser.Scene {
       fontFamily: 'Arial, sans-serif',
       fontSize: '22px',
       color: '#d9fbff',
-      fixedWidth: 430
+      fixedWidth: 760
     });
   }
 
   addIslandPath() {
     const positions = [
-      { x: 142, y: 552 },
-      { x: 248, y: 438 },
-      { x: 382, y: 500 },
-      { x: 500, y: 364 },
-      { x: 638, y: 424 },
-      { x: 758, y: 286 },
-      { x: 886, y: 352 },
-      { x: 1004, y: 232 },
-      { x: 1108, y: 338 },
-      { x: 1132, y: 520 }
+      { x: 150, y: 500 },
+      { x: 270, y: 390 },
+      { x: 402, y: 470 },
+      { x: 520, y: 330 },
+      { x: 648, y: 415 },
+      { x: 760, y: 270 },
+      { x: 884, y: 355 },
+      { x: 1002, y: 240 },
+      { x: 1110, y: 350 },
+      { x: 1088, y: 504 }
     ];
 
     const route = this.add.graphics();
-    route.lineStyle(5, 0xf0c35a, 0.55);
+    route.lineStyle(2, 0xf0c35a, 0.48);
     route.beginPath();
     route.moveTo(positions[0].x, positions[0].y);
     positions.slice(1).forEach((position) => route.lineTo(position.x, position.y));
@@ -66,49 +66,46 @@ export class MapScene extends Phaser.Scene {
     positions.forEach((position, index) => {
       const level = LEVELS[index];
       const unlocked = level.id <= this.profile.unlockedLevel;
-      this.createIsland(position, level, unlocked);
+      this.createMissionMarker(position, level, unlocked);
     });
   }
 
-  createIsland(position, level, unlocked) {
+  createMissionMarker(position, level, unlocked) {
     const container = this.add.container(position.x, position.y);
-    const shadow = this.add.graphics();
-    shadow.fillStyle(0x000000, 0.2);
-    shadow.fillEllipse(5, 18, 122, 42);
+    const marker = this.add.graphics();
+    marker.fillStyle(0x000000, 0.24);
+    marker.fillCircle(5, 7, 40);
+    marker.fillStyle(unlocked ? 0x0e3b55 : 0x172331, unlocked ? 0.98 : 0.78);
+    marker.fillCircle(0, 0, 38);
+    marker.lineStyle(5, unlocked ? 0xd7a748 : 0x53606b, unlocked ? 0.95 : 0.65);
+    marker.strokeCircle(0, 0, 36);
+    marker.lineStyle(1, unlocked ? 0x9ee8ff : 0x75808b, unlocked ? 0.78 : 0.45);
+    marker.strokeCircle(0, 0, 26);
+    marker.lineStyle(2, unlocked ? 0xf6d37c : 0x59636c, unlocked ? 0.62 : 0.35);
+    marker.lineBetween(-18, 0, 18, 0);
+    marker.lineBetween(0, -18, 0, 18);
 
-    const island = this.add.graphics();
-    island.fillStyle(unlocked ? 0xd9b36d : 0x59636c, unlocked ? 1 : 0.72);
-    island.fillEllipse(0, 0, 112, 70);
-    island.fillStyle(unlocked ? 0x2b8a4b : 0x3c4a52, unlocked ? 0.96 : 0.72);
-    island.fillEllipse(-10, -6, 62, 36);
-    island.fillStyle(unlocked ? 0x39a96b : 0x46525b, unlocked ? 0.9 : 0.72);
-    island.fillEllipse(20, 4, 48, 32);
-
-    const palm = this.add.text(-10, -23, unlocked ? '🌴' : '🔒', {
-      fontSize: unlocked ? '34px' : '30px'
-    }).setOrigin(0.5);
-
-    const number = this.add.text(0, 39, String(level.id), {
+    const number = this.add.text(0, unlocked ? 0 : -2, unlocked ? String(level.id) : '🔒', {
       fontFamily: 'Georgia, "Times New Roman", serif',
-      fontSize: '26px',
+      fontSize: unlocked ? '24px' : '22px',
       color: unlocked ? '#fff5d6' : '#b7c2ce',
       stroke: '#2b170b',
-      strokeThickness: 4
+      strokeThickness: unlocked ? 3 : 0
     }).setOrigin(0.5);
 
-    const label = this.add.text(0, 72, level.name, {
+    const label = this.add.text(0, 48, level.name, {
       fontFamily: 'Arial, sans-serif',
-      fontSize: '16px',
+      fontSize: '14px',
       color: unlocked ? '#fff5d6' : '#b7c2ce',
       align: 'center',
-      fixedWidth: 160,
-      wordWrap: { width: 160, useAdvancedWrap: true }
+      fixedWidth: 146,
+      wordWrap: { width: 146, useAdvancedWrap: true }
     }).setOrigin(0.5, 0);
 
-    container.add([shadow, island, palm, number, label]);
+    container.add([marker, number, label]);
     container.setAlpha(unlocked ? 1 : 0.62);
 
-    const hitZone = this.add.zone(position.x, position.y, 150, 126).setInteractive({ useHandCursor: unlocked });
+    const hitZone = this.add.zone(position.x, position.y, 120, 112).setInteractive({ useHandCursor: unlocked });
 
     if (unlocked) {
       hitZone.on('pointerover', () => this.tweens.add({ targets: container, scale: 1.08, duration: 140 }));
@@ -124,20 +121,18 @@ export class MapScene extends Phaser.Scene {
   }
 
   addNavigation() {
-    new Button(this, 1010, 70, 150, 46, t('back'), () => {
+    new Button(this, 134, GAME_HEIGHT - 58, 188, 52, t('back'), () => {
       this.scene.start('MenuScene');
     }, {
       variant: 'danger',
-      fontSize: 17,
-      small: true
+      fontSize: 19
     });
 
-    new Button(this, 1158, 70, 150, 46, t('shop'), () => {
+    new Button(this, GAME_WIDTH - 140, GAME_HEIGHT - 58, 196, 52, t('shop'), () => {
       this.scene.start('ShopScene', { from: 'MapScene' });
     }, {
       variant: 'secondary',
-      fontSize: 17,
-      small: true
+      fontSize: 20
     });
   }
 }
