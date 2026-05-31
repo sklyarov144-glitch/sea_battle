@@ -1,3 +1,5 @@
+import { LEVELS } from '../config/balanceConfig.js';
+
 export const UPGRADE_PRICES = [150, 350, 750, 1500, 3000];
 
 export const ECONOMY_UPGRADES = [
@@ -105,14 +107,16 @@ export const EconomyService = {
   },
 
   getBattleGoldReward({ victory, battleMode, levelId, profile }) {
+    const level = LEVELS[levelId - 1];
     const base = victory
-      ? (battleMode === 'quick' ? 40 : Math.round(50 + ((Math.max(1, levelId) - 1) / 9) * 100))
+      ? (battleMode === 'quick' ? 40 : level?.rewards?.gold ?? 50)
       : 10;
     return withPercentBonus(base, this.getUpgradeLevel(profile, 'bonusGoldUpgrade'));
   },
 
-  getBattleXpReward({ victory, battleMode, profile }) {
-    const base = victory ? (battleMode === 'quick' ? 20 : 30) : 5;
+  getBattleXpReward({ victory, battleMode, levelId, profile }) {
+    const level = LEVELS[levelId - 1];
+    const base = victory ? (battleMode === 'quick' ? 20 : level?.rewards?.xp ?? 30) : 5;
     return withPercentBonus(base, this.getUpgradeLevel(profile, 'bonusXpUpgrade'));
   },
 

@@ -228,8 +228,9 @@ export function placeEvents(board, eventCounts, rng = Math.random) {
 }
 
 export function createBattleSetup(levelConfig, rng = Math.random) {
-  const player = generateFleet(BOARD_SIZE, rng);
-  const enemy = generateFleet(BOARD_SIZE, rng);
+  const size = levelConfig?.boardSize ?? BOARD_SIZE;
+  const player = generateFleet(size, rng);
+  const enemy = generateFleet(size, rng);
   placeEvents(enemy.board, levelConfig.events, rng);
   return { player, enemy };
 }

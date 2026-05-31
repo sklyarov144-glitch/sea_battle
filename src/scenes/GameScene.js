@@ -137,7 +137,7 @@ export class GameScene extends Phaser.Scene {
 
     const locationName = this.battleMode === 'quick'
       ? t(`quick_location_${((this.levelId - 1) % 4) + 1}`)
-      : t('island_status', { id: this.level.id, name: t(`level_${this.level.id}`) });
+      : t('island_status', { id: this.level.id, name: this.level.name });
 
     this.add.text(72, 43, locationName, {
       fontFamily: 'Georgia, "Times New Roman", serif',
@@ -860,6 +860,7 @@ export class GameScene extends Phaser.Scene {
     const rewardXp = EconomyService.getBattleXpReward({
       victory,
       battleMode: this.battleMode,
+      levelId: this.level.id,
       profile
     });
     const extraChestGold = victory && EconomyService.rollExtraChest(profile)

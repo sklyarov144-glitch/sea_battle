@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { AssetKeys } from '../config/assetKeys.js';
-import { BOARD_SIZE } from '../config/balanceConfig.js';
+import { LEVELS } from '../config/balanceConfig.js';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
 import { LocalizationService, t } from '../services/LocalizationService.js';
 import { SoundService } from '../services/SoundService.js';
@@ -38,6 +38,8 @@ export class PreparationScene extends Phaser.Scene {
     LocalizationService.init(this.profile);
     SoundService.init(this.profile);
     SoundService.playMusic(this, SoundService.keys.music_battle);
+    this.level = LEVELS[this.levelId - 1] ?? LEVELS[0];
+    this.boardSize = this.level?.boardSize ?? 8;
     createCoverImageBackground(this, AssetKeys.Images.BattleOceanBg, {
       overlayAlpha: 0.42,
       overlayColor: 0x031827,
@@ -48,7 +50,7 @@ export class PreparationScene extends Phaser.Scene {
       duration: 16000
     });
 
-    this.board = createEmptyBoard(BOARD_SIZE);
+    this.board = createEmptyBoard(this.boardSize);
     this.ships = [];
     this.nextShipId = 1;
     this.direction = 'horizontal';
@@ -97,16 +99,23 @@ export class PreparationScene extends Phaser.Scene {
   }
 
   addBoard() {
-    this.boardLayout = { x: 125, y: 153, cell: 57 };
+    const panelSize = 508;
+    const gridSize = 456;
+    const cell = Math.floor(gridSize / this.boardSize);
+    this.boardLayout = {
+      x: Math.round(94 + (panelSize - cell * this.boardSize) / 2),
+      y: Math.round(122 + (panelSize - cell * this.boardSize) / 2),
+      cell
+    };
     const panel = this.add.graphics();
     panel.fillStyle(0x041f32, 0.58);
     panel.fillRoundedRect(94, 122, 508, 508, 12);
     panel.lineStyle(2, 0x65d6ef, 0.32);
     panel.strokeRoundedRect(94, 122, 508, 508, 12);
 
-    for (let y = 0; y < BOARD_SIZE; y += 1) {
+    for (let y = 0; y < this.boardSize; y += 1) {
       this.cellViews[y] = [];
-      for (let x = 0; x < BOARD_SIZE; x += 1) {
+      for (let x = 0; x < this.boardSize; x += 1) {
         const px = this.boardLayout.x + x * this.boardLayout.cell;
         const py = this.boardLayout.y + y * this.boardLayout.cell;
         const graphics = this.add.graphics();
@@ -388,7 +397,7 @@ export class PreparationScene extends Phaser.Scene {
     const { x, y, cell } = this.boardLayout;
     const boardX = Math.floor((pointer.x - x) / cell);
     const boardY = Math.floor((pointer.y - y) / cell);
-    if (boardX < 0 || boardY < 0 || boardX >= BOARD_SIZE || boardY >= BOARD_SIZE) {
+    if (boardX < 0 || boardY < 0 || boardX >= this.boardSize || boardY >= this.boardSize) {
       return null;
     }
     return { x: boardX, y: boardY };
@@ -501,7 +510,7 @@ export class PreparationScene extends Phaser.Scene {
   }
 
   autoPlace() {
-    const setup = generateFleet(BOARD_SIZE);
+    const setup = generateFleet(this.boardSize);
     this.board = setup.board;
     this.ships = setup.ships;
     this.assignTemplatesToShips();
@@ -518,8 +527,8 @@ export class PreparationScene extends Phaser.Scene {
     remaining.forEach((template) => {
       for (let attempt = 0; attempt < 240; attempt += 1) {
         const direction = Phaser.Math.Between(0, 1) === 0 ? 'horizontal' : 'vertical';
-        const x = Phaser.Math.Between(0, BOARD_SIZE - 1);
-        const y = Phaser.Math.Between(0, BOARD_SIZE - 1);
+        const x = Phaser.Math.Between(0, this.boardSize - 1);
+        const y = Phaser.Math.Between(0, this.boardSize - 1);
         if (!canPlaceShip(this.board, x, y, template.length, direction, true)) {
           continue;
         }
@@ -546,13 +555,13 @@ export class PreparationScene extends Phaser.Scene {
     const previewValid = this.previewCells.length > 0 && this.previewCells.every((cell) =>
       cell.x >= 0 &&
       cell.y >= 0 &&
-      cell.x < BOARD_SIZE &&
-      cell.y < BOARD_SIZE &&
+      cell.x < this.boardSize &&
+      cell.y < this.boardSize &&
       this.board[cell.y][cell.x].shipId === null
     );
 
-    for (let y = 0; y < BOARD_SIZE; y += 1) {
-      for (let x = 0; x < BOARD_SIZE; x += 1) {
+    for (let y = 0; y < this.boardSize; y += 1) {
+      for (let x = 0; x < this.boardSize; x += 1) {
         const view = this.cellViews[y][x];
         const cell = this.board[y][x];
         const px = this.boardLayout.x + x * this.boardLayout.cell;

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { LEVELS } from '../config/balanceConfig.js';
+import { CAMPAIGN_LEVEL_COUNT, CHAPTERS, LEVELS } from '../config/balanceConfig.js';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
 import { LocalizationService, t } from '../services/LocalizationService.js';
 import { SoundService } from '../services/SoundService.js';
@@ -14,6 +14,10 @@ export class MapScene extends Phaser.Scene {
     super('MapScene');
   }
 
+  init(data) {
+    this.requestedChapterIndex = data?.chapterIndex;
+  }
+
   create() {
     document.body.dataset.scene = 'MapScene';
     this.profile = StorageService.loadProfile();
@@ -21,9 +25,15 @@ export class MapScene extends Phaser.Scene {
     SoundService.init(this.profile);
     SoundService.playMusic(this, SoundService.keys.music_menu);
     createSeaBackground(this, { waterSkin: this.profile.selectedSkins.water });
+    this.selectedChapterIndex = Phaser.Math.Clamp(
+      this.requestedChapterIndex ?? Math.ceil((this.profile.unlockedLevel || 1) / 10) - 1,
+      0,
+      CHAPTERS.length - 1
+    );
 
     this.addHeader();
-    this.addIslandPath();
+    this.addChapterTabs();
+    this.addMissionPath();
     this.addNavigation();
   }
 
@@ -34,7 +44,7 @@ export class MapScene extends Phaser.Scene {
       fontSize: '36px',
       color: '#fff0bf'
     });
-    this.add.text(370, 58, `${t('campaign')}: ${this.profile.unlockedLevel}/10   ${t('gold')}: ${this.profile.gold}`, {
+    this.add.text(370, 58, `${t('campaign')}: ${this.profile.unlockedLevel}/${CAMPAIGN_LEVEL_COUNT}   ${t('gold')}: ${this.profile.gold}`, {
       fontFamily: 'Arial, sans-serif',
       fontSize: '22px',
       color: '#d9fbff',
@@ -42,19 +52,55 @@ export class MapScene extends Phaser.Scene {
     });
   }
 
-  addIslandPath() {
+  addChapterTabs() {
+    const chapter = CHAPTERS[this.selectedChapterIndex];
+    this.add.text(GAME_WIDTH / 2, 130, `${chapter.title}`, {
+      fontFamily: 'Georgia, "Times New Roman", serif',
+      fontSize: '28px',
+      color: '#fff0bf'
+    }).setOrigin(0.5);
+    this.add.text(GAME_WIDTH / 2, 162, chapter.subtitle, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '15px',
+      color: '#b7d7e6',
+      fixedWidth: 620,
+      align: 'center'
+    }).setOrigin(0.5);
+
+    CHAPTERS.forEach((item, index) => {
+      const x = 412 + index * 114;
+      const unlocked = this.profile.unlockedLevel >= item.levelRange[0];
+      new Button(this, x, 206, 82, 38, String(index + 1), () => {
+        if (!unlocked) {
+          Toast.show(this, t('locked_island'));
+          return;
+        }
+        this.selectedChapterIndex = index;
+        this.scene.restart({ chapterIndex: index });
+      }, {
+        variant: index === this.selectedChapterIndex ? 'primary' : 'secondary',
+        disabled: !unlocked,
+        fontSize: 17,
+        small: true
+      });
+    });
+  }
+
+  addMissionPath() {
     const positions = [
-      { x: 150, y: 500 },
-      { x: 270, y: 390 },
-      { x: 402, y: 470 },
-      { x: 520, y: 330 },
-      { x: 648, y: 415 },
-      { x: 760, y: 270 },
-      { x: 884, y: 355 },
-      { x: 1002, y: 240 },
-      { x: 1110, y: 350 },
-      { x: 1088, y: 504 }
+      { x: 150, y: 510 },
+      { x: 270, y: 410 },
+      { x: 402, y: 492 },
+      { x: 520, y: 350 },
+      { x: 648, y: 432 },
+      { x: 760, y: 296 },
+      { x: 884, y: 374 },
+      { x: 1002, y: 280 },
+      { x: 1110, y: 382 },
+      { x: 1088, y: 520 }
     ];
+    const chapter = CHAPTERS[this.selectedChapterIndex];
+    const chapterLevels = LEVELS.slice(chapter.levelRange[0] - 1, chapter.levelRange[1]);
 
     const route = this.add.graphics();
     route.lineStyle(2, 0xf0c35a, 0.48);
@@ -64,7 +110,7 @@ export class MapScene extends Phaser.Scene {
     route.strokePath();
 
     positions.forEach((position, index) => {
-      const level = { ...LEVELS[index], name: t(`level_${LEVELS[index].id}`) };
+      const level = chapterLevels[index];
       const unlocked = level.id <= this.profile.unlockedLevel;
       this.createMissionMarker(position, level, unlocked);
     });

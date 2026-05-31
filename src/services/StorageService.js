@@ -1,4 +1,4 @@
-import { CAPTAIN_XP_PER_LEVEL } from '../config/balanceConfig.js';
+import { CAMPAIGN_LEVEL_COUNT, CAPTAIN_XP_PER_LEVEL } from '../config/balanceConfig.js';
 import { CareerService } from './CareerService.js';
 import { EconomyService, createDefaultUpgrades } from './EconomyService.js';
 
@@ -179,7 +179,7 @@ export const StorageService = {
         profile.totalWins += 1;
         profile.currentWinStreak += 1;
         profile.bestWinStreak = Math.max(profile.bestWinStreak, profile.currentWinStreak);
-        profile.unlockedLevel = Math.max(profile.unlockedLevel, Math.min(10, levelId + 1));
+        profile.unlockedLevel = Math.max(profile.unlockedLevel, Math.min(CAMPAIGN_LEVEL_COUNT, levelId + 1));
       } else {
         profile.totalLosses += 1;
         profile.currentWinStreak = 0;

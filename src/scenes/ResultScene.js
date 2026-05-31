@@ -59,6 +59,7 @@ export class ResultScene extends Phaser.Scene {
     const careerXp = this.result.rewardXp || EconomyService.getBattleXpReward({
       victory: this.result.victory,
       battleMode: this.result.battleMode,
+      levelId: this.result.levelId,
       profile: profileBeforeRewards
     });
     this.appliedGold = totalGold;
@@ -91,7 +92,7 @@ export class ResultScene extends Phaser.Scene {
       strokeThickness: 6
     }).setOrigin(0.5);
 
-    this.add.text(GAME_WIDTH / 2, 202, level ? t(`level_${level.id}`) : t('campaign'), {
+    this.add.text(GAME_WIDTH / 2, 202, level ? level.name : t('campaign'), {
       fontFamily: 'Arial, sans-serif',
       fontSize: '24px',
       color: '#d9fbff'
