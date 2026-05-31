@@ -5,7 +5,6 @@ import { CareerService } from '../services/CareerService.js';
 import { LocalizationService, t } from '../services/LocalizationService.js';
 import { SoundService } from '../services/SoundService.js';
 import { StorageService } from '../services/StorageService.js';
-import { YandexService } from '../services/YandexService.js';
 import { Button } from '../ui/Button.js';
 import { drawCareerEmblem, drawNavalPanel } from '../ui/NavalPanel.js';
 import { SettingsModal } from '../ui/SettingsModal.js';
@@ -211,7 +210,11 @@ export class MenuScene extends Phaser.Scene {
       this.chestHitZone.disableInteractive();
       this.chestContainer.setAlpha(0.62);
     }
-    YandexService.showRewardedAd(() => this.grantDailyReward());
+    this.mockRewardedAd(() => this.grantDailyReward());
+  }
+
+  mockRewardedAd(callback) {
+    callback?.();
   }
 
   grantDailyReward() {
@@ -242,16 +245,59 @@ export class MenuScene extends Phaser.Scene {
   }
 
   addRareChest() {
-    this.rareChestButton = new Button(this, 224, GAME_HEIGHT - 72, 300, 50, t('rare_chest_open'), () => this.claimRareChest(), {
-      variant: 'secondary',
-      fontSize: 16,
-      small: true
-    });
+    const x = 236;
+    const y = GAME_HEIGHT - 96;
+    if (this.textures.exists(AssetKeys.Images.RareChestReward)) {
+      this.rareChestContainer = this.add.container(x, y);
+      const glow = this.add.graphics();
+      glow.fillStyle(0x020812, 0.58);
+      glow.fillRoundedRect(-104, -72, 208, 138, 22);
+      glow.fillStyle(0xb156ff, 0.14);
+      glow.fillEllipse(0, -4, 196, 154);
+      glow.lineStyle(2, 0xd7a748, 0.36);
+      glow.strokeRoundedRect(-104, -72, 208, 138, 22);
+      this.rareChestImage = this.add.image(0, -16, AssetKeys.Images.RareChestReward)
+        .setDisplaySize(138, 137);
+      this.rareChestLabel = this.add.text(0, 52, t('rare_chest'), {
+        fontFamily: 'Georgia, "Times New Roman", serif',
+        fontSize: '17px',
+        color: '#fff0bf',
+        stroke: '#020812',
+        strokeThickness: 3
+      }).setOrigin(0.5);
+      this.rareChestHitZone = this.add.zone(0, -6, 208, 150)
+        .setInteractive({ useHandCursor: true });
+      this.rareChestContainer.add([glow, this.rareChestImage, this.rareChestLabel, this.rareChestHitZone]);
+      this.rareChestHitZone.on('pointerover', () => {
+        if (StorageService.canClaimRareChest()) {
+          this.tweens.add({ targets: this.rareChestContainer, scale: 1.04, duration: 120, ease: 'Sine.easeOut' });
+        }
+      });
+      this.rareChestHitZone.on('pointerout', () => {
+        this.tweens.add({ targets: this.rareChestContainer, scale: 1, duration: 120, ease: 'Sine.easeOut' });
+      });
+      this.rareChestHitZone.on('pointerup', () => this.claimRareChest());
+    } else {
+      this.rareChestButton = new Button(this, 224, GAME_HEIGHT - 72, 300, 50, t('rare_chest_open'), () => this.claimRareChest(), {
+        variant: 'secondary',
+        fontSize: 16,
+        small: true
+      });
+    }
     this.refreshRareChest();
   }
 
   refreshRareChest() {
-    this.rareChestButton?.setEnabled(StorageService.canClaimRareChest());
+    const canClaim = StorageService.canClaimRareChest();
+    if (this.rareChestButton) {
+      this.rareChestButton.setEnabled(canClaim);
+      return;
+    }
+    this.rareChestContainer?.setAlpha(canClaim ? 1 : 0.58);
+    this.rareChestImage?.clearTint();
+    if (!canClaim) {
+      this.rareChestImage?.setTint(0x7f7787);
+    }
   }
 
   claimRareChest() {
