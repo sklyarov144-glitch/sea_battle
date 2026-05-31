@@ -243,48 +243,91 @@ export const LEVELS = generateCampaignLevels();
 export const SHOP_ITEMS = [
   {
     id: 'radarCharge',
+    page: 'abilities',
     price: 120,
     type: 'consumable',
-    ability: 'radar',
-    inventoryKey: 'radar'
+    grants: { radar: 1 }
   },
   {
     id: 'salvoCharge',
+    page: 'abilities',
     price: 160,
     type: 'consumable',
-    ability: 'barrage',
-    inventoryKey: 'salvo'
+    grants: { salvo: 1 }
   },
   {
     id: 'torpedoCharge',
+    page: 'abilities',
     price: 220,
     type: 'consumable',
-    ability: 'torpedo',
-    inventoryKey: 'torpedo'
+    grants: { torpedo: 1 }
+  },
+  {
+    id: 'scoutPack',
+    page: 'abilities',
+    price: 220,
+    type: 'consumable',
+    grants: { radar: 2 }
+  },
+  {
+    id: 'artilleryPack',
+    page: 'abilities',
+    price: 300,
+    type: 'consumable',
+    grants: { salvo: 2 }
+  },
+  {
+    id: 'assaultPack',
+    page: 'abilities',
+    price: 420,
+    type: 'consumable',
+    grants: { torpedo: 2 }
+  },
+  {
+    id: 'battlePack',
+    page: 'abilities',
+    price: 430,
+    type: 'consumable',
+    grants: { radar: 1, salvo: 1, torpedo: 1 }
   },
   {
     id: 'radarLevel',
+    page: 'upgrades',
     type: 'upgrade',
     upgradeId: 'radarLevel'
   },
   {
     id: 'salvoLevel',
+    page: 'upgrades',
     type: 'upgrade',
     upgradeId: 'salvoLevel'
   },
   {
     id: 'torpedoLevel',
+    page: 'upgrades',
     type: 'upgrade',
     upgradeId: 'torpedoLevel'
   },
   {
     id: 'goldBonusLevel',
+    page: 'upgrades',
     type: 'upgrade',
     upgradeId: 'goldBonusLevel'
   },
   {
     id: 'xpBonusLevel',
+    page: 'upgrades',
     type: 'upgrade',
     upgradeId: 'xpBonusLevel'
+  },
+  {
+    id: 'shopDiscount',
+    page: 'upgrades',
+    type: 'comingSoon'
+  },
+  {
+    id: 'startingBonus',
+    page: 'upgrades',
+    type: 'comingSoon'
   }
 ];

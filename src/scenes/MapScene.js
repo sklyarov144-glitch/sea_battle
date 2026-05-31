@@ -66,21 +66,26 @@ export class MapScene extends Phaser.Scene {
       fixedWidth: 620,
       align: 'center'
     }).setOrigin(0.5);
+    const chapterUnlocked = this.profile.unlockedLevel >= chapter.levelRange[0];
+    if (!chapterUnlocked) {
+      this.add.text(GAME_WIDTH / 2, 184, t('opens_after_previous_chapter'), {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '14px',
+        color: '#f8d77a',
+        fixedWidth: 620,
+        align: 'center'
+      }).setOrigin(0.5);
+    }
 
     CHAPTERS.forEach((item, index) => {
       const x = 412 + index * 114;
-      const unlocked = this.profile.unlockedLevel >= item.levelRange[0];
-      new Button(this, x, 206, 82, 38, String(index + 1), () => {
-        if (!unlocked) {
-          Toast.show(this, t('locked_island'));
-          return;
-        }
+      new Button(this, x, 212, 96, 38, `${t('chapter')} ${index + 1}`, () => {
         this.selectedChapterIndex = index;
         this.scene.restart({ chapterIndex: index });
       }, {
         variant: index === this.selectedChapterIndex ? 'primary' : 'secondary',
-        disabled: !unlocked,
-        fontSize: 17,
+        selected: index === this.selectedChapterIndex,
+        fontSize: 13,
         small: true
       });
     });

@@ -17,6 +17,7 @@ export class ShopScene extends Phaser.Scene {
 
   init(data) {
     this.fromScene = data.from ?? 'MenuScene';
+    this.shopPage = data.page ?? 'abilities';
   }
 
   create() {
@@ -27,6 +28,7 @@ export class ShopScene extends Phaser.Scene {
     SoundService.playMusic(this, SoundService.keys.music_menu);
     createSeaBackground(this, { waterSkin: this.profile.selectedSkins.water });
     this.addHeader();
+    this.addShopTabs();
     this.addItems();
     this.addBackButton();
   }
@@ -49,42 +51,45 @@ export class ShopScene extends Phaser.Scene {
   }
 
   addItems() {
+    this.itemObjects?.forEach((object) => object.destroy());
+    this.itemObjects = [];
     this.itemRows = [];
-    const startY = 156;
+    const startY = 182;
     const columns = [
       { x: 84, textX: 112, buttonX: 492 },
       { x: 660, textX: 688, buttonX: 1068 }
     ];
 
-    SHOP_ITEMS.forEach((item, index) => {
+    const pageItems = SHOP_ITEMS.filter((item) => (item.page ?? 'abilities') === this.shopPage);
+    pageItems.forEach((item, index) => {
       const column = columns[index % 2];
-      const y = startY + Math.floor(index / 2) * 124;
-      drawNavalPanel(this, column.x, y - 42, 536, 108, { alpha: 0.92, radius: 9 });
+      const y = startY + Math.floor(index / 2) * 118;
+      const panel = drawNavalPanel(this, column.x, y - 42, 536, 104, { alpha: 0.92, radius: 9 });
 
-      this.add.text(column.textX, y - 22, t(`shop_${item.id}_name`), {
+      const title = this.add.text(column.textX, y - 23, t(`shop_${item.id}_name`), {
         fontFamily: 'Georgia, "Times New Roman", serif',
-        fontSize: '20px',
+        fontSize: '19px',
         color: '#fff0bf',
         fixedWidth: 310,
         wordWrap: { width: 310, useAdvancedWrap: true }
       }).setOrigin(0, 0.5);
 
-      this.add.text(column.textX, y + 14, t(`shop_${item.id}_desc`), {
+      const desc = this.add.text(column.textX, y + 8, t(`shop_${item.id}_desc`), {
         fontFamily: 'Arial, sans-serif',
-        fontSize: '14px',
+        fontSize: '13px',
         color: '#d9fbff',
         fixedWidth: 310,
         wordWrap: { width: 310, useAdvancedWrap: true },
         lineSpacing: 2
       }).setOrigin(0, 0);
 
-      const priceText = this.add.text(column.buttonX, y - 34, '', {
+      const priceText = this.add.text(column.buttonX, y - 32, '', {
         fontFamily: 'Arial, sans-serif',
         fontSize: '17px',
         color: '#fff5d6'
       }).setOrigin(0.5);
 
-      const stockText = this.add.text(column.buttonX, y + 42, '', {
+      const stockText = this.add.text(column.buttonX, y + 39, '', {
         fontFamily: 'Arial, sans-serif',
         fontSize: '11px',
         color: '#d9fbff',
@@ -97,9 +102,29 @@ export class ShopScene extends Phaser.Scene {
       }, { fontSize: 17, variant: 'secondary', small: true });
 
       this.itemRows.push({ item, button, priceText, stockText });
+      this.itemObjects.push(panel, title, desc, priceText, stockText, button);
     });
 
     this.refreshItemButtons();
+  }
+
+  addShopTabs() {
+    this.abilityTab = new Button(this, GAME_WIDTH / 2 - 120, 128, 210, 42, t('shop_tab_abilities'), () => {
+      this.shopPage = 'abilities';
+      this.refreshTabs();
+      this.addItems();
+    }, { variant: 'secondary', fontSize: 16, small: true });
+    this.upgradeTab = new Button(this, GAME_WIDTH / 2 + 120, 128, 210, 42, t('shop_tab_upgrades'), () => {
+      this.shopPage = 'upgrades';
+      this.refreshTabs();
+      this.addItems();
+    }, { variant: 'secondary', fontSize: 16, small: true });
+    this.refreshTabs();
+  }
+
+  refreshTabs() {
+    this.abilityTab?.setSelected(this.shopPage === 'abilities');
+    this.upgradeTab?.setSelected(this.shopPage === 'upgrades');
   }
 
   addBackButton() {
@@ -116,6 +141,8 @@ export class ShopScene extends Phaser.Scene {
       Toast.show(this, t('not_enough_gold'));
     } else if (profile.__purchaseStatus === 'maxLevel') {
       Toast.show(this, t('max_level'));
+    } else if (profile.__purchaseStatus === 'comingSoon') {
+      Toast.show(this, t('coming_soon'));
     } else if (profile.__purchaseStatus === 'selected') {
       Toast.show(this, t('skin_selected'));
     } else {
@@ -136,11 +163,20 @@ export class ShopScene extends Phaser.Scene {
     this.profile = StorageService.loadProfile();
     this.itemRows.forEach(({ item, button, priceText, stockText }) => {
       if (item.type === 'consumable') {
-        const count = this.profile.inventory?.[item.inventoryKey] ?? 0;
+        const stock = Object.keys(item.grants ?? {})
+          .map((key) => `${t(key)}: ${this.profile.inventory?.[key] ?? 0}`)
+          .join('  ');
         button.setLabel(t('buy'));
         priceText.setText(t('price_gold', { amount: item.price }));
-        stockText.setText(t('in_stock', { count }));
+        stockText.setText(stock || t('in_stock', { count: 0 }));
         button.setEnabled(this.profile.gold >= item.price);
+        return;
+      }
+
+      if (item.type === 'comingSoon') {
+        button.setLabel(t('coming_soon')).setEnabled(false);
+        priceText.setText('');
+        stockText.setText(t('coming_soon'));
         return;
       }
 

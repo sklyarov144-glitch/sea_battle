@@ -38,6 +38,14 @@ export class MenuScene extends Phaser.Scene {
     this.addCareerPanel();
     this.addAdmiralChest();
     this.addRareChest();
+    this.chestTimerEvent = this.time.addEvent({
+      delay: 60000,
+      loop: true,
+      callback: () => {
+        this.refreshChest();
+        this.refreshRareChest();
+      }
+    });
   }
 
   addTitle() {
@@ -145,17 +153,23 @@ export class MenuScene extends Phaser.Scene {
     if (this.textures.exists(AssetKeys.Images.DailyChestReward)) {
       this.chestContainer = this.add.container(x, y);
       this.chestGlow = this.add.graphics();
-      this.chestGlow.fillStyle(0x020812, 0.62);
-      this.chestGlow.fillRoundedRect(-168, -58, 336, 132, 24);
-      this.chestGlow.fillStyle(0xd7a748, 0.12);
+      this.chestGlow.fillStyle(0xd7a748, 0.14);
       this.chestGlow.fillEllipse(0, 18, 330, 196);
-      this.chestGlow.lineStyle(2, 0xd7a748, 0.46);
-      this.chestGlow.strokeRoundedRect(-168, -58, 336, 132, 24);
       this.chestButton = this.add.image(0, -2, AssetKeys.Images.DailyChestReward)
         .setDisplaySize(244, 265);
-      this.chestHitZone = this.add.zone(0, 8, 312, 248)
+      this.dailyChestStatus = this.add.text(0, 120, '', {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '13px',
+        color: '#fff5d6',
+        align: 'center',
+        fixedWidth: 280,
+        wordWrap: { width: 280, useAdvancedWrap: true },
+        stroke: '#020812',
+        strokeThickness: 3
+      }).setOrigin(0.5);
+      this.chestHitZone = this.add.zone(0, 0, 230, 238)
         .setInteractive({ useHandCursor: true });
-      this.chestContainer.add([this.chestGlow, this.chestButton, this.chestHitZone]);
+      this.chestContainer.add([this.chestGlow, this.chestButton, this.dailyChestStatus, this.chestHitZone]);
       this.chestBaseScale = 1;
       this.chestHitZone.on('pointerover', () => {
         if (StorageService.canClaimDailyReward()) {
@@ -193,6 +207,7 @@ export class MenuScene extends Phaser.Scene {
     } else {
       this.chestContainer.setAlpha(canClaim ? 1 : 0.62);
       this.chestButton.clearTint();
+      this.dailyChestStatus?.setText(`${canClaim ? t('available') : this.getDailyCooldownText()}\n${t('daily_chest_rules')}`);
       if (!canClaim) {
         this.chestButton.setTint(0x6f7784);
       }
@@ -250,12 +265,8 @@ export class MenuScene extends Phaser.Scene {
     if (this.textures.exists(AssetKeys.Images.RareChestReward)) {
       this.rareChestContainer = this.add.container(x, y);
       const glow = this.add.graphics();
-      glow.fillStyle(0x020812, 0.58);
-      glow.fillRoundedRect(-104, -72, 208, 138, 22);
       glow.fillStyle(0xb156ff, 0.14);
       glow.fillEllipse(0, -4, 196, 154);
-      glow.lineStyle(2, 0xd7a748, 0.36);
-      glow.strokeRoundedRect(-104, -72, 208, 138, 22);
       this.rareChestImage = this.add.image(0, -16, AssetKeys.Images.RareChestReward)
         .setDisplaySize(138, 137);
       this.rareChestLabel = this.add.text(0, 52, t('rare_chest'), {
@@ -265,9 +276,19 @@ export class MenuScene extends Phaser.Scene {
         stroke: '#020812',
         strokeThickness: 3
       }).setOrigin(0.5);
-      this.rareChestHitZone = this.add.zone(0, -6, 208, 150)
+      this.rareChestStatus = this.add.text(0, 80, '', {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '12px',
+        color: '#fff5d6',
+        align: 'center',
+        fixedWidth: 230,
+        wordWrap: { width: 230, useAdvancedWrap: true },
+        stroke: '#020812',
+        strokeThickness: 3
+      }).setOrigin(0.5);
+      this.rareChestHitZone = this.add.zone(0, -12, 160, 148)
         .setInteractive({ useHandCursor: true });
-      this.rareChestContainer.add([glow, this.rareChestImage, this.rareChestLabel, this.rareChestHitZone]);
+      this.rareChestContainer.add([glow, this.rareChestImage, this.rareChestLabel, this.rareChestStatus, this.rareChestHitZone]);
       this.rareChestHitZone.on('pointerover', () => {
         if (StorageService.canClaimRareChest()) {
           this.tweens.add({ targets: this.rareChestContainer, scale: 1.04, duration: 120, ease: 'Sine.easeOut' });
@@ -294,6 +315,7 @@ export class MenuScene extends Phaser.Scene {
       return;
     }
     this.rareChestContainer?.setAlpha(canClaim ? 1 : 0.58);
+    this.rareChestStatus?.setText(this.getRareChestStatusText(canClaim));
     this.rareChestImage?.clearTint();
     if (!canClaim) {
       this.rareChestImage?.setTint(0x7f7787);
@@ -328,7 +350,20 @@ export class MenuScene extends Phaser.Scene {
     const ms = Math.max(0, 24 * 60 * 60 * 1000 - (Date.now() - new Date(last).getTime()));
     const hours = Math.floor(ms / 3600000);
     const minutes = Math.ceil((ms % 3600000) / 60000);
-    return t('daily_chest_cooldown', { time: `${hours}:${String(minutes).padStart(2, '0')}` });
+    return t('opens_in', { time: `${hours}:${String(minutes).padStart(2, '0')}` });
+  }
+
+  getRareChestStatusText(canClaim = StorageService.canClaimRareChest()) {
+    if (canClaim) {
+      return `${t('available')}\n${t('rare_chest_rules')}`;
+    }
+    const profile = StorageService.loadProfile();
+    const last = profile.rareChest?.lastRareChestAt;
+    const ms = last ? Math.max(0, 6 * 60 * 60 * 1000 - (Date.now() - new Date(last).getTime())) : 0;
+    const hours = Math.floor(ms / 3600000);
+    const minutes = Math.ceil((ms % 3600000) / 60000);
+    const wins = profile.rareChest?.winsSinceRareChest ?? 0;
+    return `${t('opens_in', { time: `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}` })}\n${t('wins_until_open', { count: Math.max(0, 3 - wins), current: Math.min(3, wins) })}`;
   }
 
   showRankUpPopup(rankUp) {

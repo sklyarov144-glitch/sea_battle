@@ -167,14 +167,16 @@ export const EconomyService = {
     return profile;
   },
 
-  buyConsumable(profile, inventoryKey, price) {
+  buyConsumable(profile, grants, price) {
     this.normalize(profile);
     if ((profile.gold ?? 0) < price) {
       profile.__purchaseStatus = 'notEnoughGold';
       return profile;
     }
     profile.gold -= price;
-    profile.inventory[inventoryKey] = (profile.inventory[inventoryKey] ?? 0) + 1;
+    Object.entries(grants ?? {}).forEach(([key, count]) => {
+      profile.inventory[key] = (profile.inventory[key] ?? 0) + count;
+    });
     profile.__purchaseStatus = 'purchased';
     return profile;
   },

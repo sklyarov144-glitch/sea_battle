@@ -236,7 +236,12 @@ export const StorageService = {
       }
 
       if (item.type === 'consumable') {
-        return EconomyService.buyConsumable(profile, item.inventoryKey, item.price);
+        return EconomyService.buyConsumable(profile, item.grants, item.price);
+      }
+
+      if (item.type === 'comingSoon') {
+        profile.__purchaseStatus = 'comingSoon';
+        return profile;
       }
 
       if (item.type === 'skin') {
