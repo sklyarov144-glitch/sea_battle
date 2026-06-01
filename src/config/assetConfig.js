@@ -6,7 +6,8 @@ export const AssetConfig = {
     mainMenu: `${STYLE_PACK_BASE}/backgrounds/main_menu_background.png`,
     battle: `${STYLE_PACK_BASE}/backgrounds/battle_background.png`,
     campaign: `${STYLE_PACK_BASE}/backgrounds/campaign_background.png`,
-    shop: `${STYLE_PACK_BASE}/backgrounds/shop_background.png`
+    shop: `${STYLE_PACK_BASE}/backgrounds/shop_background.png`,
+    islandsPath: `${STYLE_PACK_BASE}/backgrounds/`
   },
   chests: {
     dailyClosed: `${STYLE_PACK_BASE}/ui/chests/chest_daily_closed_gold.png`,

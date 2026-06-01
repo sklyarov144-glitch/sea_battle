@@ -69,6 +69,21 @@ export const AssetKeys = {
     Defeat2: 'style_effect_defeat_2',
     Defeat3: 'style_effect_defeat_3'
   },
+  CampaignIslands: {
+    TrainingBay: 'campaign_island_training_bay',
+    TropicalSmall: 'campaign_island_tropical_small',
+    TropicalLarge: 'campaign_island_tropical_large',
+    Reef: 'campaign_island_reef',
+    Port: 'campaign_island_port',
+    Fort: 'campaign_island_fort',
+    Fog: 'campaign_island_fog',
+    Shipwreck: 'campaign_island_shipwreck',
+    Skull: 'campaign_island_skull',
+    Volcano: 'campaign_island_volcano',
+    Crystal: 'campaign_island_crystal',
+    Citadel: 'campaign_island_citadel',
+    BossFortress: 'campaign_island_boss_fortress'
+  },
   Buttons: {
     AutoPlace: 'button_auto_place',
     Campaign: 'button_campaign',

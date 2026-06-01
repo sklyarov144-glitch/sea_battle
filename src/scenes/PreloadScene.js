@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { AssetConfig } from '../config/assetConfig.js';
 import { AssetKeys } from '../config/assetKeys.js';
+import { CAMPAIGN_ISLAND_FILES, CAMPAIGN_ISLAND_KEYS } from '../config/campaignVisualConfig.js';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
 import { drawNavalPanel } from '../ui/NavalPanel.js';
 import { createCoverImageBackground, createSeaBackground } from '../utils/effects.js';
@@ -92,6 +93,10 @@ export class PreloadScene extends Phaser.Scene {
       [AssetKeys.StyleEffects.Defeat2, AssetConfig.effects.defeat[1]],
       [AssetKeys.StyleEffects.Defeat3, AssetConfig.effects.defeat[2]]
     ].forEach(([key, path]) => this.load.image(key, path));
+
+    Object.entries(CAMPAIGN_ISLAND_FILES).forEach(([id, file]) => {
+      this.load.image(CAMPAIGN_ISLAND_KEYS[id], `${AssetConfig.backgrounds.islandsPath}${file}`);
+    });
   }
 
   create() {
