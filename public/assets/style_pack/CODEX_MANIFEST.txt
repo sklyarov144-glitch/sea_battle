@@ -1,0 +1,68 @@
+FILE NAME -> INTENDED USAGE
+
+00_full_screens/main_menu_full_screen_reference.png -> full reference for main menu redesign
+00_full_screens/battle_full_screen_reference.png -> full reference for battle screen redesign
+00_full_screens/campaign_full_screen_reference.png -> full reference for campaign map redesign
+00_full_screens/shop_full_screen_reference.png -> full reference for shop redesign
+
+01_main_menu/main_menu_logo_title_reference.png -> game logo/title block on main menu
+01_main_menu/main_menu_button_play_reference.png -> PLAY button on main menu
+01_main_menu/main_menu_button_campaign_reference.png -> CAMPAIGN button on main menu
+01_main_menu/main_menu_button_shop_reference.png -> SHOP button on main menu
+01_main_menu/main_menu_button_settings_reference.png -> SETTINGS button on main menu
+01_main_menu/main_menu_career_panel_reference.png -> career/rank panel in top-right of main menu
+01_main_menu/main_menu_daily_chest_block_reference.png -> daily chest block at the bottom of main menu
+01_main_menu/main_menu_premium_chest_block_reference.png -> premium chest block at the bottom of main menu
+01_main_menu/main_menu_top_left_round_buttons_reference.png -> compact round buttons in top-left of main menu
+01_main_menu/main_menu_bottom_left_buttons_reference.png -> bottom-left small buttons (mail/friends style)
+01_main_menu/main_menu_bottom_right_map_button_reference.png -> bottom-right map/compass button style
+01_main_menu/main_menu_background_ship_and_sea_reference.png -> background art reference for main menu
+
+02_battle/battle_turn_header_reference.png -> turn header in top center of battle screen
+02_battle/battle_player_status_panel_reference.png -> player status panel on battle screen
+02_battle/battle_enemy_status_panel_reference.png -> enemy status panel on battle screen
+02_battle/battle_player_grid_reference.png -> player grid style in battle
+02_battle/battle_enemy_grid_reference.png -> enemy grid style in battle
+02_battle/battle_journal_panel_reference.png -> central battle journal panel
+02_battle/battle_bottom_skills_panel_reference.png -> bottom skills/action bar in battle
+02_battle/battle_energy_panel_reference.png -> energy counter panel
+02_battle/battle_skill_button_radar_like_reference.png -> example skill button style
+02_battle/battle_button_end_turn_reference.png -> END TURN button
+02_battle/battle_button_auto_battle_reference.png -> AUTO BATTLE button
+02_battle/battle_right_side_settings_buttons_reference.png -> settings/retreat button style
+02_battle/battle_background_top_reference.png -> battle background atmosphere reference
+
+03_campaign/campaign_logo_title_reference.png -> campaign screen title block
+03_campaign/campaign_top_right_career_panel_reference.png -> top-right resource/career panel on campaign screen
+03_campaign/campaign_top_left_buttons_reference.png -> back/settings/events buttons on campaign screen
+03_campaign/campaign_left_chapter_panel_reference.png -> left chapter info card
+03_campaign/campaign_map_area_reference.png -> main map area with route/nodes
+03_campaign/campaign_reward_progress_bar_reference.png -> chapter reward progress bar
+03_campaign/campaign_legend_button_reference.png -> legend/compass button
+03_campaign/campaign_level_node_unlocked_reference.png -> unlocked level node style
+03_campaign/campaign_level_node_locked_reference.png -> locked level node style
+03_campaign/campaign_background_reference.png -> background reference for campaign screen
+
+04_shop/shop_logo_title_reference.png -> shop screen title block
+04_shop/shop_top_right_currency_panel_reference.png -> resource/currency panel in top-right of shop
+04_shop/shop_tabs_bar_reference.png -> horizontal shop category tabs
+04_shop/shop_left_category_menu_reference.png -> vertical left category menu
+04_shop/shop_product_card_captains_chest_reference.png -> shop product card example (captain chest)
+04_shop/shop_product_card_admiral_chest_reference.png -> shop product card example (admiral chest)
+04_shop/shop_product_card_growth_pack_reference.png -> shop product card example (growth pack)
+04_shop/shop_product_card_coins_bag_reference.png -> shop product card example (coins)
+04_shop/shop_product_card_gems_pack_reference.png -> shop product card example (gems)
+04_shop/shop_daily_items_section_reference.png -> daily items section in shop
+04_shop/shop_limited_offer_ship_skin_reference.png -> limited offer block (ship skin)
+04_shop/shop_limited_offer_epic_chest_reference.png -> limited offer block (epic chest)
+04_shop/shop_buy_button_reference.png -> generic BUY button style
+04_shop/shop_bottom_navigation_bar_reference.png -> shop bottom navigation bar
+04_shop/shop_button_back_reference.png -> shop BACK button style
+04_shop/shop_background_full_reference.png -> overall shop background reference
+
+05_rewards_and_chests/reward_daily_chest_icon_reference.png -> standalone daily chest icon
+05_rewards_and_chests/reward_premium_purple_chest_icon_reference.png -> standalone premium/rare chest icon
+05_rewards_and_chests/campaign_reward_chest_blue_reference.png -> blue reward chest icon from campaign rewards
+05_rewards_and_chests/campaign_reward_chest_purple_reference.png -> purple reward chest icon from campaign rewards
+05_rewards_and_chests/main_menu_daily_chest_icon_large_reference.png -> large daily chest art from main menu block
+05_rewards_and_chests/main_menu_premium_chest_icon_large_reference.png -> large premium chest art from main menu block

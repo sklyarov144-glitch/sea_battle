@@ -1,13 +1,6 @@
 import Phaser from 'phaser';
 import { SoundService } from '../services/SoundService.js';
-
-const VARIANTS = {
-  primary: { fill: 0x09263f, fill2: 0x0f3a5c, glow: 0xd7a748, text: '#f8d77a' },
-  secondary: { fill: 0x071d32, fill2: 0x0b2b48, glow: 0x6db7d4, text: '#f2d48a' },
-  ready: { fill: 0x083326, fill2: 0x0d5a3e, glow: 0x5ee0a1, text: '#e9ffd8' },
-  danger: { fill: 0x35111a, fill2: 0x5c1d28, glow: 0xff6d5e, text: '#ffe2cc' },
-  disabled: { fill: 0x1d2732, fill2: 0x27313b, glow: 0x56616e, text: '#9aa6b2' }
-};
+import { ButtonVariants, UITheme } from './theme.js';
 
 export class Button extends Phaser.GameObjects.Container {
   constructor(scene, x, y, width, height, label, onClick, options = {}) {
@@ -24,7 +17,8 @@ export class Button extends Phaser.GameObjects.Container {
       selected: false,
       disabled: false,
       small: false,
-      hitPadding: 6,
+      hitPadding: 0,
+      strictHitArea: true,
       ...options
     };
     this.enabled = !this.options.disabled && this.options.variant !== 'disabled';
@@ -38,7 +32,7 @@ export class Button extends Phaser.GameObjects.Container {
     this.add(this.graphics);
 
     this.text = scene.add.text(0, 1, this.formatLabel(label), {
-      fontFamily: 'Georgia, "Times New Roman", serif',
+      fontFamily: UITheme.fonts.button,
       fontSize: `${this.options.fontSize}px`,
       color: '#f8d77a',
       align: 'center',
@@ -47,8 +41,8 @@ export class Button extends Phaser.GameObjects.Container {
       shadow: {
         offsetX: 0,
         offsetY: 2,
-        color: '#020812',
-        blur: 5,
+        color: UITheme.css.navyShadow,
+        blur: 2,
         fill: true
       }
     }).setOrigin(0.5);
@@ -74,15 +68,15 @@ export class Button extends Phaser.GameObjects.Container {
 
   getVariant() {
     if (!this.enabled) {
-      return VARIANTS.disabled;
+      return ButtonVariants.disabled;
     }
-    return VARIANTS[this.options.variant] ?? VARIANTS.primary;
+    return ButtonVariants[this.options.variant] ?? ButtonVariants.primary;
   }
 
   updateHitArea() {
     const width = Math.ceil(this.widthValue);
     const height = Math.ceil(this.heightValue);
-    const hitPadding = this.options.strictHitArea ? 0 : Math.min(8, Math.max(0, this.options.hitPadding ?? 6));
+    const hitPadding = this.options.strictHitArea ? 0 : Math.max(0, this.options.hitPadding ?? 0);
     const hitArea = new Phaser.Geom.Rectangle(
       -width / 2 - hitPadding,
       -height / 2 - hitPadding,
@@ -146,30 +140,30 @@ export class Button extends Phaser.GameObjects.Container {
     const variant = this.getVariant();
     const w = this.widthValue;
     const h = this.heightValue;
-    const radius = this.options.small ? 7 : 10;
+    const radius = this.options.small ? UITheme.radius.small : UITheme.radius.button;
     const glowAlpha = this.selected || this.hovered ? 0.34 : 0.16;
     const yOffset = this.pressed ? 2 : 0;
 
     this.graphics.clear();
-    this.graphics.fillStyle(0x010711, 0.48);
+    this.graphics.fillStyle(UITheme.colors.navy950, 0.5);
     this.graphics.fillRoundedRect(-w / 2 + 4, -h / 2 + 5 + yOffset, w - 8, h - 8, radius);
 
     this.graphics.lineStyle(7, variant.glow, glowAlpha);
     this.graphics.strokeRoundedRect(-w / 2 + 2, -h / 2 + 2 + yOffset, w - 4, h - 4, radius);
 
-    this.graphics.fillStyle(0x07121f, this.enabled ? 0.98 : 0.72);
+    this.graphics.fillStyle(UITheme.colors.navy900, this.enabled ? 0.98 : 0.72);
     this.graphics.fillRoundedRect(-w / 2, -h / 2 + yOffset, w, h, radius);
     this.graphics.fillStyle(variant.fill, this.enabled ? 0.98 : 0.78);
     this.graphics.fillRoundedRect(-w / 2 + 5, -h / 2 + 5 + yOffset, w - 10, h - 10, radius - 2);
     this.graphics.fillStyle(variant.fill2, 0.62);
     this.graphics.fillRoundedRect(-w / 2 + 8, -h / 2 + h * 0.48 + yOffset, w - 16, h * 0.42, radius - 3);
 
-    this.graphics.lineStyle(3, 0x9c6b2f, this.enabled ? 1 : 0.45);
+    this.graphics.lineStyle(3, variant.border ?? UITheme.colors.brass600, this.enabled ? 1 : 0.45);
     this.graphics.strokeRoundedRect(-w / 2 + 1, -h / 2 + 1 + yOffset, w - 2, h - 2, radius);
-    this.graphics.lineStyle(1, 0xf6d37c, this.enabled ? 0.82 : 0.32);
+    this.graphics.lineStyle(1, UITheme.colors.gold300, this.enabled ? 0.86 : 0.32);
     this.graphics.strokeRoundedRect(-w / 2 + 7, -h / 2 + 7 + yOffset, w - 14, h - 14, radius - 3);
 
-    const rivetColor = this.enabled ? 0xd7a748 : 0x707987;
+    const rivetColor = this.enabled ? UITheme.colors.gold500 : 0x707987;
     this.graphics.fillStyle(rivetColor, 0.92);
     [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy]) => {
       this.graphics.fillCircle(sx * (w / 2 - 14), sy * (h / 2 - 14) + yOffset, this.options.small ? 2.5 : 3.6);
