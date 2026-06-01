@@ -7,6 +7,8 @@ export const SUPPORTED_LANGUAGES = [
 const translations = {
   ru: {
     menu_title: 'Пиратский\nМорской Бой',
+    menu_title_line_1: 'Пиратский Морской Бой',
+    menu_title_line_2: 'Карта Сокровищ',
     menu_subtitle: 'КАМПАНИЯ СОКРОВИЩ',
     play: 'Играть',
     campaign: 'Кампания',
@@ -190,6 +192,8 @@ const translations = {
   },
   en: {
     menu_title: 'Pirate\nSea Battle',
+    menu_title_line_1: 'Pirate Sea Battle',
+    menu_title_line_2: 'Treasure Map',
     menu_subtitle: 'TREASURE CAMPAIGN',
     play: 'Play',
     campaign: 'Campaign',
@@ -372,6 +376,8 @@ const translations = {
   },
   tr: {
     menu_title: 'Korsan\nDeniz Savaşı',
+    menu_title_line_1: 'Korsan Deniz Savaşı',
+    menu_title_line_2: 'Hazine Haritası',
     menu_subtitle: 'HAZİNE SEFERİ',
     play: 'Oyna',
     campaign: 'Sefer',

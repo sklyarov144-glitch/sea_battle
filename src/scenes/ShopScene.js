@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { AssetKeys } from '../config/assetKeys.js';
 import { SHOP_ITEMS } from '../config/balanceConfig.js';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/gameConfig.js';
 import { EconomyService } from '../services/EconomyService.js';
@@ -8,7 +9,7 @@ import { StorageService } from '../services/StorageService.js';
 import { Button } from '../ui/Button.js';
 import { drawNavalPanel } from '../ui/NavalPanel.js';
 import { Toast } from '../ui/Toast.js';
-import { createSeaBackground, flyCoins } from '../utils/effects.js';
+import { createCoverImageBackground, flyCoins } from '../utils/effects.js';
 
 export class ShopScene extends Phaser.Scene {
   constructor() {
@@ -26,7 +27,11 @@ export class ShopScene extends Phaser.Scene {
     LocalizationService.init(this.profile);
     SoundService.init(this.profile);
     SoundService.playMusic(this, SoundService.keys.music_menu);
-    createSeaBackground(this, { waterSkin: this.profile.selectedSkins.water });
+    createCoverImageBackground(this, AssetKeys.Images.ShopBg, {
+      fallback: { waterSkin: this.profile.selectedSkins.water },
+      overlayAlpha: 0.42,
+      overlayColor: 0x04121f
+    });
     this.addHeader();
     this.addShopTabs();
     this.addItems();
@@ -56,8 +61,8 @@ export class ShopScene extends Phaser.Scene {
     this.itemRows = [];
     const startY = 182;
     const columns = [
-      { x: 84, textX: 112, buttonX: 492 },
-      { x: 660, textX: 688, buttonX: 1068 }
+      { x: 84, textX: 154, buttonX: 492 },
+      { x: 660, textX: 730, buttonX: 1068 }
     ];
 
     const pageItems = SHOP_ITEMS.filter((item) => (item.page ?? 'abilities') === this.shopPage);
@@ -65,6 +70,10 @@ export class ShopScene extends Phaser.Scene {
       const column = columns[index % 2];
       const y = startY + Math.floor(index / 2) * 118;
       const panel = drawNavalPanel(this, column.x, y - 42, 536, 104, { alpha: 0.92, radius: 9 });
+      const iconKey = this.getItemIconKey(item);
+      const icon = iconKey && this.textures.exists(iconKey)
+        ? this.add.image(column.x + 45, y + 3, iconKey).setDisplaySize(42, 42)
+        : null;
 
       const title = this.add.text(column.textX, y - 23, t(`shop_${item.id}_name`), {
         fontFamily: 'Georgia, "Times New Roman", serif',
@@ -103,9 +112,22 @@ export class ShopScene extends Phaser.Scene {
 
       this.itemRows.push({ item, button, priceText, stockText });
       this.itemObjects.push(panel, title, desc, priceText, stockText, button);
+      if (icon) {
+        this.itemObjects.push(icon);
+      }
     });
 
     this.refreshItemButtons();
+  }
+
+  getItemIconKey(item) {
+    const id = `${item.id} ${item.upgradeId ?? ''}`;
+    if (id.includes('radar')) return AssetKeys.StyleIcons.Radar;
+    if (id.includes('salvo')) return AssetKeys.StyleIcons.Salvo;
+    if (id.includes('torpedo')) return AssetKeys.StyleIcons.Torpedo;
+    if (id.includes('gold')) return AssetKeys.StyleIcons.Gold;
+    if (id.includes('xp')) return AssetKeys.StyleIcons.Xp;
+    return AssetKeys.StyleIcons.Rank;
   }
 
   addShopTabs() {

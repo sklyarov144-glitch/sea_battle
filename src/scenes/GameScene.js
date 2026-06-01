@@ -383,8 +383,20 @@ export class GameScene extends Phaser.Scene {
       barrage: this.add.text(640, 656, '', this.createChargeTextStyle()).setOrigin(0.5),
       torpedo: this.add.text(940, 656, '', this.createChargeTextStyle()).setOrigin(0.5)
     };
+    this.abilityIcons = {
+      radar: this.addAbilityIcon(256, 626, AssetKeys.StyleIcons.Radar),
+      barrage: this.addAbilityIcon(556, 626, AssetKeys.StyleIcons.Salvo),
+      torpedo: this.addAbilityIcon(856, 626, AssetKeys.StyleIcons.Torpedo)
+    };
 
     this.updateAbilityButtons();
+  }
+
+  addAbilityIcon(x, y, key) {
+    if (!this.textures.exists(key)) {
+      return null;
+    }
+    return this.add.image(x, y, key).setDisplaySize(28, 28).setDepth(10);
   }
 
   createChargeTextStyle() {
@@ -425,6 +437,9 @@ export class GameScene extends Phaser.Scene {
     this.abilityChargeTexts.radar.setText(t('in_stock', { count: this.abilityCharges.radar }));
     this.abilityChargeTexts.barrage.setText(t('in_stock', { count: this.abilityCharges.barrage }));
     this.abilityChargeTexts.torpedo.setText(t('in_stock', { count: this.abilityCharges.torpedo }));
+    this.abilityIcons?.radar?.setAlpha(this.abilityCharges.radar > 0 ? 1 : 0.42);
+    this.abilityIcons?.barrage?.setAlpha(this.abilityCharges.barrage > 0 ? 1 : 0.42);
+    this.abilityIcons?.torpedo?.setAlpha(this.abilityCharges.torpedo > 0 ? 1 : 0.42);
     this.exitButton?.setEnabled(!this.battleEnded && !this.exitConfirmOpen);
     this.settingsButton?.setEnabled(!this.battleEnded && !this.exitConfirmOpen);
   }

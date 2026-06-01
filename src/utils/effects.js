@@ -330,10 +330,10 @@ export function pulseTarget(scene, x, y, radius = 28, color = 0xffd36e) {
   });
 }
 
-export function createRainOverlay(scene) {
+export function createRainOverlay(scene, options = {}) {
   const rain = scene.add.graphics();
-  rain.setDepth(110);
-  rain.setAlpha(0.32);
+  rain.setDepth(options.depth ?? 110);
+  rain.setAlpha(options.alpha ?? 0.32);
 
   for (let index = 0; index < 80; index += 1) {
     const x = Phaser.Math.Between(-80, GAME_WIDTH + 80);

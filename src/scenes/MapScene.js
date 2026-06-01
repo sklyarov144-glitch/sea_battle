@@ -7,7 +7,8 @@ import { StorageService } from '../services/StorageService.js';
 import { Button } from '../ui/Button.js';
 import { drawNavalPanel } from '../ui/NavalPanel.js';
 import { Toast } from '../ui/Toast.js';
-import { createSeaBackground } from '../utils/effects.js';
+import { AssetKeys } from '../config/assetKeys.js';
+import { createCoverImageBackground } from '../utils/effects.js';
 
 export class MapScene extends Phaser.Scene {
   constructor() {
@@ -24,7 +25,11 @@ export class MapScene extends Phaser.Scene {
     LocalizationService.init(this.profile);
     SoundService.init(this.profile);
     SoundService.playMusic(this, SoundService.keys.music_menu);
-    createSeaBackground(this, { waterSkin: this.profile.selectedSkins.water });
+    createCoverImageBackground(this, AssetKeys.Images.CampaignBg, {
+      fallback: { waterSkin: this.profile.selectedSkins.water },
+      overlayAlpha: 0.38,
+      overlayColor: 0x061827
+    });
     this.selectedChapterIndex = Phaser.Math.Clamp(
       this.requestedChapterIndex ?? Math.ceil((this.profile.unlockedLevel || 1) / 10) - 1,
       0,

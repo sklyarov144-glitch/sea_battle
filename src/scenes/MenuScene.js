@@ -49,27 +49,27 @@ export class MenuScene extends Phaser.Scene {
   }
 
   addTitle() {
-    this.add.text(88, 82, t('menu_title'), {
+    this.add.text(88, 76, t('menu_title_line_1'), {
       fontFamily: 'Georgia, "Times New Roman", serif',
-      fontSize: '50px',
+      fontSize: '44px',
       color: '#fff0bf',
       stroke: '#020812',
-      strokeThickness: 8,
-      lineSpacing: 2
+      strokeThickness: 7
     }).setOrigin(0, 0.5);
 
-    this.add.text(92, 178, t('menu_subtitle'), {
-      fontFamily: 'Arial, sans-serif',
-      fontSize: '20px',
-      color: '#f0c35a',
-      letterSpacing: 2
-    });
+    this.add.text(92, 128, t('menu_title_line_2'), {
+      fontFamily: 'Georgia, "Times New Roman", serif',
+      fontSize: '38px',
+      color: '#f8d77a',
+      stroke: '#020812',
+      strokeThickness: 6
+    }).setOrigin(0, 0.5);
 
     const line = this.add.graphics();
     line.lineStyle(2, 0xd7a748, 0.75);
-    line.lineBetween(92, 214, 386, 214);
+    line.lineBetween(92, 180, 430, 180);
     line.lineStyle(1, 0x6db7d4, 0.32);
-    line.lineBetween(92, 222, 330, 222);
+    line.lineBetween(92, 188, 360, 188);
   }
 
   addMenuButtons() {
@@ -102,7 +102,17 @@ export class MenuScene extends Phaser.Scene {
 
   addCareerPanel() {
     drawNavalPanel(this, 882, 42, 330, 186, { title: t('career'), titleSize: 21 });
-    drawCareerEmblem(this, 1122, 102, 0.78);
+    if (this.textures.exists(AssetKeys.StyleIcons.Rank)) {
+      this.add.image(1122, 102, AssetKeys.StyleIcons.Rank).setDisplaySize(66, 66);
+    } else {
+      drawCareerEmblem(this, 1122, 102, 0.78);
+    }
+    if (this.textures.exists(AssetKeys.StyleIcons.Gold)) {
+      this.add.image(900, 143, AssetKeys.StyleIcons.Gold).setDisplaySize(22, 22);
+    }
+    if (this.textures.exists(AssetKeys.StyleIcons.Xp)) {
+      this.add.image(900, 169, AssetKeys.StyleIcons.Xp).setDisplaySize(20, 20);
+    }
 
     this.rankText = this.add.text(910, 88, '', {
       fontFamily: 'Georgia, "Times New Roman", serif',
@@ -111,12 +121,12 @@ export class MenuScene extends Phaser.Scene {
       fixedWidth: 198,
       wordWrap: { width: 198, useAdvancedWrap: true }
     });
-    this.goldText = this.add.text(910, 134, '', {
+    this.goldText = this.add.text(928, 134, '', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '18px',
       color: '#f8d77a'
     });
-    this.xpText = this.add.text(910, 160, '', {
+    this.xpText = this.add.text(928, 160, '', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '17px',
       color: '#d9fbff'
@@ -155,7 +165,7 @@ export class MenuScene extends Phaser.Scene {
       this.chestGlow = this.add.graphics();
       this.chestGlow.fillStyle(0xd7a748, 0.14);
       this.chestGlow.fillEllipse(0, 18, 330, 196);
-      this.chestButton = this.add.image(0, -2, AssetKeys.Images.DailyChestReward)
+      this.chestButton = this.add.image(0, -2, AssetKeys.StyleChests.DailyGlow)
         .setDisplaySize(244, 265);
       this.dailyChestStatus = this.add.text(0, 120, '', {
         fontFamily: 'Arial, sans-serif',
@@ -167,7 +177,7 @@ export class MenuScene extends Phaser.Scene {
         stroke: '#020812',
         strokeThickness: 3
       }).setOrigin(0.5);
-      this.chestHitZone = this.add.zone(0, 0, 230, 238)
+      this.chestHitZone = this.add.zone(0, -2, 244, 265)
         .setInteractive({ useHandCursor: true });
       this.chestContainer.add([this.chestGlow, this.chestButton, this.dailyChestStatus, this.chestHitZone]);
       this.chestBaseScale = 1;
@@ -207,6 +217,10 @@ export class MenuScene extends Phaser.Scene {
     } else {
       this.chestContainer.setAlpha(canClaim ? 1 : 0.62);
       this.chestButton.clearTint();
+      const textureKey = canClaim ? AssetKeys.StyleChests.DailyGlow : AssetKeys.StyleChests.DailyClosed;
+      if (this.textures.exists(textureKey)) {
+        this.chestButton.setTexture(textureKey);
+      }
       this.dailyChestStatus?.setText(`${canClaim ? t('available') : this.getDailyCooldownText()}\n${t('daily_chest_rules')}`);
       if (!canClaim) {
         this.chestButton.setTint(0x6f7784);
@@ -242,6 +256,9 @@ export class MenuScene extends Phaser.Scene {
     }
 
     const rewardGold = profile.__dailyRewardGold ?? 100;
+    if (!(this.chestButton instanceof Button) && this.textures.exists(AssetKeys.StyleChests.DailyOpen)) {
+      this.chestButton.setTexture(AssetKeys.StyleChests.DailyOpen);
+    }
     const xpLine = profile.__dailyRewardXp > 0 ? t('daily_xp_bonus', { amount: profile.__dailyRewardXp }) : '';
     const abilityLine = profile.__dailyRewardAbility ? `, +1 ${t(profile.__dailyRewardAbility)}` : '';
     Toast.show(this, `${t('admiral_chest')}: +${rewardGold} ${t('gold').toLowerCase()}${xpLine}${abilityLine}`);
@@ -249,7 +266,7 @@ export class MenuScene extends Phaser.Scene {
     flyCoins(this, { x: GAME_WIDTH / 2, y: GAME_HEIGHT - 78 }, { x: 930, y: 132 }, 14);
     this.profile = profile;
     this.refreshCareerPanel();
-    this.refreshChest();
+    this.time.delayedCall(850, () => this.refreshChest());
     if (!(this.chestButton instanceof Button)) {
       this.chestHitZone.setInteractive({ useHandCursor: true });
     }
@@ -267,7 +284,7 @@ export class MenuScene extends Phaser.Scene {
       const glow = this.add.graphics();
       glow.fillStyle(0xb156ff, 0.14);
       glow.fillEllipse(0, -4, 196, 154);
-      this.rareChestImage = this.add.image(0, -16, AssetKeys.Images.RareChestReward)
+      this.rareChestImage = this.add.image(0, -16, AssetKeys.StyleChests.EpicGlow)
         .setDisplaySize(138, 137);
       this.rareChestLabel = this.add.text(0, 52, t('rare_chest'), {
         fontFamily: 'Georgia, "Times New Roman", serif',
@@ -286,7 +303,7 @@ export class MenuScene extends Phaser.Scene {
         stroke: '#020812',
         strokeThickness: 3
       }).setOrigin(0.5);
-      this.rareChestHitZone = this.add.zone(0, -12, 160, 148)
+      this.rareChestHitZone = this.add.zone(0, -16, 138, 137)
         .setInteractive({ useHandCursor: true });
       this.rareChestContainer.add([glow, this.rareChestImage, this.rareChestLabel, this.rareChestStatus, this.rareChestHitZone]);
       this.rareChestHitZone.on('pointerover', () => {
@@ -317,6 +334,10 @@ export class MenuScene extends Phaser.Scene {
     this.rareChestContainer?.setAlpha(canClaim ? 1 : 0.58);
     this.rareChestStatus?.setText(this.getRareChestStatusText(canClaim));
     this.rareChestImage?.clearTint();
+    const textureKey = canClaim ? AssetKeys.StyleChests.EpicGlow : AssetKeys.StyleChests.EpicClosed;
+    if (this.rareChestImage && this.textures.exists(textureKey)) {
+      this.rareChestImage.setTexture(textureKey);
+    }
     if (!canClaim) {
       this.rareChestImage?.setTint(0x7f7787);
     }
@@ -331,12 +352,15 @@ export class MenuScene extends Phaser.Scene {
     }
 
     const reward = profile.__rareChestReward;
+    if (this.rareChestImage && this.textures.exists(AssetKeys.StyleChests.EpicOpen)) {
+      this.rareChestImage.setTexture(AssetKeys.StyleChests.EpicOpen);
+    }
     Toast.show(this, `${t('rare_chest')}: +${reward.gold} ${t('gold').toLowerCase()}, +${reward.xp} XP`);
     SoundService.playSfx(this, SoundService.keys.sfx_reward);
     flyCoins(this, { x: 224, y: GAME_HEIGHT - 72 }, { x: 930, y: 132 }, 14);
     this.profile = profile;
     this.refreshCareerPanel();
-    this.refreshRareChest();
+    this.time.delayedCall(850, () => this.refreshRareChest());
     if (profile.__rankUp) {
       this.showRankUpPopup(profile.__rankUp);
     }

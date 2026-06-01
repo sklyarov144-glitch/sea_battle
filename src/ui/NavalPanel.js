@@ -1,4 +1,40 @@
+import { AssetKeys } from '../config/assetKeys.js';
+
+function pickPanelTexture(scene, width, height) {
+  const candidates = [
+    [AssetKeys.StylePanels.Wide, width >= 900 || height <= 120],
+    [AssetKeys.StylePanels.Large, width >= 520 && height >= 250],
+    [AssetKeys.StylePanels.Tall, height >= 360],
+    [AssetKeys.StylePanels.Medium, width >= 340],
+    [AssetKeys.StylePanels.Small, true]
+  ];
+  const match = candidates.find(([key, condition]) => condition && scene.textures.exists(key));
+  return match?.[0] ?? null;
+}
+
 export function drawNavalPanel(scene, x, y, width, height, options = {}) {
+  const textureKey = pickPanelTexture(scene, width, height);
+  if (textureKey && !options.forceGraphics) {
+    const container = scene.add.container(x, y);
+    const image = scene.add.image(width / 2, height / 2, textureKey)
+      .setDisplaySize(width, height)
+      .setAlpha(options.alpha ?? 0.96);
+    container.add(image);
+
+    if (options.title) {
+      const title = scene.add.text(24, 16, options.title, {
+        fontFamily: 'Georgia, "Times New Roman", serif',
+        fontSize: `${options.titleSize ?? 22}px`,
+        color: '#f8d77a',
+        fontStyle: 'bold',
+        shadow: { offsetX: 0, offsetY: 2, color: '#06101f', blur: 2, fill: true }
+      });
+      container.add(title);
+    }
+
+    return container;
+  }
+
   const graphics = scene.add.graphics();
   const radius = options.radius ?? 12;
   const alpha = options.alpha ?? 0.94;

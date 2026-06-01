@@ -10,7 +10,7 @@ import { StorageService } from '../services/StorageService.js';
 import { Button } from '../ui/Button.js';
 import { drawNavalPanel } from '../ui/NavalPanel.js';
 import { Toast } from '../ui/Toast.js';
-import { createRainOverlay, createSeaBackground, flyCoins, spawnFireworks } from '../utils/effects.js';
+import { createCoverImageBackground, createRainOverlay, flyCoins, spawnFireworks } from '../utils/effects.js';
 
 export class ResultScene extends Phaser.Scene {
   constructor() {
@@ -37,20 +37,54 @@ export class ResultScene extends Phaser.Scene {
     LocalizationService.init(profile);
     SoundService.init(profile);
     SoundService.playMusic(this, this.result.victory ? SoundService.keys.music_menu : SoundService.keys.music_battle);
-    createSeaBackground(this, { waterSkin: profile.selectedSkins.water });
+    createCoverImageBackground(this, AssetKeys.Images.BattleOceanBg, {
+      fallback: { waterSkin: profile.selectedSkins.water },
+      overlayAlpha: this.result.victory ? 0.32 : 0.52,
+      overlayColor: this.result.victory ? 0x061827 : 0x050914
+    });
     this.applyRewards();
 
     if (this.result.victory) {
+      this.addResultEffects(true);
       spawnFireworks(this, GAME_WIDTH / 2, 210);
     } else {
-      createRainOverlay(this);
-      this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x0a101a, 0.24).setDepth(20);
+      this.addResultEffects(false);
+      createRainOverlay(this, { depth: -2, alpha: 0.26 });
+      this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x0a101a, 0.24).setDepth(-4);
     }
 
     this.addPanel();
     if (this.rankUp) {
       this.time.delayedCall(420, () => this.showRankUpPopup(this.rankUp));
     }
+  }
+
+  addResultEffects(victory) {
+    const keys = victory
+      ? [AssetKeys.StyleEffects.Victory1, AssetKeys.StyleEffects.Victory2, AssetKeys.StyleEffects.Victory3, AssetKeys.StyleEffects.Victory4]
+      : [AssetKeys.StyleEffects.Defeat1, AssetKeys.StyleEffects.Defeat2, AssetKeys.StyleEffects.Defeat3];
+    const positions = victory
+      ? [{ x: 302, y: 168, s: 0.86 }, { x: 962, y: 188, s: 0.76 }, { x: 640, y: 114, s: 0.92 }, { x: 650, y: 602, s: 0.74 }]
+      : [{ x: 298, y: 230, s: 0.92 }, { x: 958, y: 248, s: 0.84 }, { x: 640, y: 610, s: 0.78 }];
+    keys.forEach((key, index) => {
+      if (!this.textures.exists(key)) {
+        return;
+      }
+      const pos = positions[index];
+      const effect = this.add.image(pos.x, pos.y, key)
+        .setScale(pos.s)
+        .setAlpha(victory ? 0.72 : 0.48)
+        .setDepth(-3);
+      this.tweens.add({
+        targets: effect,
+        alpha: victory ? 0.42 : 0.28,
+        scale: pos.s * 1.06,
+        duration: 1300 + index * 180,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.inOut'
+      });
+    });
   }
 
   applyRewards() {
@@ -100,7 +134,15 @@ export class ResultScene extends Phaser.Scene {
       color: '#fff5d6'
     }).setOrigin(0.5);
 
-    const chest = this.add.image(GAME_WIDTH / 2, 292, AssetKeys.Textures.Chest).setScale(1.45);
+    const chestKey = this.result.victory && this.textures.exists(AssetKeys.StyleChests.NavalOpen)
+      ? AssetKeys.StyleChests.NavalOpen
+      : AssetKeys.Textures.Chest;
+    const chest = this.add.image(GAME_WIDTH / 2, 292, chestKey);
+    if (chestKey === AssetKeys.Textures.Chest) {
+      chest.setScale(1.45);
+    } else {
+      chest.setDisplaySize(128, 128);
+    }
     this.tweens.add({ targets: chest, y: 286, duration: 950, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
 
     this.rewardText = this.add.text(GAME_WIDTH / 2, 356, this.getRewardText(), {
@@ -146,7 +188,8 @@ export class ResultScene extends Phaser.Scene {
       }, {
         fontSize: 20,
         variant: 'ready',
-        hitPadding: 0
+        hitPadding: 0,
+        pulse: true
       });
     }
   }

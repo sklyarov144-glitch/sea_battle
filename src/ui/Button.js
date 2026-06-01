@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { AssetKeys } from '../config/assetKeys.js';
 import { SoundService } from '../services/SoundService.js';
 import { ButtonVariants, UITheme } from './theme.js';
 
@@ -27,6 +28,11 @@ export class Button extends Phaser.GameObjects.Container {
     this.pressed = false;
     this.pulseTween = null;
     this.pulsing = false;
+
+    this.backgroundImage = this.createStyleBackground();
+    if (this.backgroundImage) {
+      this.add(this.backgroundImage);
+    }
 
     this.graphics = scene.add.graphics();
     this.add(this.graphics);
@@ -71,6 +77,45 @@ export class Button extends Phaser.GameObjects.Container {
       return ButtonVariants.disabled;
     }
     return ButtonVariants[this.options.variant] ?? ButtonVariants.primary;
+  }
+
+  getStyleTextureKey() {
+    if (this.options.textureKey) {
+      return this.options.textureKey;
+    }
+    const useSmall = this.options.small || this.widthValue <= 150 || this.heightValue <= 46;
+    const useMedium = !useSmall && (this.widthValue <= 260 || this.heightValue <= 62);
+    const table = useSmall
+      ? {
+          primary: AssetKeys.StyleButtons.SmallPrimary,
+          secondary: AssetKeys.StyleButtons.SmallSecondary,
+          ready: AssetKeys.StyleButtons.SmallPrimary,
+          danger: AssetKeys.StyleButtons.SmallDanger
+        }
+      : useMedium
+        ? {
+            primary: AssetKeys.StyleButtons.MediumPrimary,
+            secondary: AssetKeys.StyleButtons.MediumSecondary,
+            ready: AssetKeys.StyleButtons.MediumReady,
+            danger: AssetKeys.StyleButtons.MediumDanger
+          }
+        : {
+            primary: AssetKeys.StyleButtons.Primary,
+            secondary: AssetKeys.StyleButtons.Secondary,
+            ready: AssetKeys.StyleButtons.Ready,
+            danger: AssetKeys.StyleButtons.Danger
+          };
+    return table[this.options.variant] ?? table.primary;
+  }
+
+  createStyleBackground() {
+    const textureKey = this.getStyleTextureKey();
+    if (!textureKey || !this.scene.textures.exists(textureKey)) {
+      return null;
+    }
+    return this.scene.add.image(0, 0, textureKey)
+      .setDisplaySize(this.widthValue, this.heightValue)
+      .setOrigin(0.5);
   }
 
   updateHitArea() {
@@ -145,6 +190,28 @@ export class Button extends Phaser.GameObjects.Container {
     const yOffset = this.pressed ? 2 : 0;
 
     this.graphics.clear();
+    if (this.backgroundImage) {
+      const textureKey = this.getStyleTextureKey();
+      if (textureKey && this.backgroundImage.texture.key !== textureKey && this.scene.textures.exists(textureKey)) {
+        this.backgroundImage.setTexture(textureKey);
+      }
+      this.backgroundImage
+        .setDisplaySize(w, h)
+        .setAlpha(this.enabled ? 1 : 0.58)
+        .setY(yOffset);
+      if (!this.enabled) {
+        this.backgroundImage.setTint(0x7f8794);
+      } else if (this.hovered || this.selected) {
+        this.backgroundImage.setTint(0xfff0a8);
+      } else {
+        this.backgroundImage.clearTint();
+      }
+      this.text.setY(1 + yOffset);
+      this.text.setColor(variant.text);
+      this.setAlpha(1);
+      return;
+    }
+
     this.graphics.fillStyle(UITheme.colors.navy950, 0.5);
     this.graphics.fillRoundedRect(-w / 2 + 4, -h / 2 + 5 + yOffset, w - 8, h - 8, radius);
 
