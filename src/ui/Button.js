@@ -42,8 +42,9 @@ export class Button extends Phaser.GameObjects.Container {
       fontSize: `${this.options.fontSize}px`,
       color: '#f8d77a',
       align: 'center',
-      fixedWidth: width - 24,
-      wordWrap: { width: width - 24, useAdvancedWrap: true },
+      fixedWidth: width - 28,
+      fixedHeight: height - 12,
+      wordWrap: { width: width - 28, useAdvancedWrap: true },
       shadow: {
         offsetX: 0,
         offsetY: 2,
@@ -65,6 +66,7 @@ export class Button extends Phaser.GameObjects.Container {
 
     scene.add.existing(this);
     this.draw();
+    this.fitText();
     this.setPulse(Boolean(this.options.pulse));
   }
 
@@ -144,7 +146,7 @@ export class Button extends Phaser.GameObjects.Container {
     if (this.enabled) {
       SoundService.playSfx(this.scene, SoundService.keys.sfx_button_hover);
       this.stopPulseTween();
-      this.scene.tweens.add({ targets: this, scale: 1.03, duration: 120, ease: 'Sine.easeOut' });
+      this.setScale(1);
     }
   }
 
@@ -156,7 +158,7 @@ export class Button extends Phaser.GameObjects.Container {
       this.startPulseTween();
     } else {
       this.scene.tweens.killTweensOf(this);
-      this.scene.tweens.add({ targets: this, scale: 1, duration: 120, ease: 'Sine.easeOut' });
+      this.setScale(1);
     }
   }
 
@@ -167,7 +169,7 @@ export class Button extends Phaser.GameObjects.Container {
     this.pressed = true;
     this.draw();
     this.stopPulseTween();
-    this.scene.tweens.add({ targets: this, scale: 0.97, duration: 70, ease: 'Sine.easeOut' });
+    this.setScale(1);
   }
 
   handlePointerUp() {
@@ -177,7 +179,7 @@ export class Button extends Phaser.GameObjects.Container {
     this.pressed = false;
     this.draw();
     SoundService.playSfx(this.scene, SoundService.keys.sfx_click);
-    this.scene.tweens.add({ targets: this, scale: this.hovered ? 1.03 : 1, duration: 90, ease: 'Sine.easeOut' });
+    this.setScale(1);
     this.onClick?.();
   }
 
@@ -258,6 +260,23 @@ export class Button extends Phaser.GameObjects.Container {
   setLabel(value) {
     this.label = value;
     this.text.setText(this.formatLabel(value));
+    this.fitText();
+    return this;
+  }
+
+  fitText() {
+    const maxFontSize = this.options.fontSize;
+    const minFontSize = this.options.small ? 11 : 14;
+    const maxWidth = this.widthValue - 30;
+    const maxHeight = this.heightValue - 12;
+    this.text.setFixedSize(maxWidth, maxHeight);
+    this.text.setWordWrapWidth(maxWidth, true);
+    for (let size = maxFontSize; size >= minFontSize; size -= 1) {
+      this.text.setFontSize(size);
+      if (this.text.width <= maxWidth && this.text.height <= maxHeight) {
+        break;
+      }
+    }
     return this;
   }
 
@@ -274,7 +293,7 @@ export class Button extends Phaser.GameObjects.Container {
     this.stopPulseTween(false);
     this.pulseTween = this.scene.tweens.add({
       targets: this,
-      scale: 1.035,
+      alpha: 0.88,
       duration: 760,
       yoyo: true,
       repeat: -1,
@@ -290,6 +309,7 @@ export class Button extends Phaser.GameObjects.Container {
     }
     if (resetScale) {
       this.setScale(1);
+      this.setAlpha(this.enabled ? 1 : 0.72);
     }
   }
 

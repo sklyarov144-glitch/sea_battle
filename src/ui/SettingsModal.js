@@ -31,7 +31,9 @@ export class SettingsModal {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '30px',
       color: '#f8d77a',
-      fontStyle: 'bold'
+      fontStyle: 'bold',
+      fixedWidth: 620,
+      wordWrap: { width: 620, useAdvancedWrap: true }
     });
     this.container.add([dim, panel, title]);
 
@@ -56,7 +58,9 @@ export class SettingsModal {
     this.container.add(this.scene.add.text(this.panel.x + 40, y - 12, t('language'), {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '22px',
-      color: '#fff0bf'
+      color: '#fff0bf',
+      fixedWidth: 250,
+      wordWrap: { width: 250, useAdvancedWrap: true }
     }));
 
     LocalizationService.getSupportedLanguages().forEach((language, index) => {
@@ -80,7 +84,9 @@ export class SettingsModal {
     this.container.add(this.scene.add.text(this.panel.x + 40, y - 13, label, {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '22px',
-      color: '#fff0bf'
+      color: '#fff0bf',
+      fixedWidth: 360,
+      wordWrap: { width: 360, useAdvancedWrap: true }
     }));
     const button = new Button(this.scene, this.panel.x + 530, y, 154, 44, this.profile.settings[key] ? t('on') : t('off'), () => {
       this.updateSetting(key, !this.profile.settings[key]);
@@ -100,7 +106,9 @@ export class SettingsModal {
     this.container.add(this.scene.add.text(this.panel.x + 40, y - 13, label, {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '20px',
-      color: '#fff0bf'
+      color: '#fff0bf',
+      fixedWidth: 330,
+      wordWrap: { width: 330, useAdvancedWrap: true }
     }));
     const minusX = this.panel.x + 388;
     const valueX = this.panel.x + 468;

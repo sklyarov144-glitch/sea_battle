@@ -44,13 +44,18 @@ export class ShopScene extends Phaser.Scene {
     this.add.text(80, 54, t('shop_title'), {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '36px',
-      color: '#fff0bf'
+      color: '#fff0bf',
+      fixedWidth: 520,
+      wordWrap: { width: 520, useAdvancedWrap: true }
     });
 
     this.goldText = this.add.text(920, 58, '', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '28px',
-      color: '#fff5d6'
+      color: '#fff5d6',
+      fixedWidth: 250,
+      align: 'right',
+      wordWrap: { width: 250, useAdvancedWrap: true }
     });
     this.refreshGold();
   }
@@ -69,7 +74,7 @@ export class ShopScene extends Phaser.Scene {
     pageItems.forEach((item, index) => {
       const column = columns[index % 2];
       const y = startY + Math.floor(index / 2) * 118;
-      const panel = drawNavalPanel(this, column.x, y - 42, 536, 104, { alpha: 0.92, radius: 9 });
+      const panel = drawNavalPanel(this, column.x, y - 42, 536, 104, { alpha: 0.88, radius: 9 });
       const iconKey = this.getItemIconKey(item);
       const icon = iconKey && this.textures.exists(iconKey)
         ? this.add.image(column.x + 45, y + 3, iconKey).setDisplaySize(42, 42)
@@ -77,25 +82,30 @@ export class ShopScene extends Phaser.Scene {
 
       const title = this.add.text(column.textX, y - 23, t(`shop_${item.id}_name`), {
         fontFamily: 'Georgia, "Times New Roman", serif',
-        fontSize: '19px',
+        fontSize: '18px',
         color: '#fff0bf',
         fixedWidth: 310,
+        fixedHeight: 28,
         wordWrap: { width: 310, useAdvancedWrap: true }
       }).setOrigin(0, 0.5);
 
       const desc = this.add.text(column.textX, y + 8, t(`shop_${item.id}_desc`), {
         fontFamily: 'Arial, sans-serif',
-        fontSize: '13px',
+        fontSize: '12px',
         color: '#d9fbff',
         fixedWidth: 310,
+        fixedHeight: 38,
         wordWrap: { width: 310, useAdvancedWrap: true },
-        lineSpacing: 2
+        lineSpacing: 1
       }).setOrigin(0, 0);
 
       const priceText = this.add.text(column.buttonX, y - 32, '', {
         fontFamily: 'Arial, sans-serif',
         fontSize: '17px',
-        color: '#fff5d6'
+        color: '#fff5d6',
+        fixedWidth: 166,
+        align: 'center',
+        wordWrap: { width: 166, useAdvancedWrap: true }
       }).setOrigin(0.5);
 
       const stockText = this.add.text(column.buttonX, y + 39, '', {
@@ -103,7 +113,9 @@ export class ShopScene extends Phaser.Scene {
         fontSize: '11px',
         color: '#d9fbff',
         align: 'center',
-        fixedWidth: 168
+        fixedWidth: 168,
+        fixedHeight: 16,
+        wordWrap: { width: 168, useAdvancedWrap: true }
       }).setOrigin(0.5);
 
       const button = new Button(this, column.buttonX, y + 4, 164, 42, '', () => {

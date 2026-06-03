@@ -81,7 +81,9 @@ export class MapScene extends Phaser.Scene {
       color: '#fff0bf',
       stroke: '#020812',
       strokeThickness: 6,
-      shadow: { offsetX: 0, offsetY: 3, color: '#020812', blur: 3, fill: true }
+      fixedWidth: 420,
+      align: 'center',
+      shadow: { offsetX: 0, offsetY: 2, color: '#020812', blur: 2, fill: true }
     }).setOrigin(0.5);
 
     const completed = this.getCompletedCount();
@@ -144,7 +146,7 @@ export class MapScene extends Phaser.Scene {
         small: true,
         strictHitArea: true
       });
-      button.setAlpha(unlocked ? 1 : 0.58);
+      button.setAlpha(unlocked ? (selected ? 1 : 0.84) : 0.48);
       this.chapterTabsGroup.add(button);
     });
 
@@ -205,21 +207,21 @@ export class MapScene extends Phaser.Scene {
       points.push({ x, y });
     }
 
-    graphics.lineStyle(7, 0x020812, 0.42);
+    graphics.lineStyle(6, 0x020812, 0.34);
     for (let indexPoint = 0; indexPoint < points.length - 1; indexPoint += 2) {
       const a = points[indexPoint];
       const b = points[indexPoint + 1];
       graphics.lineBetween(a.x, a.y, b.x, b.y);
     }
 
-    graphics.lineStyle(active ? 3 : 2.5, active ? 0xffe0a6 : 0xffe0a6, active ? 0.95 : 0.5);
+    graphics.lineStyle(active ? 3 : 2, active ? 0xffe0a6 : 0xc3b48d, active ? 0.9 : 0.34);
     for (let indexPoint = 0; indexPoint < points.length - 1; indexPoint += 2) {
       const a = points[indexPoint];
       const b = points[indexPoint + 1];
       graphics.lineBetween(a.x, a.y, b.x, b.y);
     }
 
-    graphics.fillStyle(active ? 0xf8d77a : 0xffe0a6, active ? 0.92 : 0.56);
+    graphics.fillStyle(active ? 0xf8d77a : 0xb9af91, active ? 0.9 : 0.38);
     points.forEach((point, indexPoint) => {
       if (indexPoint % 4 === 0) {
         graphics.fillCircle(point.x, point.y, active ? 3.8 : 3.2);
@@ -236,16 +238,9 @@ export class MapScene extends Phaser.Scene {
 
   createIslandImage(islandKey, position, boss, unlocked, container) {
     const size = this.getIslandDisplaySize(boss, position);
-    const maskGraphics = this.add.graphics();
-    maskGraphics.fillStyle(0xffffff, 1);
-    maskGraphics.fillEllipse(0, 2, size.width * 0.92, size.height * 0.86);
-    maskGraphics.setVisible(false);
-    container.add(maskGraphics);
-
     const island = this.add.image(0, 0, islandKey)
       .setDisplaySize(size.width, size.height)
       .setAlpha(unlocked ? 1 : 0.62);
-    island.setMask(maskGraphics.createGeometryMask());
     if (!unlocked) {
       island.setTint(0x56606b);
     }
@@ -262,16 +257,16 @@ export class MapScene extends Phaser.Scene {
     container.setDepth(3);
 
     const shadow = this.add.graphics();
-    shadow.fillStyle(0x001322, 0.36);
+    shadow.fillStyle(0x001322, 0.24);
     shadow.fillEllipse(4, 18, boss ? 188 : 178, boss ? 104 : 92);
     container.add(shadow);
 
     if (current) {
       const glow = this.add.graphics();
-      glow.fillStyle(0xf8d77a, 0.28);
+      glow.fillStyle(0xf8d77a, 0.2);
       glow.fillEllipse(0, 10, boss ? 216 : 202, boss ? 122 : 112);
       container.add(glow);
-      this.tweens.add({ targets: container, scale: 1.035, yoyo: true, repeat: -1, duration: 1050, ease: 'Sine.inOut' });
+      this.tweens.add({ targets: container, alpha: 0.92, yoyo: true, repeat: -1, duration: 1050, ease: 'Sine.inOut' });
     }
 
     const island = this.createIslandImage(islandKey, position, boss, unlocked, container);
@@ -291,7 +286,7 @@ export class MapScene extends Phaser.Scene {
       fontSize: unlocked ? '24px' : '21px',
       color: unlocked ? '#fff0bf' : '#b9c3cf',
       stroke: '#020812',
-      strokeThickness: 4
+      strokeThickness: 3
     }).setOrigin(0.5);
     container.add(number);
 
@@ -307,16 +302,19 @@ export class MapScene extends Phaser.Scene {
       fixedWidth: 150,
       wordWrap: { width: 150, useAdvancedWrap: true },
       stroke: '#020812',
-      strokeThickness: 4
+      strokeThickness: 3
     }).setOrigin(0.5, 0);
     container.add(label);
 
-    const hitZone = this.add.zone(position.x, position.y + 8, boss ? 174 : 160, boss ? 132 : 118)
-      .setInteractive({ useHandCursor: unlocked });
+    const hitWidth = boss ? 174 : 160;
+    const hitHeight = boss ? 132 : 118;
+    const hitZone = this.add.zone(position.x, position.y + 8, hitWidth, hitHeight)
+      .setInteractive(new Phaser.Geom.Ellipse(0, 0, hitWidth, hitHeight), Phaser.Geom.Ellipse.Contains);
+    hitZone.input.cursor = unlocked ? 'pointer' : 'default';
 
     if (unlocked) {
-      hitZone.on('pointerover', () => this.tweens.add({ targets: container, scale: 1.08, duration: 130, ease: 'Sine.easeOut' }));
-      hitZone.on('pointerout', () => this.tweens.add({ targets: container, scale: current ? 1.035 : 1, duration: 130, ease: 'Sine.easeOut' }));
+      hitZone.on('pointerover', () => container.setAlpha(1));
+      hitZone.on('pointerout', () => container.setAlpha(current ? 0.96 : 1));
       hitZone.on('pointerup', () => this.scene.start('PreparationScene', {
         levelId: level.id,
         battleMode: 'campaign',

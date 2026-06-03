@@ -119,19 +119,28 @@ export class ResultScene extends Phaser.Scene {
       fontSize: '54px',
       color: this.result.victory ? '#fff0bf' : '#d8e1ea',
       stroke: '#2b170b',
-      strokeThickness: 6
+      strokeThickness: 4,
+      align: 'center',
+      fixedWidth: 640,
+      wordWrap: { width: 640, useAdvancedWrap: true }
     }).setOrigin(0.5);
 
     this.add.text(GAME_WIDTH / 2, 202, level ? level.name : t('campaign'), {
       fontFamily: 'Arial, sans-serif',
       fontSize: '24px',
-      color: '#d9fbff'
+      color: '#d9fbff',
+      align: 'center',
+      fixedWidth: 600,
+      wordWrap: { width: 600, useAdvancedWrap: true }
     }).setOrigin(0.5);
 
     this.add.text(GAME_WIDTH / 2, 236, subtitle, {
       fontFamily: 'Arial, sans-serif',
       fontSize: '20px',
-      color: '#fff5d6'
+      color: '#fff5d6',
+      align: 'center',
+      fixedWidth: 560,
+      wordWrap: { width: 560, useAdvancedWrap: true }
     }).setOrigin(0.5);
 
     const chestKey = this.result.victory && this.textures.exists(AssetKeys.StyleChests.NavalOpen)
@@ -150,6 +159,9 @@ export class ResultScene extends Phaser.Scene {
       fontSize: '22px',
       color: '#fff5d6',
       align: 'center',
+      fixedWidth: 560,
+      fixedHeight: 74,
+      wordWrap: { width: 560, useAdvancedWrap: true },
       lineSpacing: 6
     }).setOrigin(0.5);
 
@@ -157,7 +169,10 @@ export class ResultScene extends Phaser.Scene {
       fontFamily: 'Arial, sans-serif',
       fontSize: '18px',
       color: '#d9fbff',
-      align: 'center'
+      align: 'center',
+      fixedWidth: 560,
+      fixedHeight: 48,
+      wordWrap: { width: 560, useAdvancedWrap: true }
     }).setOrigin(0.5);
     this.rankBar = this.add.graphics();
     this.updateRankProgress();
@@ -266,24 +281,35 @@ export class ResultScene extends Phaser.Scene {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '30px',
       color: '#f8d77a',
-      fontStyle: 'bold'
+      fontStyle: 'bold',
+      fixedWidth: 492,
+      wordWrap: { width: 492, useAdvancedWrap: true }
     });
     const lead = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 58, t('rank_up_text'), {
       fontFamily: 'Arial, sans-serif',
       fontSize: '23px',
-      color: '#d9fbff'
+      color: '#d9fbff',
+      align: 'center',
+      fixedWidth: 460,
+      wordWrap: { width: 460, useAdvancedWrap: true }
     }).setOrigin(0.5);
     const rank = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 8, rankUp.rankName, {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '35px',
       color: '#fff0bf',
       stroke: '#020812',
-      strokeThickness: 5
+      strokeThickness: 4,
+      align: 'center',
+      fixedWidth: 470,
+      wordWrap: { width: 470, useAdvancedWrap: true }
     }).setOrigin(0.5);
     const reward = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 44, `${t('rank_reward')}: +${rankUp.rewardGold} ${t('gold').toLowerCase()}`, {
       fontFamily: 'Arial, sans-serif',
       fontSize: '22px',
-      color: '#f8d77a'
+      color: '#f8d77a',
+      align: 'center',
+      fixedWidth: 460,
+      wordWrap: { width: 460, useAdvancedWrap: true }
     }).setOrigin(0.5);
     const closePopup = () => {
       overlay.destroy();

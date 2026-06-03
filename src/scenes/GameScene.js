@@ -136,7 +136,10 @@ export class GameScene extends Phaser.Scene {
     this.add.text(72, 43, locationName, {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '25px',
-      color: '#fff0bf'
+      color: '#fff0bf',
+      fixedWidth: 420,
+      fixedHeight: 32,
+      wordWrap: { width: 420, useAdvancedWrap: true }
     });
 
     this.goldText = this.add.text(72, 80, '', {
@@ -149,13 +152,17 @@ export class GameScene extends Phaser.Scene {
       fontFamily: 'Arial, sans-serif',
       fontSize: '28px',
       color: '#d9fbff',
-      align: 'center'
+      align: 'center',
+      fixedWidth: 300,
+      wordWrap: { width: 300, useAdvancedWrap: true }
     }).setOrigin(0.5);
 
     this.add.text(800, 48, t('captain_level', { level: this.profile.captainLevel }), {
       fontFamily: 'Arial, sans-serif',
       fontSize: '18px',
-      color: '#fff5d6'
+      color: '#fff5d6',
+      fixedWidth: 178,
+      wordWrap: { width: 178, useAdvancedWrap: true }
     });
 
     this.settingsButton = new Button(this, 1040, 58, 124, 42, t('settings'), () => this.openSettings(), {
@@ -193,13 +200,18 @@ export class GameScene extends Phaser.Scene {
       fontSize: '34px',
       color: '#fff0bf',
       stroke: '#2b170b',
-      strokeThickness: 4
+      strokeThickness: 3,
+      align: 'center',
+      fixedWidth: 460,
+      wordWrap: { width: 460, useAdvancedWrap: true }
     }).setOrigin(0.5);
     const message = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 12, t('leave_battle_text'), {
       fontFamily: 'Arial, sans-serif',
       fontSize: '22px',
       color: '#fff5d6',
-      align: 'center'
+      align: 'center',
+      fixedWidth: 450,
+      wordWrap: { width: 450, useAdvancedWrap: true }
     }).setOrigin(0.5);
     const stayButton = new Button(this, GAME_WIDTH / 2 - 128, GAME_HEIGHT / 2 + 62, 238, 64, t('stay'), () => {
       this.closeExitConfirm();
@@ -255,7 +267,10 @@ export class GameScene extends Phaser.Scene {
       fontSize: '28px',
       color: '#fff0bf',
       stroke: '#2b170b',
-      strokeThickness: 2
+      strokeThickness: 2,
+      fixedWidth: 260,
+      align: 'center',
+      wordWrap: { width: 260, useAdvancedWrap: true }
     }).setOrigin(0.5);
 
     this.add.text(this.layout.enemy.x + (this.layout.enemy.size * this.layout.enemy.cell) / 2, 116, t('enemy_waters'), {
@@ -339,7 +354,10 @@ export class GameScene extends Phaser.Scene {
     this.add.text(554, 160, t('logbook'), {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '24px',
-      color: '#fff0bf'
+      color: '#fff0bf',
+      fixedWidth: 208,
+      align: 'center',
+      wordWrap: { width: 208, useAdvancedWrap: true }
     }).setOrigin(0.5);
 
     this.logText = this.add.text(454, 198, '', {

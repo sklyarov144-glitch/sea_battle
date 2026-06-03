@@ -52,17 +52,19 @@ export class MenuScene extends Phaser.Scene {
     this.mainMenuTitleGroup = this.add.container(0, 0);
     const glow = this.add.graphics();
     glow.fillStyle(0x001329, 0.34);
-    glow.fillRoundedRect(54, 36, 474, 150, 18);
+    glow.fillRoundedRect(54, 36, 576, 150, 18);
     glow.lineStyle(2, 0xd7a748, 0.36);
-    glow.strokeRoundedRect(60, 42, 462, 138, 16);
+    glow.strokeRoundedRect(60, 42, 564, 138, 16);
 
     const title1 = this.add.text(86, 76, t('menu_title_line_1'), {
       fontFamily: 'Georgia, "Times New Roman", serif',
-      fontSize: '43px',
+      fontSize: '38px',
       color: '#fff0bf',
       stroke: '#020812',
-      strokeThickness: 7,
-      shadow: { offsetX: 0, offsetY: 4, color: '#020812', blur: 4, fill: true }
+      strokeThickness: 5,
+      fixedWidth: 540,
+      wordWrap: { width: 540, useAdvancedWrap: false },
+      shadow: { offsetX: 0, offsetY: 3, color: '#020812', blur: 2, fill: true }
     }).setOrigin(0, 0.5);
 
     const title2 = this.add.text(90, 130, t('menu_title_line_2'), {
@@ -70,15 +72,17 @@ export class MenuScene extends Phaser.Scene {
       fontSize: '37px',
       color: '#f8d77a',
       stroke: '#020812',
-      strokeThickness: 6,
-      shadow: { offsetX: 0, offsetY: 3, color: '#020812', blur: 3, fill: true }
+      strokeThickness: 5,
+      fixedWidth: 500,
+      wordWrap: { width: 500, useAdvancedWrap: false },
+      shadow: { offsetX: 0, offsetY: 2, color: '#020812', blur: 2, fill: true }
     }).setOrigin(0, 0.5);
 
     const line = this.add.graphics();
     line.lineStyle(2, 0xd7a748, 0.75);
-    line.lineBetween(90, 176, 440, 176);
+    line.lineBetween(90, 176, 520, 176);
     line.lineStyle(1, 0x6db7d4, 0.32);
-    line.lineBetween(90, 184, 372, 184);
+    line.lineBetween(90, 184, 440, 184);
     this.mainMenuTitleGroup.add([glow, title1, title2, line]);
   }
 
@@ -143,14 +147,18 @@ export class MenuScene extends Phaser.Scene {
       fontSize: '22px',
       color: '#fff5d6',
       stroke: '#020812',
-      strokeThickness: 3
+      strokeThickness: 2,
+      fixedWidth: 184,
+      wordWrap: { width: 184, useAdvancedWrap: true }
     });
     this.xpText = this.add.text(910, 179, '', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '19px',
       color: '#d9fbff',
       stroke: '#020812',
-      strokeThickness: 3
+      strokeThickness: 2,
+      fixedWidth: 188,
+      wordWrap: { width: 188, useAdvancedWrap: true }
     });
 
     this.careerBar = this.add.graphics();
@@ -191,48 +199,42 @@ export class MenuScene extends Phaser.Scene {
       this.chestContainer = this.add.container(x, y);
       this.chestRewardsGroup = this.chestRewardsGroup ?? this.add.container(0, 0);
       this.chestGlow = this.add.graphics();
-      this.chestGlow.fillStyle(0xd7a748, 0.14);
+      this.chestGlow.fillStyle(0xd7a748, 0.09);
       this.chestGlow.fillEllipse(-132, 10, 188, 102);
       this.chestButton = this.add.image(-132, 0, AssetKeys.StyleChests.DailyGlow)
         .setDisplaySize(142, 142);
       const title = this.add.text(16, -44, t('admiral_chest'), {
         fontFamily: 'Georgia, "Times New Roman", serif',
-        fontSize: '24px',
-        color: '#fff0bf',
-        stroke: '#020812',
-        strokeThickness: 4
-      }).setOrigin(0.5);
+      fontSize: '24px',
+      color: '#fff0bf',
+      stroke: '#020812',
+      strokeThickness: 3,
+      align: 'center',
+      fixedWidth: 260,
+      wordWrap: { width: 260, useAdvancedWrap: true }
+    }).setOrigin(0.5);
       this.dailyChestStatus = this.add.text(26, 6, '', {
         fontFamily: 'Arial, sans-serif',
-        fontSize: '15px',
-        color: '#fff5d6',
-        align: 'center',
-        fixedWidth: 270,
-        wordWrap: { width: 270, useAdvancedWrap: true },
-        stroke: '#020812',
-        strokeThickness: 3
-      }).setOrigin(0.5);
+      fontSize: '15px',
+      color: '#fff5d6',
+      align: 'center',
+      fixedWidth: 270,
+      fixedHeight: 52,
+      wordWrap: { width: 270, useAdvancedWrap: true },
+      stroke: '#020812',
+      strokeThickness: 2
+    }).setOrigin(0.5);
       this.chestHitZone = this.add.zone(0, 0, width, height)
         .setInteractive({ useHandCursor: true });
       this.chestContainer.add([this.chestGlow, this.chestButton, title, this.dailyChestStatus, this.chestHitZone]);
       this.chestBaseScale = 1;
       this.chestHitZone.on('pointerover', () => {
         if (StorageService.canClaimDailyReward()) {
-          this.tweens.add({
-            targets: this.chestContainer,
-            scale: this.chestBaseScale * 1.04,
-            duration: 120,
-            ease: 'Sine.easeOut'
-          });
+          this.chestContainer.setAlpha(1);
         }
       });
       this.chestHitZone.on('pointerout', () => {
-        this.tweens.add({
-          targets: this.chestContainer,
-          scale: this.chestBaseScale,
-          duration: 120,
-          ease: 'Sine.easeOut'
-        });
+        this.chestContainer.setScale(this.chestBaseScale);
       });
       this.chestHitZone.on('pointerup', () => this.claimDailyReward());
     } else {
@@ -320,37 +322,41 @@ export class MenuScene extends Phaser.Scene {
       drawNavalPanel(this, x - width / 2, y - height / 2, width, height, { alpha: 0.88, radius: 14 });
       this.rareChestContainer = this.add.container(x, y);
       const glow = this.add.graphics();
-      glow.fillStyle(0xb156ff, 0.14);
+      glow.fillStyle(0xb156ff, 0.09);
       glow.fillEllipse(-112, 10, 172, 104);
       this.rareChestImage = this.add.image(-112, 2, AssetKeys.StyleChests.EpicGlow)
         .setDisplaySize(132, 132);
       this.rareChestLabel = this.add.text(54, -44, t('rare_chest'), {
         fontFamily: 'Georgia, "Times New Roman", serif',
-        fontSize: '23px',
-        color: '#fff0bf',
-        stroke: '#020812',
-        strokeThickness: 3
-      }).setOrigin(0.5);
+      fontSize: '23px',
+      color: '#fff0bf',
+      stroke: '#020812',
+      strokeThickness: 3,
+      align: 'center',
+      fixedWidth: 210,
+      wordWrap: { width: 210, useAdvancedWrap: true }
+    }).setOrigin(0.5);
       this.rareChestStatus = this.add.text(54, 8, '', {
         fontFamily: 'Arial, sans-serif',
-        fontSize: '14px',
-        color: '#fff5d6',
-        align: 'center',
-        fixedWidth: 220,
-        wordWrap: { width: 220, useAdvancedWrap: true },
-        stroke: '#020812',
-        strokeThickness: 3
-      }).setOrigin(0.5);
+      fontSize: '14px',
+      color: '#fff5d6',
+      align: 'center',
+      fixedWidth: 220,
+      fixedHeight: 54,
+      wordWrap: { width: 220, useAdvancedWrap: true },
+      stroke: '#020812',
+      strokeThickness: 2
+    }).setOrigin(0.5);
       this.rareChestHitZone = this.add.zone(0, 0, width, height)
         .setInteractive({ useHandCursor: true });
       this.rareChestContainer.add([glow, this.rareChestImage, this.rareChestLabel, this.rareChestStatus, this.rareChestHitZone]);
       this.rareChestHitZone.on('pointerover', () => {
         if (StorageService.canClaimRareChest()) {
-          this.tweens.add({ targets: this.rareChestContainer, scale: 1.04, duration: 120, ease: 'Sine.easeOut' });
+          this.rareChestContainer.setAlpha(1);
         }
       });
       this.rareChestHitZone.on('pointerout', () => {
-        this.tweens.add({ targets: this.rareChestContainer, scale: 1, duration: 120, ease: 'Sine.easeOut' });
+        this.rareChestContainer.setScale(1);
       });
       this.rareChestHitZone.on('pointerup', () => this.claimRareChest());
     } else {
@@ -438,24 +444,35 @@ export class MenuScene extends Phaser.Scene {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '28px',
       color: '#f8d77a',
-      fontStyle: 'bold'
+      fontStyle: 'bold',
+      fixedWidth: 472,
+      wordWrap: { width: 472, useAdvancedWrap: true }
     });
     const text = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 54, t('rank_up_text'), {
       fontFamily: 'Arial, sans-serif',
       fontSize: '23px',
-      color: '#d9fbff'
+      color: '#d9fbff',
+      align: 'center',
+      fixedWidth: 440,
+      wordWrap: { width: 440, useAdvancedWrap: true }
     }).setOrigin(0.5);
     const rank = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 8, rankUp.rankName, {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '34px',
       color: '#fff0bf',
       stroke: '#020812',
-      strokeThickness: 5
+      strokeThickness: 4,
+      align: 'center',
+      fixedWidth: 450,
+      wordWrap: { width: 450, useAdvancedWrap: true }
     }).setOrigin(0.5);
     const reward = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 40, `${t('rank_reward')}: +${rankUp.rewardGold} ${t('gold').toLowerCase()}`, {
       fontFamily: 'Arial, sans-serif',
       fontSize: '22px',
-      color: '#f8d77a'
+      color: '#f8d77a',
+      align: 'center',
+      fixedWidth: 430,
+      wordWrap: { width: 430, useAdvancedWrap: true }
     }).setOrigin(0.5);
     const closePopup = () => {
       overlay.destroy();

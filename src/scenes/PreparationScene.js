@@ -87,14 +87,19 @@ export class PreparationScene extends Phaser.Scene {
     this.add.text(82, 50, t('fleet_preparation'), {
       fontFamily: 'Georgia, "Times New Roman", serif',
       fontSize: '34px',
-      color: '#fff0bf'
+      color: '#fff0bf',
+      fixedWidth: 410,
+      wordWrap: { width: 410, useAdvancedWrap: true }
     });
     this.timerText = this.add.text(GAME_WIDTH / 2, 67, `${t('preparation_timer')}: 00:45`, {
       fontFamily: 'Arial, sans-serif',
       fontSize: '34px',
       color: '#d9fbff',
       stroke: '#041f32',
-      strokeThickness: 4
+      strokeThickness: 3,
+      fixedWidth: 390,
+      align: 'center',
+      wordWrap: { width: 390, useAdvancedWrap: true }
     }).setOrigin(0.5);
   }
 
@@ -142,6 +147,7 @@ export class PreparationScene extends Phaser.Scene {
       color: '#fff0bf',
       align: 'center',
       fixedWidth: 360,
+      fixedHeight: 54,
       wordWrap: { width: 360, useAdvancedWrap: true }
     }).setOrigin(0.5, 0);
     this.currentShipPreview = this.add.graphics();
