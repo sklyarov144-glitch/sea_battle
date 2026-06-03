@@ -7,7 +7,7 @@ export const AssetConfig = {
     battle: `${STYLE_PACK_BASE}/backgrounds/battle_background.png`,
     campaign: `${STYLE_PACK_BASE}/backgrounds/campaign_background.png`,
     shop: `${STYLE_PACK_BASE}/backgrounds/shop_background.png`,
-    islandsPath: `${STYLE_PACK_BASE}/backgrounds/`
+    islandsPath: `${STYLE_PACK_BASE}/islands/`
   },
   chests: {
     dailyClosed: `${STYLE_PACK_BASE}/ui/chests/chest_daily_closed_gold.png`,

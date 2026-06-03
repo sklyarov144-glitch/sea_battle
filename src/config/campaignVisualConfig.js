@@ -49,16 +49,16 @@ export const CHAPTER_ISLANDS = [
 ];
 
 export const CAMPAIGN_NODE_POSITIONS = [
-  { x: 170, y: 312, scale: 0.82, labelY: 74 },
-  { x: 300, y: 418, scale: 0.78, labelY: 70 },
-  { x: 442, y: 326, scale: 0.82, labelY: 74 },
-  { x: 586, y: 456, scale: 0.78, labelY: 70 },
-  { x: 728, y: 318, scale: 0.82, labelY: 74 },
-  { x: 866, y: 430, scale: 0.78, labelY: 70 },
-  { x: 1010, y: 318, scale: 0.82, labelY: 74 },
-  { x: 1110, y: 468, scale: 0.72, labelY: 68 },
-  { x: 946, y: 548, scale: 0.76, labelY: 68 },
-  { x: 704, y: 552, scale: 0.82, labelY: 74 }
+  { x: 152, y: 286, scale: 0.94, labelY: 66, curve: 18 },
+  { x: 292, y: 386, scale: 0.86, labelY: 62, curve: -24 },
+  { x: 432, y: 286, scale: 0.94, labelY: 66, curve: 24 },
+  { x: 570, y: 410, scale: 0.86, labelY: 62, curve: -22 },
+  { x: 710, y: 292, scale: 0.94, labelY: 66, curve: 26 },
+  { x: 846, y: 414, scale: 0.86, labelY: 62, curve: -18 },
+  { x: 986, y: 292, scale: 0.94, labelY: 66, curve: 22 },
+  { x: 1112, y: 404, scale: 0.82, labelY: 60, curve: -24 },
+  { x: 940, y: 508, scale: 0.86, labelY: 58, curve: 20 },
+  { x: 704, y: 502, scale: 0.94, labelY: 60, curve: -18 }
 ];
 
 export const STAR_REWARD_THRESHOLDS = [
